@@ -1,0 +1,47 @@
+name: Build e pubblicazione
+
+# ogni push su "main" va sullo STAGING (protetto da password);
+# un tag di versione (es. v1.0.0) va in PRODUZIONE.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    env:
+      HAS_FTP: ${{ secrets.FTP_SERVER != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Pubblica sullo staging
+        if: env.HAS_FTP == 'true' && github.ref_type == 'branch'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_STAGING_DIR }}
+
+      - name: Pubblica in produzione
+        if: env.HAS_FTP == 'true' && github.ref_type == 'tag'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_PROD_DIR }}

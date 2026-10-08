@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+# credenziali: mai nel repository
+server/config.php
+dist/config.php
+scripts/test/*.sqlite

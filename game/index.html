@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#050507" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>GHOSTS 'N GOALS · Cesena FC</title>
+  <meta name="description" content="L'arcade di Halloween del Cesena FC. Salva Petrosino, entra in classifica. DAIBURDEL!" />
+  <meta property="og:title" content="GHOSTS 'N GOALS · Cesena FC" />
+  <meta property="og:description" content="Hanno rapito Petrosino. Tocca a te. L'arcade di Halloween del Cesena FC." />
+</head>
+<body>
+  <div id="room">
+    <div id="cabinet" aria-label="Cabinato arcade">
+      <header class="marquee">
+        <div class="marquee-glass">
+          <span class="m-top">CESENA FC PRESENTA</span>
+          <span class="m-title">GHOSTS <em>'N</em> GOALS</span>
+        </div>
+      </header>
+
+      <div class="bezel">
+        <div id="screen">
+          <div id="game"></div>
+          <div class="crt" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div id="stick" class="stick" aria-label="Joystick">
+          <div class="stick-gate"></div>
+          <div class="stick-knob"></div>
+        </div>
+        <div class="buttons">
+          <button id="btnB" class="btn btn-b" aria-label="Tiro"><span>B</span><small data-i18n="kick">TIRO</small></button>
+          <button id="btnA" class="btn btn-a" aria-label="Salto"><span>A</span><small data-i18n="jump">SALTO</small></button>
+        </div>
+        <button id="btnStart" class="btn-start" aria-label="Start">START</button>
+      </div>
+
+      <div class="cab-foot">
+        <div class="coin-door"><span class="coin-slot"></span><span class="coin-label">25¢</span></div>
+        <div class="speaker" aria-hidden="true"></div>
+        <div class="instr-card">
+          <b data-i18n="howto">COME SI GIOCA</b>
+          <span>← → <i data-i18n="run">CORRI</i> · ↓ <i data-i18n="crouch">ABBASSATI</i></span>
+          <span>Z <i data-i18n="jumpKey">SALTA</i> · X <i data-i18n="kickKey">TIRA</i> · ↑+X <i data-i18n="header">COLPO DI TESTA</i></span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="cab-tools">
+      <button id="tMute" aria-label="Audio">🔊</button>
+      <button id="tCrt" aria-label="Effetto CRT">CRT</button>
+      <button id="tFull" aria-label="Schermo intero">⛶</button>
+    </nav>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

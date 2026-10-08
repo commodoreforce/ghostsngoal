@@ -1,0 +1,27 @@
+{
+  "name": "ghosts-n-goals",
+  "version": "0.1.0",
+  "description": "Ghosts n Goals - arcade di Halloween del Cesena FC",
+  "scripts": {
+    "dev": "vite game --host",
+    "build": "vite build game && node scripts/postbuild.mjs",
+    "preview": "vite preview game --host"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/commodoreforce/ghostsngoal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/commodoreforce/ghostsngoal/issues"
+  },
+  "homepage": "https://github.com/commodoreforce/ghostsngoal#readme",
+  "dependencies": {
+    "@fontsource/press-start-2p": "^5.3.0",
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4"
+  },
+  "private": true,
+  "type": "module"
+}
