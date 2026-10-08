@@ -19,6 +19,17 @@ function canvasTex(scene, key, w, h) {
   return { tex, ctx: tex.getContext() };
 }
 function rect(ctx, x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
+// disegno in scala: gli sprite sono pensati su una griglia piccola e ingranditi
+// arrotondando i bordi (non i pixel), così restano pixel art pulita
+export const SC = 1.25;
+function scaled(ctx, ox, S = SC) {
+  return (x, y, w, h, c) => {
+    const x0 = Math.round(x * S), y0 = Math.round(y * S);
+    const x1 = Math.round((x + w) * S), y1 = Math.round((y + h) * S);
+    ctx.fillStyle = c; ctx.fillRect(ox + x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0));
+  };
+}
+const sz = (n) => Math.round(n * SC);
 function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16);
   const f = (v) => Math.max(0, Math.min(255, Math.round(v * amt)));
@@ -47,7 +58,7 @@ function addFrames(tex, names, fw, fh) {
 // ---------------------------------------------------------------- giocatori
 export const PLAYER_FRAMES = ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'fall', 'kick', 'crouch',
   'crouchkick', 'up', 'hurt', 'ko0', 'ko1', 'cheer0', 'cheer1', 'slide'];
-export const PW = 24; export const PH = 32;
+export const PW = 30; export const PH = 40; // 24x32 di progetto, ingrandito x1.25
 
 const POSES = {
   idle0: { bob: 0, back: -1, front: 1, armF: 0, armB: 0 },
@@ -93,7 +104,7 @@ function drawPlayer(ctx, ox, poseName, c, variant) {
   const p = POSES[poseName];
   const col = playerColors(c, variant);
   const L = c.look;
-  const R = (x, y, w, h, color) => rect(ctx, ox + x, y, w, h, color);
+  const R = scaled(ctx, ox);
   const muscular = variant.includes('mane');
   const naked = variant.includes('naked');
   const hero = variant.includes('hero') && !naked;
@@ -256,15 +267,15 @@ export function buildEnemyTextures(scene) {
   // zombie 16x24: emerge0..2, walk0..1, slide
   {
     const names = ['rise0', 'rise1', 'rise2', 'walk0', 'walk1', 'slide'];
-    const { tex, ctx } = canvasTex(scene, 'zombie', 16 * names.length, 24);
+    const { tex, ctx } = canvasTex(scene, 'zombie', sz(16) * names.length, sz(24));
     names.forEach((n, i) => {
-      const ox = i * 16;
-      const R = (x, y, w, h, c) => rect(ctx, ox + x, y, w, h, c);
+      const ox = i * sz(16);
+      const R = scaled(ctx, ox);
       const cut = n === 'rise0' ? 16 : n === 'rise1' ? 9 : 0;
       if (n === 'slide') {
         R(1, 16, 12, 5, '#5c5f6e'); R(10, 12, 6, 6, PAL.zombie); R(13, 14, 1, 1, '#ff3b3b');
         R(0, 19, 5, 3, '#2b2d38'); R(11, 20, 5, 2, PAL.boot);
-        outline(ctx, ox, 0, 16, 24); return;
+        outline(ctx, ox, 0, sz(16), sz(24)); return;
       }
       const step = n === 'walk1' ? 1 : 0;
       R(4, 1 + cut, 8, 7, PAL.zombie); R(4, 6 + cut, 8, 2, PAL.zombieSh); R(5, 1 + cut, 3, 2, PAL.rot);
@@ -276,31 +287,31 @@ export function buildEnemyTextures(scene) {
         R(3 + step, 22, 4, 2, PAL.boot); R(9 - step, 22, 4, 2, PAL.boot);
       }
       if (cut) R(0, 20, 16, 4, '#3b2a1a'); // terra smossa
-      outline(ctx, ox, 0, 16, 24);
+      outline(ctx, ox, 0, sz(16), sz(24));
     });
-    addFrames(tex, names, 16, 24);
+    addFrames(tex, names, sz(16), sz(24));
   }
   // pipistrello 16x10
   {
     const names = ['bat0', 'bat1'];
-    const { tex, ctx } = canvasTex(scene, 'bat', 32, 10);
+    const { tex, ctx } = canvasTex(scene, 'bat', sz(16) * 2, sz(10));
     names.forEach((n, i) => {
-      const ox = i * 16;
-      const R = (x, y, w, h, c) => rect(ctx, ox + x, y, w, h, c);
+      const ox = i * sz(16);
+      const R = scaled(ctx, ox);
       R(6, 3, 4, 4, '#3a2a4a'); R(7, 4, 1, 1, '#ff3b3b'); R(9, 4, 1, 1, '#ff3b3b');
       if (i === 0) { R(0, 1, 6, 3, '#2a1d38'); R(10, 1, 6, 3, '#2a1d38'); R(1, 3, 2, 2, '#2a1d38'); R(13, 3, 2, 2, '#2a1d38'); }
       else { R(1, 5, 5, 3, '#2a1d38'); R(10, 5, 5, 3, '#2a1d38'); }
-      outline(ctx, ox, 0, 16, 10);
+      outline(ctx, ox, 0, sz(16), sz(10));
     });
-    addFrames(tex, names, 16, 10);
+    addFrames(tex, names, sz(16), sz(10));
   }
   // zucca saltellante 14x14
   {
     const names = ['pk0', 'pk1', 'pk2'];
-    const { tex, ctx } = canvasTex(scene, 'pumpkin', 42, 14);
+    const { tex, ctx } = canvasTex(scene, 'pumpkin', sz(14) * 3, sz(14));
     names.forEach((n, i) => {
-      const ox = i * 14;
-      const R = (x, y, w, h, c) => rect(ctx, ox + x, y, w, h, c);
+      const ox = i * sz(14);
+      const R = scaled(ctx, ox);
       const sq = i === 1 ? 2 : 0; const up = i === 2 ? -1 : 0;
       R(1 - sq / 2, 3 + sq + up, 12 + sq, 10 - sq, PAL.orange);
       R(1, 11 + up, 12, 2, PAL.orangeSh);
@@ -308,23 +319,23 @@ export function buildEnemyTextures(scene) {
       R(6, 0 + sq + up, 2, 3, '#3f6b2a');
       R(3, 6 + sq + up, 2, 2, '#ffe066'); R(9, 6 + sq + up, 2, 2, '#ffe066');
       R(4, 10 + up, 6, 1, '#ffe066'); R(5, 9 + up, 1, 1, '#ffe066'); R(8, 9 + up, 1, 1, '#ffe066');
-      outline(ctx, ox, 0, 14, 14);
+      outline(ctx, ox, 0, sz(14), sz(14));
     });
-    addFrames(tex, names, 14, 14);
+    addFrames(tex, names, sz(14), sz(14));
   }
   // fantasmino 14x16
   {
     const names = ['gh0', 'gh1'];
-    const { tex, ctx } = canvasTex(scene, 'ghost', 28, 16);
+    const { tex, ctx } = canvasTex(scene, 'ghost', sz(14) * 2, sz(16));
     names.forEach((n, i) => {
-      const ox = i * 14;
-      const R = (x, y, w, h, c) => rect(ctx, ox + x, y, w, h, c);
+      const ox = i * sz(14);
+      const R = scaled(ctx, ox);
       R(2, 1, 10, 12, '#e8f6ff'); R(1, 4, 12, 8, '#e8f6ff');
       for (let k = 0; k < 4; k++) R(1 + k * 3 + (i ? 1 : 0), 12, 2, 3, '#e8f6ff');
       R(4, 5, 2, 3, '#101015'); R(8, 5, 2, 3, '#101015'); R(5, 10, 3, 1, '#7aa8c8');
-      outline(ctx, ox, 0, 14, 16, '#4a6a88');
+      outline(ctx, ox, 0, sz(14), sz(16), '#4a6a88');
     });
-    addFrames(tex, names, 14, 16);
+    addFrames(tex, names, sz(14), sz(16));
   }
   // occhi rossi (visibili al buio)
   {
@@ -335,10 +346,10 @@ export function buildEnemyTextures(scene) {
   // Arbitro Non-Morto 40x56: idle0, idle1, throw, whistle, hurt
   {
     const names = ['ref0', 'ref1', 'refThrow', 'refWhistle', 'refHurt'];
-    const { tex, ctx } = canvasTex(scene, 'referee', 40 * names.length, 56);
+    const { tex, ctx } = canvasTex(scene, 'referee', sz(40) * names.length, sz(56));
     names.forEach((n, i) => {
-      const ox = i * 40;
-      const R = (x, y, w, h, c) => rect(ctx, ox + x, y, w, h, c);
+      const ox = i * sz(40);
+      const R = scaled(ctx, ox);
       const b = n === 'ref1' ? 1 : 0;
       const skin = n === 'refHurt' ? '#f4f4f0' : '#8fbf7a';
       // gambe
@@ -359,9 +370,9 @@ export function buildEnemyTextures(scene) {
       if (n === 'refThrow') { R(30, 6, 5, 16, skin); R(31, 2, 5, 6, '#ffd23f'); R(2, 20, 6, 12, skin); }
       else if (n === 'refWhistle') { R(26, 14, 8, 5, skin); R(2, 20, 6, 12, skin); }
       else { R(2, 20 + b, 6, 14, skin); R(32, 20 + b, 6, 14, skin); }
-      outline(ctx, ox, 0, 40, 56);
+      outline(ctx, ox, 0, sz(40), sz(56));
     });
-    addFrames(tex, names, 40, 56);
+    addFrames(tex, names, sz(40), sz(56));
   }
   // cartellino giallo 6x8, onda del fischio 10x24, maxischermo VAR 56x34
   {
@@ -470,9 +481,9 @@ export function buildBackgrounds(scene) {
     const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
     for (let i = 0; i < 70; i++) rect(ctx, Math.floor(rnd() * 320), Math.floor(rnd() * 130), 1, 1, rnd() > 0.8 ? '#ffffff' : '#8a8aa8');
     // luna piena
-    ctx.fillStyle = 'rgba(255,240,200,0.10)'; ctx.beginPath(); ctx.arc(250, 52, 34, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#f6eccb'; ctx.beginPath(); ctx.arc(250, 52, 22, 0, Math.PI * 2); ctx.fill();
-    rect(ctx, 242, 44, 5, 4, '#ddd0a8'); rect(ctx, 254, 56, 6, 5, '#ddd0a8'); rect(ctx, 248, 62, 3, 3, '#ddd0a8');
+    ctx.fillStyle = 'rgba(255,240,200,0.10)'; ctx.beginPath(); ctx.arc(196, 46, 34, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f6eccb'; ctx.beginPath(); ctx.arc(196, 46, 22, 0, Math.PI * 2); ctx.fill();
+    rect(ctx, 188, 38, 5, 4, '#ddd0a8'); rect(ctx, 200, 50, 6, 5, '#ddd0a8'); rect(ctx, 194, 56, 3, 3, '#ddd0a8');
     tex.refresh();
   }
   // stadio lontano: tribune e torri faro
@@ -528,6 +539,105 @@ export function buildBackgrounds(scene) {
     ctx.globalCompositeOperation = 'source-over';
     tex.refresh();
   }
+  // ---- livelli di parallasse in stile 16 bit ----
+  const seeded = (seed) => () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  // nuvole sfilacciate che passano davanti alla luna
+  {
+    const Wc = 512;
+    const { tex, ctx } = canvasTex(scene, 'clouds', Wc, 90);
+    const rnd = seeded(11);
+    for (let i = 0; i < 9; i++) {
+      const cx = Math.floor(rnd() * Wc), cy = 14 + Math.floor(rnd() * 56), len = 50 + Math.floor(rnd() * 90);
+      for (let k = 0; k < 4; k++) {
+        const y = cy + k * 3, w = len - k * 14, x = cx + k * 7;
+        rect(ctx, x, y, w, 3, k === 0 ? '#4a3a66' : '#2a1f40');
+        if (x + w > Wc) rect(ctx, x - Wc, y, w, 3, k === 0 ? '#4a3a66' : '#2a1f40');
+      }
+    }
+    tex.refresh();
+  }
+  // Cesena in lontananza: la Rocca sulla collina, campanili e tetti
+  {
+    const Wc = 512;
+    const { tex, ctx } = canvasTex(scene, 'bg_city', Wc, 224);
+    const col = '#1c1233', lit = '#d9a441';
+    const R = (x, y, w, h, c = col) => rect(ctx, x, y, w, h, c);
+    // colline
+    for (let x = 0; x < Wc; x++) {
+      const hgt = 18 + Math.sin(x / 40) * 6 + Math.sin(x / 13) * 2 + (x > 40 && x < 230 ? Math.sin((x - 40) / 190 * Math.PI) * 26 : 0);
+      R(x, Math.floor(148 - hgt), 1, Math.ceil(hgt) + 76);
+    }
+    // la Rocca: mura merlate e torri
+    R(70, 92, 120, 22); for (let x = 70; x < 190; x += 6) R(x, 88, 4, 4);
+    R(88, 70, 18, 22); for (let x = 88; x < 106; x += 5) R(x, 66, 3, 4);
+    R(150, 64, 22, 28); for (let x = 150; x < 172; x += 5) R(x, 60, 3, 4);
+    R(122, 80, 12, 12);
+    [[95, 78], [160, 72], [126, 84]].forEach(([x, y]) => R(x, y, 2, 3, lit));
+    // campanili e tetti della città
+    const towers = [[262, 72, 10], [330, 86, 8], [420, 78, 9]];
+    towers.forEach(([x, y, w]) => { R(x, y, w, 150 - y); R(x + 2, y - 8, w - 4, 8); R(x + Math.floor(w / 2) - 1, y - 14, 2, 6); R(x + 3, y + 6, 2, 4, lit); });
+    const rnd = seeded(5);
+    for (let x = 240; x < Wc; x += 14 + Math.floor(rnd() * 10)) {
+      const h = 14 + Math.floor(rnd() * 16);
+      R(x, 140 - h, 12, h + 10);
+      for (let k = 0; k < 6; k++) R(x + k, 140 - h - k, 12 - k * 2, 1);
+      if (rnd() > 0.5) R(x + 4, 140 - h + 5, 2, 2, lit);
+    }
+    tex.refresh();
+  }
+  // tribune vicine (sezione in campo): due fotogrammi per far "ballare" la curva fantasma
+  for (const f of [0, 1]) {
+    const Wc = 512;
+    const { tex, ctx } = canvasTex(scene, `bg_stands${f}`, Wc, 224);
+    const R = (x, y, w, h, c) => rect(ctx, x, y, w, h, c);
+    R(0, 60, Wc, 6, '#2a1f40');           // tetto
+    for (let x = 0; x < Wc; x += 64) R(x + 30, 66, 3, 110, '#1d1430');
+    for (let s2 = 0; s2 < 9; s2++) R(0, 72 + s2 * 11, Wc, 11, s2 % 2 ? '#1a1128' : '#160e24');
+    const rnd = seeded(21);
+    for (let row = 0; row < 9; row++) {
+      for (let x = 2; x < Wc; x += 5) {
+        if (rnd() < 0.18) continue;
+        const bob = ((x / 5 + row) % 2 === f) ? 1 : 0;
+        const y = 75 + row * 11 - bob;
+        const c = rnd() < 0.06 ? '#f4f4f0' : (rnd() < 0.5 ? '#6a5a8a' : '#4f4270');
+        R(x, y, 3, 3, c); R(x, y + 3, 3, 4, '#2c2244');
+      }
+    }
+    // striscione della curva
+    R(40, 170, 160, 9, '#f4f4f0'); R(40, 170, 160, 1, '#16161c');
+    for (let x = 44; x < 196; x += 12) R(x, 173, 6, 3, '#16161c');
+    R(300, 170, 120, 9, '#16161c');
+    for (let x = 304; x < 416; x += 10) R(x, 173, 5, 3, '#f4f4f0');
+    tex.refresh();
+  }
+  // primo piano davanti al giocatore: sagome scure che scorrono più veloci (profondità)
+  {
+    const Wc = 512;
+    const { tex, ctx } = canvasTex(scene, 'fg_cemetery', Wc, 224);
+    const c = '#06040a';
+    const R = (x, y, w, h) => rect(ctx, x, y, w, h, c);
+    // cancellata in ferro con punte
+    for (let x = 60; x < 120; x += 8) { R(x, 194, 2, 30); R(x - 1, 190, 4, 4); R(x, 188, 2, 2); }
+    R(56, 200, 66, 2);
+    // cespuglio secco
+    for (let k = 0; k < 7; k++) { R(330 + k * 5, 200 - (k % 3) * 8, 2, 24); R(326 + k * 6, 196 - (k % 2) * 6, 6, 2); }
+    // croce storta
+    R(440, 178, 4, 46); R(432, 186, 20, 4);
+    tex.refresh();
+  }
+  {
+    const Wc = 512;
+    const { tex, ctx } = canvasTex(scene, 'fg_pitch', Wc, 224);
+    const c = '#06040a';
+    const R = (x, y, w, h) => rect(ctx, x, y, w, h, c);
+    // telecamera a bordo campo e fotografo
+    R(90, 196, 4, 28); R(84, 222, 16, 2); R(80, 184, 22, 12); R(100, 188, 8, 5);
+    R(300, 200, 10, 24); R(298, 190, 12, 11); R(308, 194, 10, 4);
+    // panchina coperta
+    R(420, 186, 60, 3); R(420, 186, 3, 38); R(477, 186, 3, 38);
+    tex.refresh();
+  }
+
   // campo: strisce di erba tagliata, vista da bordo campo
   {
     const W = 512;
@@ -554,30 +664,30 @@ export function buildLedBoard(scene, key, text) {
 export function buildStoryTextures(scene) {
   // Petrosino 16x28
   {
-    const { tex, ctx } = canvasTex(scene, 'petrosino', 16, 28);
-    const R = (x, y, w, h, c) => rect(ctx, x, y, w, h, c);
+    const { tex, ctx } = canvasTex(scene, 'petrosino', sz(16), sz(28));
+    const R = scaled(ctx, 0);
     R(4, 1, 8, 8, '#e6b08c'); R(4, 0, 8, 3, '#b8b8c0'); R(4, 1, 2, 5, '#b8b8c0');
     R(9, 4, 1, 2, '#101015'); R(8, 7, 4, 1, '#8a4a3a');
     R(3, 9, 10, 10, '#1b1b22'); R(3, 9, 10, 1, '#f4f4f0'); R(7, 12, 3, 2, '#f4f4f0');
     R(3, 19, 10, 6, '#2a2a34'); R(4, 25, 3, 3, PAL.boot); R(9, 25, 3, 3, PAL.boot);
     R(12, 13, 4, 6, '#f4f4f0'); // maglia piegata in mano
-    outline(ctx, 0, 0, 16, 28); tex.refresh();
+    outline(ctx, 0, 0, sz(16), sz(28)); tex.refresh();
   }
   // il Conte 22x32
   {
     const names = ['count0', 'count1'];
-    const { tex, ctx } = canvasTex(scene, 'count', 44, 32);
+    const { tex, ctx } = canvasTex(scene, 'count', sz(22) * 2, sz(32));
     names.forEach((n, i) => {
-      const ox = i * 22;
-      const R = (x, y, w, h, c) => rect(ctx, ox + x, y, w, h, c);
+      const ox = i * sz(22);
+      const R = scaled(ctx, ox);
       R(1, 8, 20, 22 - i * 2, '#3a0a1a'); R(2, 10, 18, 18 - i * 2, '#5a0f24');
       R(7, 1, 8, 9, '#d8d8e8'); R(6, 0, 10, 3, '#101015'); R(10, 2, 2, 2, '#101015');
       R(8, 4, 2, 2, '#ff3b3b'); R(12, 4, 2, 2, '#ff3b3b'); R(9, 8, 1, 2, '#ffffff'); R(12, 8, 1, 2, '#ffffff');
       R(4, 8, 4, 6, '#101015'); R(14, 8, 4, 6, '#101015'); // colletto alto
       R(8, 12, 6, 16, '#101015'); R(10, 13, 2, 2, '#ffd23f');
-      outline(ctx, ox, 0, 22, 32);
+      outline(ctx, ox, 0, sz(22), sz(32));
     });
-    addFrames(tex, names, 22, 32);
+    addFrames(tex, names, sz(22), sz(32));
   }
   // borsone del magazzino
   {

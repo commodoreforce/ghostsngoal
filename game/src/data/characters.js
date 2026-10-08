@@ -53,10 +53,10 @@ export function tuning(c) {
   const s = c.stats;
   return {
     runSpeed: 62 + s.speed * 12,          // px/s
-    jumpVel: -(230 + s.jump * 18),        // px/s
+    jumpVel: -(252 + s.jump * 17),        // px/s
     ballSpeed: 170 + s.shot * 14,
     ballDamage: s.shot >= 5 ? 2 : 1,
     maxBalls: c.id === 'shpendi' ? 3 : 2,
-    boostTime: 7000 + s.boost * 1000,     // ms
+    boostTime: 8000 + s.boost * 1000,     // ms
   };
 }

@@ -4,11 +4,11 @@ import { Sfx } from '../systems/sfx.js';
 import { charById, tuning } from '../data/characters.js';
 import { Run } from '../systems/state.js';
 
-const COYOTE_MS = 100;       // si può saltare poco dopo aver lasciato il bordo
+const COYOTE_MS = 120;       // si può saltare poco dopo aver lasciato il bordo
 const BUFFER_MS = 110;       // il salto premuto poco prima di atterrare viene ricordato
 const KICK_ANIM_MS = 140;
 const CHARGE_MS = 650;
-const INVULN_MS = 1500;
+const INVULN_MS = 2200;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, charId) {
@@ -42,9 +42,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.applyLook();
   }
 
-  standBody() { this.body.setSize(10, 26).setOffset(7, 6); }
-  crouchBody() { this.body.setSize(10, 17).setOffset(7, 15); }
-  slideBody() { this.body.setSize(16, 10).setOffset(4, 21); }
+  standBody() { this.body.setSize(12, 32).setOffset(9, 8); }
+  crouchBody() { this.body.setSize(12, 21).setOffset(9, 19); }
+  slideBody() { this.body.setSize(20, 12).setOffset(5, 28); }
 
   get boosted() { return this.scene.time.now < this.boostUntil; }
   get invulnerable() {
@@ -169,8 +169,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     let angle = 0; // gradi: 0 avanti, -45 su, 45 giù
     if (up) angle = -45;
     else if (airDown) angle = 45;
-    const ox = dir * 10;
-    const oy = up ? -18 : crouching ? 5 : airDown ? 4 : -2;
+    const ox = dir * 12;
+    const oy = up ? -22 : crouching ? 6 : airDown ? 5 : -2;
     const base = { x: this.x + ox, y: this.y + oy, dir, angle, charged, owner: this };
     if (fire) sc.spawnBall({ ...base, kind: 'fire' });
     else if (boostKind === 'shpendi') sc.spawnBall({ ...base, kind: 'gold' });

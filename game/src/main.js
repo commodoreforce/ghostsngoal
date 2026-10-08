@@ -11,6 +11,11 @@ import { IntroScene } from './scenes/IntroScene.js';
 import { LevelScene } from './scenes/LevelScene.js';
 import { NameEntryScene } from './scenes/NameEntryScene.js';
 import { W, H } from './systems/ui.js';
+import { CrtScreen } from './systems/crt.js';
+
+// i cabinati aggiornavano animazioni e movimento a scatti: il gioco disegna 20 fotogrammi al secondo
+// (la fisica resta calcolata a 60 passi al secondo, quindi i salti non cambiano)
+export const ARCADE_FPS = 20;
 
 setLang(getLang());
 Input.init();
@@ -27,13 +32,16 @@ muteBtn.addEventListener('click', () => { unlockAudio(); setMuted(!isMuted()); r
 refreshMute();
 
 let crtOff = false;
-try { crtOff = localStorage.getItem('gng_crt') === 'off'; } catch (e) { /* ignora */ }
-// sui telefoni lenti l'effetto si spegne da solo
-if (!crtOff && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) crtOff = true;
+let crtPref = null;
+try { crtPref = localStorage.getItem('gng_crt'); } catch (e) { /* ignora */ }
+crtOff = crtPref === 'off';
+// sui telefoni lenti l'effetto parte spento (si può sempre riaccendere)
+if (crtPref === null && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) crtOff = true;
 document.body.classList.toggle('crt-off', crtOff);
 document.getElementById('tCrt').addEventListener('click', () => {
   crtOff = !crtOff;
   document.body.classList.toggle('crt-off', crtOff);
+  if (window.__crt && window.__crt.ok) window.__crt.setEnabled(!crtOff);
   try { localStorage.setItem('gng_crt', crtOff ? 'off' : 'on'); } catch (e) { /* ignora */ }
 });
 document.getElementById('tFull').addEventListener('click', () => {
@@ -58,9 +66,10 @@ async function start() {
     width: W,
     height: H,
     pixelArt: true,
+    render: { preserveDrawingBuffer: true, antialias: false, pixelArt: true },
     roundPixels: true,
     backgroundColor: '#000000',
-    fps: { target: 60, smoothStep: true },
+    fps: { target: 60, limit: ARCADE_FPS, smoothStep: false },
     physics: { default: 'arcade', arcade: { gravity: { y: 850 }, debug: false, tileBias: 8 } },
     scale: { mode: Phaser.Scale.NONE },
     input: { keyboard: false, mouse: false, touch: false, gamepad: false },
@@ -69,6 +78,13 @@ async function start() {
     scene: [BootScene, TitleScene, SelectScene, IntroScene, LevelScene, NameEntryScene],
   });
   game.events.on('prestep', () => Input.update());
+  // tubo catodico vero (shader WebGL); se non disponibile resta l'effetto leggero in CSS
+  const crt = new CrtScreen(document.getElementById('game'), game.canvas);
+  if (crt.ok) {
+    game.events.on('postrender', () => crt.draw());
+    crt.setEnabled(!crtOff);
+  }
+  window.__crt = crt;
   window.__gng = game; // utile per i test
 }
 start();

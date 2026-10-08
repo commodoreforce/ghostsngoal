@@ -14,8 +14,8 @@ export class TitleScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#000000');
     this.add.image(0, 0, 'bg_sky').setOrigin(0);
-    this.stadium = this.add.tileSprite(0, 40, W, 240, 'bg_stadium').setOrigin(0);
-    this.fog = this.add.tileSprite(0, 170, W, 60, 'fog').setOrigin(0).setAlpha(0.9);
+    this.stadium = this.add.tileSprite(0, 28, W, H, 'bg_stadium').setOrigin(0);
+    this.fog = this.add.tileSprite(0, 158, W, 60, 'fog').setOrigin(0).setAlpha(0.9);
 
     this.page = this.add.container(0, 0);
     this.board = this.add.container(0, 0).setVisible(false);
@@ -34,24 +34,24 @@ export class TitleScene extends Phaser.Scene {
     p.removeAll(true);
     // fantasmi che fluttuano attorno al titolo
     for (let i = 0; i < 4; i++) {
-      const g = this.add.sprite(40 + i * 80, 30 + (i % 2) * 120, 'ghost', 'gh0').setAlpha(0.8);
+      const g = this.add.sprite(26 + i * 68, 24 + (i % 2) * 112, 'ghost', 'gh0').setAlpha(0.8);
       this.tweens.add({ targets: g, y: g.y + 10, x: g.x + 8, duration: 1400 + i * 300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       g.play('ghost_fly');
       p.add(g);
     }
     const shadow = '#5a1a00';
-    const t1 = center(this, 40, 'GHOSTS', { size: 24, color: C.white, stroke: shadow, strokeThickness: 4 });
-    const t2 = center(this, 70, "'N", { size: 16, color: C.orange, stroke: '#000', strokeThickness: 3 });
-    const t3 = center(this, 92, 'GOALS', { size: 24, color: C.white, stroke: shadow, strokeThickness: 4 });
+    const t1 = center(this, 30, 'GHOSTS', { size: 24, color: C.white, stroke: shadow, strokeThickness: 4 });
+    const t2 = center(this, 59, "'N", { size: 16, color: C.orange, stroke: '#000', strokeThickness: 3 });
+    const t3 = center(this, 80, 'GOALS', { size: 24, color: C.white, stroke: shadow, strokeThickness: 4 });
     p.add([t1, t2, t3]);
     this.tweens.add({ targets: [t1, t3], y: '+=2', duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-    const ps = center(this, 150, t('pressStart'), { size: 8, color: C.gold });
+    const ps = center(this, 132, t('pressStart'), { size: 8, color: C.gold });
     blink(this, ps, 480);
-    const sub = center(this, 164, t('pressStartSub'), { color: C.grey });
-    this.playsText = center(this, 196, '', { color: C.ghost });
-    const lang = center(this, 212, `↑ ${t('lang')}`, { color: C.grey });
-    const cr = center(this, 226, t('credits'), { color: C.grey });
+    const sub = center(this, 146, t('pressStartSub'), { color: C.grey });
+    this.playsText = center(this, 172, '', { color: C.ghost });
+    const lang = center(this, 190, `↑ ${t('lang')}`, { color: C.grey });
+    const cr = center(this, 208, t('credits'), { color: C.grey });
     p.add([ps, sub, this.playsText, lang, cr]);
     this.updatePlays();
   }
@@ -77,21 +77,21 @@ export class TitleScene extends Phaser.Scene {
   buildBoard() {
     const b = this.board;
     b.removeAll(true);
-    b.add(this.add.rectangle(W / 2, H / 2, W - 16, H - 16, 0x000000, 0.78).setStrokeStyle(1, 0xff7a1a));
-    b.add(center(this, 20, t('hiscores'), { size: 8, color: C.orange }));
+    b.add(this.add.rectangle(W / 2, H / 2, W - 10, H - 10, 0x000000, 0.8).setStrokeStyle(1, 0xff7a1a));
+    b.add(center(this, 16, t('hiscores'), { size: 8, color: C.orange }));
     if (!this.top.length) {
       b.add(center(this, 110, '- - -', { color: C.grey }));
       return;
     }
     const colors = [C.gold, C.white, '#d0a070'];
     this.top.slice(0, 10).forEach((s, i) => {
-      const y = 44 + i * 17;
+      const y = 36 + i * 17;
       const col = colors[i] || C.white;
-      b.add(txt(this, 18, y, `${String(i + 1).padStart(2, ' ')}.`, { color: col }));
-      b.add(txt(this, 50, y, s.nickname, { color: col }));
-      b.add(txt(this, 200, y, pad(s.score), { color: col }));
+      b.add(txt(this, 10, y, `${String(i + 1).padStart(2, ' ')}.`, { color: col }));
+      b.add(txt(this, 38, y, s.nickname, { color: col }));
+      b.add(txt(this, 152, y, pad(s.score), { color: col }));
       const c = charById(s.character);
-      b.add(this.add.image(296, y + 3, `portrait_${c.id}`).setScale(0.16));
+      b.add(this.add.image(238, y + 3, `portrait_${c.id}`).setScale(0.16));
     });
   }
 

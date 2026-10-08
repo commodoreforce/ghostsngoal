@@ -6,13 +6,13 @@ import { Sfx } from '../systems/sfx.js';
 // accovacciati, salto schiacciante, e il VAR CHECK che riavvolge il tempo.
 export class Referee extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, groundY, arena) {
-    super(scene, x, groundY - 28, 'referee', 'ref0');
+    super(scene, x, groundY - 35, 'referee', 'ref0');
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.level = scene;
     this.arena = arena;            // { left, right }
     this.groundY = groundY;
-    this.maxHp = 44;
+    this.maxHp = 32;
     this.hp = this.maxHp;
     this.alive = true;
     this.harmful = true;
@@ -20,7 +20,7 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
     this.points = 10000;
     this.kind = 'boss';
     this.setDepth(35);
-    this.body.setSize(24, 50).setOffset(8, 6);
+    this.body.setSize(30, 62).setOffset(10, 8);
     this.state = 'enter';
     this.nextAction = 0;
     this.varsDone = 0;
@@ -32,12 +32,12 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
 
   get phase() { return this.hp > this.maxHp * 0.66 ? 1 : this.hp > this.maxHp * 0.33 ? 2 : 3; }
 
-  start(time) { this.state = 'idle'; this.vulnerable = true; this.nextAction = time + 900; }
+  start(time) { this.state = 'idle'; this.vulnerable = true; this.nextAction = time + 1500; }
 
   damage(n, fromX, ballY) {
     if (!this.alive || !this.vulnerable) return false;
     // colpi alla testa (al fischietto) valgono doppio: premia il colpo di testa
-    const head = ballY !== undefined && ballY < this.y - 8;
+    const head = ballY !== undefined && ballY < this.y - 12;
     const dmg = head ? n * 2 : n;
     this.hp -= dmg;
     if (head) this.level.spark(this.x + (this.flipX ? -6 : 6), this.y - 12);
@@ -56,7 +56,7 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
 
   tick(time, player) {
     if (!this.alive) return;
-    this.eyes.setPosition(this.x + (this.flipX ? -4 : 4), this.y - 18);
+    this.eyes.setPosition(this.x + (this.flipX ? -5 : 5), this.y - 23);
     this.history.push({ x: this.x, y: this.y, t: time });
     while (this.history.length && time - this.history[0].t > 3200) this.history.shift();
     if (this.state === 'var' || this.state === 'enter') return;
@@ -71,7 +71,7 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
         // onda d'urto a terra: si evita saltando
         this.level.groundShock(this.x, this.groundY);
         this.body.setVelocityX(0);
-        this.nextAction = time + 700;
+        this.nextAction = time + 1200;
       }
       return;
     }
@@ -99,14 +99,14 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
     this.level.warn(this.x, this.y - 40);
     this.level.time.delayedCall(450, () => {
       if (!this.alive) return;
-      const n = p === 1 ? 3 : p === 2 ? 4 : 5;
+      const n = p === 1 ? 2 : p === 2 ? 3 : 4;
       const dir = this.flipX ? -1 : 1;
       for (let i = 0; i < n; i++) {
         const spread = (i - (n - 1) / 2) * 34;
         this.level.spawnCard(this.x + dir * 10, this.y - 20, dir * (120 + Math.abs(spread) * 0.6) + (player.x - this.x) * 0.25, -230 + spread);
       }
       Sfx.card();
-      this.level.time.delayedCall(350, () => { if (this.alive) { this.state = 'idle'; this.play('ref_idle'); this.nextAction = this.level.time.now + (p === 3 ? 700 : 1100); } });
+      this.level.time.delayedCall(350, () => { if (this.alive) { this.state = 'idle'; this.play('ref_idle'); this.nextAction = this.level.time.now + (p === 3 ? 1000 : 1500); } });
     });
   }
 
@@ -119,9 +119,9 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
       if (!this.alive) return;
       Sfx.whistle();
       const dir = this.flipX ? -1 : 1;
-      this.level.spawnWave(this.x + dir * 16, this.groundY - 30, dir * (p === 3 ? 170 : 140));
-      if (p >= 2) this.level.time.delayedCall(500, () => { if (this.alive) this.level.spawnWave(this.x + dir * 16, this.groundY - 30, dir * 150); });
-      this.level.time.delayedCall(p >= 2 ? 900 : 500, () => { if (this.alive) { this.state = 'idle'; this.play('ref_idle'); this.nextAction = this.level.time.now + 900; } });
+      this.level.spawnWave(this.x + dir * 16, this.groundY - 36, dir * (p === 3 ? 135 : 110));
+      if (p === 3) this.level.time.delayedCall(500, () => { if (this.alive) this.level.spawnWave(this.x + dir * 16, this.groundY - 36, dir * 120); });
+      this.level.time.delayedCall(p >= 2 ? 900 : 500, () => { if (this.alive) { this.state = 'idle'; this.play('ref_idle'); this.nextAction = this.level.time.now + 1300; } });
     });
   }
 
@@ -130,12 +130,12 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocityX(0);
     this.anims.stop(); this.setFrame('ref1');
     this.level.warn(this.x, this.y - 40, '!');
-    this.level.time.delayedCall(420, () => {
+    this.level.time.delayedCall(600, () => {
       if (!this.alive) return;
       this.state = 'jump'; this.jumpStart = this.level.time.now;
       const tx = Phaser.Math.Clamp(player.x, this.arena.left + 24, this.arena.right - 24);
       const vx = (tx - this.x) / 0.95;
-      this.body.setVelocity(Phaser.Math.Clamp(vx, -200, 200), -400 - (p === 3 ? 40 : 0));
+      this.body.setVelocity(Phaser.Math.Clamp(vx, -160, 160), -400 - (p === 3 ? 40 : 0));
     });
   }
 
@@ -153,7 +153,7 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
       if (!this.alive) return;
       Sfx.rewind();
       lvl.tweens.add({
-        targets: this, x: past.x, y: Math.min(past.y, this.groundY - 28), duration: 900, ease: 'Sine.easeInOut',
+        targets: this, x: past.x, y: Math.min(past.y, this.groundY - 35), duration: 900, ease: 'Sine.easeInOut',
         onUpdate: () => this.setFlipX(!this.flipX),
         onComplete: () => {
           lvl.varEffect(false);

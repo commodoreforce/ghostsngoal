@@ -54,10 +54,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 // Zombie che emerge dal terreno, poi cammina verso di te. Alcuni entrano in scivolata.
 export class Zombie extends Enemy {
   constructor(scene, x, groundY, slider = false) {
-    super(scene, x, groundY - 12, 'zombie', 'rise0', { hp: 1, points: 100, eyeOffset: { x: 3, y: -8 } });
-    this.body.setSize(10, 20).setOffset(3, 4);
+    super(scene, x, groundY - 15, 'zombie', 'rise0', { hp: 1, points: 100, eyeOffset: { x: 4, y: -10 } });
+    this.body.setSize(12, 25).setOffset(4, 5);
     this.slider = slider;
-    this.speed = Phaser.Math.Between(26, 40);
+    this.speed = Phaser.Math.Between(20, 30);
     this.rising = true;
     this.vulnerable = false;
     this.harmful = false;
@@ -78,23 +78,23 @@ export class Zombie extends Enemy {
     const dx = player.x - this.x;
     const dir = Math.sign(dx) || 1;
     if (this.sliding) {
-      if (time > this.slideEnd) { this.sliding = false; this.play('zombie_walk'); this.body.setSize(10, 20).setOffset(3, 4); }
+      if (time > this.slideEnd) { this.sliding = false; this.play('zombie_walk'); this.body.setSize(12, 25).setOffset(4, 5); }
       return;
     }
     this.setFlipX(dir < 0);
     this.body.setVelocityX(dir * this.speed);
     if (this.slider && time > this.slideCooldown && Math.abs(dx) < 80 && Math.abs(dx) > 30 && Math.abs(player.y - this.y) < 24 && this.body.blocked.down) {
       // annuncio: un attimo fermo, poi scivolata
-      this.slideCooldown = time + 2600;
+      this.slideCooldown = time + 4200;
       this.body.setVelocityX(0);
       this.setTint(0xff9a9a);
       this.sliding = true; this.slideEnd = time + 900;
-      this.level.time.delayedCall(280, () => {
+      this.level.time.delayedCall(450, () => {
         if (!this.active || !this.alive) return;
         this.clearTint();
         this.anims.stop(); this.setFrame('slide');
-        this.body.setSize(14, 8).setOffset(1, 14);
-        this.body.setVelocityX(dir * 165);
+        this.body.setSize(18, 10).setOffset(1, 20);
+        this.body.setVelocityX(dir * 130);
       });
     }
   }
@@ -105,10 +105,10 @@ export class Bat extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'bat', 'bat0', { hp: 1, points: 100, eyeOffset: { x: 0, y: -1 } });
     this.body.setAllowGravity(false);
-    this.body.setSize(12, 7).setOffset(2, 2);
+    this.body.setSize(15, 9).setOffset(2, 2);
     this.baseY = y;
     this.t0 = Phaser.Math.Between(0, 1000);
-    this.diveAt = scene.time.now + Phaser.Math.Between(1500, 3000);
+    this.diveAt = scene.time.now + Phaser.Math.Between(2800, 4200);
     this.diving = 0;
     this.play('bat_fly');
   }
@@ -118,23 +118,23 @@ export class Bat extends Enemy {
     const dir = Math.sign(dx) || -1;
     this.setFlipX(dir < 0);
     if (this.diving) {
-      if (time > this.diving) { this.diving = 0; this.diveAt = time + 2600; }
+      if (time > this.diving) { this.diving = 0; this.diveAt = time + 4200; }
       return;
     }
     this.baseY = Phaser.Math.Linear(this.baseY, Math.min(player.y - 26, 170), 0.01);
     const y = this.baseY + Math.sin((time + this.t0) / 260) * 14;
-    this.body.setVelocity(dir * 52, (y - this.y) * 6);
+    this.body.setVelocity(dir * 40, (y - this.y) * 5);
     if (time > this.diveAt && Math.abs(dx) < 110) {
       // annuncio: squittio e lampo, poi picchiata
       this.setTint(0xff6a6a);
       this.level.sfxBlip();
       this.diving = time + 900;
       this.body.setVelocity(0, 0);
-      this.level.time.delayedCall(200, () => {
+      this.level.time.delayedCall(380, () => {
         if (!this.active) return;
         this.clearTint();
         const a = Phaser.Math.Angle.Between(this.x, this.y, player.x, player.y - 6);
-        this.body.setVelocity(Math.cos(a) * 150, Math.sin(a) * 150);
+        this.body.setVelocity(Math.cos(a) * 105, Math.sin(a) * 105);
       });
     }
   }
@@ -144,7 +144,7 @@ export class Bat extends Enemy {
 export class Pumpkin extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'pumpkin', 'pk0', { hp: 2, points: 200, eyeOffset: { x: 0, y: -1 } });
-    this.body.setSize(12, 11).setOffset(1, 3);
+    this.body.setSize(15, 14).setOffset(1, 4);
     this.nextHop = scene.time.now + 600;
   }
 
@@ -155,8 +155,8 @@ export class Pumpkin extends Enemy {
       this.setFrame(time > this.nextHop - 200 ? 'pk1' : 'pk0'); // si schiaccia prima di saltare
       if (time > this.nextHop) {
         const dir = Math.sign(player.x - this.x) || -1;
-        this.body.setVelocity(dir * 72, -250);
-        this.nextHop = time + Phaser.Math.Between(800, 1200);
+        this.body.setVelocity(dir * 55, -240);
+        this.nextHop = time + Phaser.Math.Between(1200, 1700);
       }
     } else this.setFrame('pk2');
   }
@@ -167,7 +167,7 @@ export class Ghost extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'ghost', 'gh0', { hp: 1, points: 300, eyeOffset: { x: 0, y: -2 } });
     this.body.setAllowGravity(false);
-    this.body.setSize(10, 12).setOffset(2, 2);
+    this.body.setSize(12, 15).setOffset(3, 3);
     this.t0 = Phaser.Math.Between(0, 3000);
     this.play('ghost_fly');
   }
@@ -178,7 +178,7 @@ export class Ghost extends Enemy {
     this.vulnerable = !faded; this.harmful = !faded;
     this.setAlpha(faded ? 0.22 : 0.8 + Math.sin(time / 90) * 0.1);
     const a = Phaser.Math.Angle.Between(this.x, this.y, player.x, player.y - 10);
-    const sp = 34;
+    const sp = 24;
     this.body.setVelocity(Math.cos(a) * sp, Math.sin(a) * sp + Math.sin(time / 300) * 20);
     this.setFlipX(player.x < this.x);
   }

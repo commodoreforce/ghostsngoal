@@ -24,8 +24,8 @@ export class NameEntryScene extends Phaser.Scene {
     this.phase = 'loading';
     this.add.image(W / 2, 46, `portrait_${Run.character}`).setScale(0.75);
     center(this, 8, this.cleared ? 'DAIBURDEL!' : t('gameOver'), { color: this.cleared ? C.gold : C.red });
-    center(this, 80, `${t('score')} ${pad(Run.score)}`, { color: C.white });
-    this.status = center(this, 112, t('sending'), { color: C.grey });
+    center(this, 76, `${t('score')} ${pad(Run.score)}`, { color: C.white });
+    this.status = center(this, 100, t('sending'), { color: C.grey });
 
     const durationMs = Date.now() - Run.startedAt;
     const payload = {
@@ -47,7 +47,7 @@ export class NameEntryScene extends Phaser.Scene {
   startEntry(rank) {
     this.phase = 'entry';
     this.status.setText(`${t('newRecord')}  ${t('rank')} ${rank}`).setColor(C.gold);
-    center(this, 132, t('enterName'), { color: C.orange });
+    center(this, 120, t('enterName'), { color: C.orange });
     let saved = '';
     try { saved = (localStorage.getItem('gng_name') || '').toUpperCase().slice(0, MAX); } catch (e) { /* ignora */ }
     this.name = saved ? saved.split('') : ['A'];
@@ -56,15 +56,15 @@ export class NameEntryScene extends Phaser.Scene {
     this.slots = [];
     const x0 = W / 2 - (MAX * 14) / 2 + 7;
     for (let i = 0; i < MAX; i++) {
-      const s = txt(this, x0 + i * 14, 154, '_', { size: 8, color: C.white, ox: 0.5 });
+      const s = txt(this, x0 + i * 14, 142, '_', { size: 8, color: C.white, ox: 0.5 });
       this.slots.push(s);
     }
-    this.caret = this.add.rectangle(0, 166, 10, 2, 0xff7a1a);
+    this.caret = this.add.rectangle(0, 154, 10, 2, 0xff7a1a);
     this.tweens.add({ targets: this.caret, alpha: 0.2, yoyo: true, repeat: -1, duration: 200 });
     const [h1, h2] = t('nameHint').split('|');
-    center(this, 180, h1, { color: C.grey });
-    center(this, 194, h2, { color: C.grey });
-    this.msg = center(this, 210, '', { color: C.red });
+    center(this, 168, h1, { color: C.grey });
+    center(this, 182, h2, { color: C.grey });
+    this.msg = center(this, 202, '', { color: C.red });
     Input.takeTyped();
     this.refreshName();
   }
@@ -118,14 +118,14 @@ export class NameEntryScene extends Phaser.Scene {
       center(this, 120, t('magicOffline'), { color: C.grey });
     } else {
       (r.scores || []).forEach((s, i) => {
-        const y = 32 + i * 17;
+        const y = 30 + i * 17;
         const me = highlightId && s.id === highlightId;
         const col = me ? C.gold : i === 0 ? C.white : C.grey;
-        txt(this, 18, y, `${String(i + 1).padStart(2, ' ')}.`, { color: col });
-        txt(this, 50, y, s.nickname, { color: col });
-        txt(this, 200, y, pad(s.score), { color: col });
-        this.add.image(296, y + 3, `portrait_${charById(s.character).id}`).setScale(0.16);
-        if (me) { const bar = this.add.rectangle(W / 2, y + 3, W - 20, 13).setStrokeStyle(1, 0xffd23f); this.tweens.add({ targets: bar, alpha: 0.2, yoyo: true, repeat: -1, duration: 220 }); }
+        txt(this, 10, y, `${String(i + 1).padStart(2, ' ')}.`, { color: col });
+        txt(this, 38, y, s.nickname, { color: col });
+        txt(this, 152, y, pad(s.score), { color: col });
+        this.add.image(238, y + 3, `portrait_${charById(s.character).id}`).setScale(0.16);
+        if (me) { const bar = this.add.rectangle(W / 2, y + 3, W - 12, 13).setStrokeStyle(1, 0xffd23f); this.tweens.add({ targets: bar, alpha: 0.2, yoyo: true, repeat: -1, duration: 220 }); }
       });
     }
     this.backAt = this.time.now + 9000;

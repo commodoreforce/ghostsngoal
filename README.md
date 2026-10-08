@@ -73,6 +73,12 @@ GNG_CONFIG=$PWD/scripts/test/config.php php -S localhost:8000 -t server
 - **Filtro nomi**: parole vietate, con riconoscimento di varianti tipo D10 o C4ZZ0. Con `=` davanti si blocca solo la parola intera.
 - **Statistiche**: partite, personaggi, livello raggiunto, cause di morte. Dati anonimi: gli IP non sono mai salvati in chiaro.
 
+## Effetto CRT
+
+Shader WebGL in `game/src/systems/crt.js`, basato su [CRTFilter](https://github.com/Ichiaka/CRTFilter) di Aka (licenza MIT). Se il browser non supporta WebGL resta un effetto leggero in CSS. Si spegne con il pulsante CRT.
+
 ## Sostituire la grafica provvisoria
 
-Gli sprite provvisori sono generati in `game/src/systems/textures.js`. Gli sprite veri useranno **le stesse chiavi e gli stessi nomi dei fotogrammi** (es. `pl_shpendi_base`, fotogrammi `idle0`, `run0`…): il resto del gioco non cambia. Le varianti (oro, senza maglia) si ottengono in codice dalla palette.
+Risoluzione nativa **256x224**, la stessa di Ghosts'n Goblins, mostrata in 4:3 come su un monitor da cabinato. Il gioco disegna **20 fotogrammi al secondo** (`ARCADE_FPS` in `game/src/main.js`) per il movimento a scatti dei cabinati; la fisica resta calcolata a 60 passi al secondo.
+
+Il personaggio occupa un fotogramma di **30x40 pixel**. Gli sprite provvisori sono generati in `game/src/systems/textures.js`. Gli sprite veri useranno **le stesse chiavi e gli stessi nomi dei fotogrammi** (es. `pl_shpendi_base`, fotogrammi `idle0`, `run0`…): il resto del gioco non cambia. Le varianti (oro, senza maglia) si ottengono in codice dalla palette.

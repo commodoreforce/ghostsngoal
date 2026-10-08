@@ -1,6 +1,7 @@
 // Testi in pixel font e piccoli effetti ricorrenti.
-export const W = 320;
-export const H = 240;
+// risoluzione nativa di Ghosts'n Goblins (Capcom, 1985): 256x224, mostrata in 4:3 come su un CRT
+export const W = 256;
+export const H = 224;
 export const FONT = '"Press Start 2P", monospace';
 
 export const C = {
@@ -53,7 +54,7 @@ export function crtOut(scene, next, data) {
   });
 }
 
-export function makeLightTexture(scene, key = 'light', r = 52) {
+export function makeLightTexture(scene, key = 'light', r = 66) {
   if (scene.textures.exists(key)) return;
   const tex = scene.textures.createCanvas(key, r * 2, r * 2);
   const ctx = tex.getContext();

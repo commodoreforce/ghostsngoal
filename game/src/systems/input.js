@@ -19,6 +19,7 @@ class InputHub {
     this.pad = {};       // joypad
     this.state = {};
     this.prev = {};
+    this.latch = {};     // pressioni brevissime tra un fotogramma e l'altro (il gioco gira a 20 fps)
     this.lastTyped = [];  // per l'inserimento del nome e della parola magica
     this.anyListeners = new Set();
     for (const b of BUTTONS) { this.state[b] = false; this.prev[b] = false; }
@@ -28,7 +29,7 @@ class InputHub {
     window.addEventListener('keydown', (e) => {
       if (e.target && e.target.tagName === 'INPUT') return; // si sta scrivendo nella parola magica
       const b = KEYMAP[e.code];
-      if (b) { this.keys[b] = true; e.preventDefault(); }
+      if (b) { if (!this.keys[b]) this.latch[b] = true; this.keys[b] = true; e.preventDefault(); }
       if (e.key.length === 1 || e.key === 'Backspace') this.lastTyped.push(e.key);
       this.anyListeners.forEach((fn) => fn());
     });
@@ -47,7 +48,7 @@ class InputHub {
     if (!el) return;
     const down = (e) => {
       e.preventDefault();
-      this.touch[name] = true; el.classList.add('pressed');
+      this.touch[name] = true; this.latch[name] = true; el.classList.add('pressed');
       if (navigator.vibrate) navigator.vibrate(8);
       this.anyListeners.forEach((fn) => fn());
     };
@@ -118,8 +119,9 @@ class InputHub {
     this.pollPad();
     for (const k of BUTTONS) {
       this.prev[k] = this.state[k];
-      this.state[k] = !!(this.keys[k] || this.touch[k] || this.pad[k]);
+      this.state[k] = !!(this.keys[k] || this.touch[k] || this.pad[k] || this.latch[k]);
     }
+    this.latch = {};
   }
 
   down(k) { return this.state[k]; }

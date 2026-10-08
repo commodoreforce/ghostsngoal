@@ -38,7 +38,7 @@ export class LevelScene extends Phaser.Scene {
     this.hazards = [];
     this.leds = [];
     this.wavesDone = new Set();
-    this.lastZombie = this.time.now + 2500; // qualche secondo di respiro all'inizio
+    this.lastZombie = this.time.now + 4000; // qualche secondo di respiro all'inizio
     this.combo = 0;
     this.lastKill = 0;
     this.hitStopUntil = 0;
@@ -55,7 +55,7 @@ export class LevelScene extends Phaser.Scene {
     this.buildFx();
 
     const startX = this.fromCheckpoint ? (L.checkpoint + 2) * T : 2.5 * T;
-    this.player = new Player(this, startX, GROUND_Y - 20, Run.character);
+    this.player = new Player(this, startX, GROUND_Y - 24, Run.character);
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setDeadzone(24, 60);
     this.cameras.main.setFollowOffset(-30, 0);
@@ -84,13 +84,44 @@ export class LevelScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------ mondo
+  // Parallasse a più piani, come nei platform 16 bit: ogni piano scorre a una velocità diversa,
+  // e il prato in campo scorre "a righe" (ogni striscia più veloce di quella sopra).
   buildBackground() {
-    this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0).setScrollFactor(0).setDepth(-10);
-    this.bgStadium = this.add.tileSprite(0, 30, W, 240, 'bg_stadium').setOrigin(0).setScrollFactor(0).setDepth(-9);
-    this.bgPitch = this.add.tileSprite(0, 0, W, 240, 'bg_pitch').setOrigin(0).setScrollFactor(0).setDepth(-8.5).setAlpha(0);
-    this.bgNear = this.add.tileSprite(0, 0, W, 240, 'bg_near').setOrigin(0).setScrollFactor(0).setDepth(-8);
-    this.fogBack = this.add.tileSprite(0, 160, W, 60, 'fog').setOrigin(0).setScrollFactor(0).setDepth(-7).setAlpha(0.8);
-    this.fogFront = this.add.tileSprite(0, 186, W, 60, 'fog').setOrigin(0).setScrollFactor(0).setDepth(46).setAlpha(0.45);
+    const layer = (key, y, h, depth, factor, alpha = 1) => {
+      const ts = this.add.tileSprite(0, y, W, h, key).setOrigin(0).setScrollFactor(0).setDepth(depth).setAlpha(alpha);
+      ts.factor = factor;
+      this.parallax.push(ts);
+      return ts;
+    };
+    this.parallax = [];
+    this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0).setScrollFactor(0).setDepth(-12);
+    this.bgClouds = layer('clouds', 0, 90, -11.5, 0.03);
+    this.bgClouds.drift = 0.004;
+    this.bgCity = layer('bg_city', 0, H, -11, 0.08);
+    this.bgStadium = layer('bg_stadium', 24, H, -10, 0.18);
+    this.bgNear = layer('bg_near', 0, H, -9, 0.38);
+    this.bgStands = layer('bg_stands0', 0, H, -9.5, 0.3, 0);
+    this.fogBack = layer('fog', 150, 60, -8, 0.5, 0.8);
+    this.fogBack.drift = 0.01;
+    // prato a righe (line scroll): 6 strisce da 7 px, dalla più lenta alla più veloce
+    this.pitchRows = [];
+    for (let i = 0; i < 6; i++) {
+      const y = 166 + i * 7;
+      const row = this.add.tileSprite(0, y, W, 7, 'bg_pitch').setOrigin(0).setScrollFactor(0).setDepth(-8.5).setAlpha(0);
+      row.tilePositionY = y;
+      row.factor = 0.45 + i * 0.1;
+      this.pitchRows.push(row);
+      this.parallax.push(row);
+    }
+    // primo piano davanti a tutto, più veloce della telecamera
+    this.fgCemetery = layer('fg_cemetery', 0, H, 47, 1.35);
+    this.fgPitch = layer('fg_pitch', 0, H, 47, 1.35, 0);
+    this.fogFront = layer('fog', 178, 60, 46, 1.2, 0.4);
+    this.fogFront.drift = 0.02;
+    // la curva fantasma "balla" a tempo
+    this.time.addEvent({ delay: 420, loop: true, callback: () => {
+      this.bgStands.setTexture(this.bgStands.texture.key === 'bg_stands0' ? 'bg_stands1' : 'bg_stands0');
+    } });
   }
 
   addSolid(x, y, w, h) {
@@ -215,8 +246,8 @@ export class LevelScene extends Phaser.Scene {
     this.hudBoost = this.add.rectangle(W / 2 - 40, H - 10, 80, 4, 0xffd23f).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D).setVisible(false);
     this.hudBoostIcon = this.add.image(W / 2 - 50, H - 10, 'seahorse').setScale(0.75).setScrollFactor(0).setDepth(D).setVisible(false);
     // barra del boss
-    this.bossBarBg = this.add.rectangle(W / 2, 32, 200, 7, 0x000000).setStrokeStyle(1, 0xf4f4f0).setScrollFactor(0).setDepth(D).setVisible(false);
-    this.bossBar = this.add.rectangle(W / 2 - 99, 32, 198, 5, 0xff3b3b).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D).setVisible(false);
+    this.bossBarBg = this.add.rectangle(W / 2, 32, 160, 7, 0x000000).setStrokeStyle(1, 0xf4f4f0).setScrollFactor(0).setDepth(D).setVisible(false);
+    this.bossBar = this.add.rectangle(W / 2 - 79, 32, 158, 5, 0xff3b3b).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D).setVisible(false);
     this.bossName = txt(this, W / 2, 38, '', { color: C.white, fixed: true, depth: D, ox: 0.5 });
   }
 
@@ -250,16 +281,18 @@ export class LevelScene extends Phaser.Scene {
     const cam = this.cameras.main;
     if (!this.bossActive) cam.followOffset.x = Phaser.Math.Linear(cam.followOffset.x, -P.facing * 34, 0.04);
 
-    // parallasse
+    // parallasse: scrolling a pixel interi, come l'hardware dell'epoca
     const sx = cam.scrollX;
-    this.bgStadium.tilePositionX = sx * 0.12;
-    this.bgNear.tilePositionX = sx * 0.4;
-    this.bgPitch.tilePositionX = sx * 0.6;
-    this.fogBack.tilePositionX = sx * 0.55 + time * 0.01;
-    this.fogFront.tilePositionX = sx * 1.25 + time * 0.02;
+    for (const l of this.parallax) l.tilePositionX = Math.round(sx * l.factor + (l.drift ? time * l.drift : 0));
+    // passaggio dall'esterno dello stadio al campo
     const inB = sx > (L.checkpoint - 8) * T;
-    this.bgPitch.setAlpha(Phaser.Math.Linear(this.bgPitch.alpha, inB ? 1 : 0, 0.05));
-    this.bgNear.setAlpha(1 - this.bgPitch.alpha);
+    const k = Phaser.Math.Linear(this.bgStands.alpha, inB ? 1 : 0, 0.08);
+    this.bgStands.setAlpha(k);
+    this.pitchRows.forEach((r) => r.setAlpha(k));
+    this.fgPitch.setAlpha(k);
+    this.bgNear.setAlpha(1 - k);
+    this.fgCemetery.setAlpha(1 - k);
+    this.bgStadium.setAlpha(1 - k * 0.7);
 
     if (P.state === 'play' || P.state === 'hurt') {
       // buche
@@ -371,7 +404,7 @@ export class LevelScene extends Phaser.Scene {
     for (let k = 0; k < 8; k++) {
       // davanti al giocatore più spesso che dietro, mai troppo vicino
       const side = Math.random() < 0.7 ? P.facing : -P.facing;
-      const x = P.x + side * Phaser.Math.Between(56, 140);
+      const x = P.x + side * Phaser.Math.Between(96, 150);
       const cam = this.cameras.main;
       if (x < cam.scrollX + 12 || x > cam.scrollX + W - 12 || x > this.arenaX - 16) continue;
       if (this.isGround(x)) return x;
@@ -657,7 +690,7 @@ export class LevelScene extends Phaser.Scene {
     });
   }
 
-  updateBossBar(f) { this.bossBar.width = 198 * Phaser.Math.Clamp(f, 0, 1); }
+  updateBossBar(f) { this.bossBar.width = 158 * Phaser.Math.Clamp(f, 0, 1); }
 
   warn(x, y, sym = '!') {
     const w = txt(this, x, y, sym, { size: 16, color: C.gold, ox: 0.5, oy: 1, stroke: '#000', strokeThickness: 3, depth: 90 });
@@ -789,8 +822,8 @@ export class LevelScene extends Phaser.Scene {
     let delay = 900;
     rows.forEach(([label, value]) => {
       this.time.delayedCall(delay, () => {
-        txt(this, 40, y, label, { fixed: true, depth: 120, color: C.ghost });
-        const v = txt(this, 280, y, '0', { fixed: true, depth: 120, ox: 1 });
+        txt(this, 22, y, label, { fixed: true, depth: 120, color: C.ghost });
+        const v = txt(this, W - 22, y, '0', { fixed: true, depth: 120, ox: 1 });
         const counter = { n: 0 };
         this.tweens.add({
           targets: counter, n: value, duration: Math.min(1200, 200 + value / 8),
@@ -803,12 +836,12 @@ export class LevelScene extends Phaser.Scene {
       delay += 1500;
     });
     this.time.delayedCall(delay + 300, () => {
-      txt(this, 40, y + 6, t('total'), { fixed: true, depth: 120, color: C.gold });
-      txt(this, 280, y + 6, pad(Run.score), { fixed: true, depth: 120, ox: 1, color: C.gold });
+      txt(this, 22, y + 6, t('total'), { fixed: true, depth: 120, color: C.gold });
+      txt(this, W - 22, y + 6, pad(Run.score), { fixed: true, depth: 120, ox: 1, color: C.gold });
       LocalBest.set(Run.score);
     });
     this.time.delayedCall(delay + 2400, () => {
-      center(this, 196, t('demoEnd'), { fixed: true, depth: 120, color: C.orange, wrap: 300 });
+      center(this, 184, t('demoEnd'), { fixed: true, depth: 120, color: C.orange, wrap: 230 });
     });
     this.time.delayedCall(delay + 5200, () => this.scene.start('NameEntry', { cleared: true }));
   }
@@ -852,14 +885,14 @@ export class LevelScene extends Phaser.Scene {
     else {
       // ciclo: accese 4,5 s, preavviso con sfarfallio, spente 3 s
       this.lightTimer += delta;
-      const cycle = this.lightTimer % 8100;
+      const cycle = this.lightTimer % 7300;
       const prevOn = this.lightsOn;
       if (cycle < 4500) this.lightsOn = true;
       else if (cycle < 5100) this.lightsOn = (time >> 6) % 2 === 0;
       else this.lightsOn = false;
       if (prevOn && !this.lightsOn && cycle >= 5100 && cycle < 5200) Sfx.thunder();
     }
-    const target = this.lightsOn ? 0 : 0.9;
+    const target = this.lightsOn ? 0 : 0.82;
     this.darkness = Phaser.Math.Linear(this.darkness, target, this.lightsOn ? 0.15 : 0.3);
     if (this.darkness < 0.02) { this.darkRT.setVisible(false); return; }
     const cam = this.cameras.main;
@@ -867,7 +900,7 @@ export class LevelScene extends Phaser.Scene {
     rt.setVisible(true);
     rt.clear();
     rt.fill(0x000000, this.darkness);
-    rt.erase('light', P.x - cam.scrollX - 52, P.y - cam.scrollY - 52);
+    rt.erase('light', P.x - cam.scrollX - 66, P.y - cam.scrollY - 66);
     // i cartelloni LED restano accesi anche al buio
     for (const led of this.leds) {
       const lx = led.x - cam.scrollX;

@@ -1,7 +1,7 @@
 // Stato della partita in corso, condiviso fra le scene.
 import { LocalBest } from './api.js';
 
-export const EXTRA_LIFE_AT = [30000, 80000];
+export const EXTRA_LIFE_AT = [20000, 60000];
 export const EXTRA_LIFE_EVERY = 100000;
 
 export const Run = {

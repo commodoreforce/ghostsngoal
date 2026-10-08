@@ -18,13 +18,13 @@ export class IntroScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#0a0710');
     const g = this.add.graphics();
     // magazzino: scaffali con maglie piegate
-    g.fillStyle(0x1a1420, 1).fillRect(0, 0, W, 180);
-    g.fillStyle(0x120d18, 1).fillRect(0, 180, W, 60);
+    g.fillStyle(0x1a1420, 1).fillRect(0, 0, W, 168);
+    g.fillStyle(0x120d18, 1).fillRect(0, 168, W, 56);
     for (let s = 0; s < 3; s++) {
-      g.fillStyle(0x3a2a1e, 1).fillRect(20, 60 + s * 36, 120, 4).fillRect(190, 60 + s * 36, 110, 4);
+      g.fillStyle(0x3a2a1e, 1).fillRect(10, 54 + s * 34, 92, 4).fillRect(154, 54 + s * 34, 92, 4);
       for (let k = 0; k < 7; k++) {
-        g.fillStyle(k % 2 ? 0xf4f4f0 : 0x16161c, 1).fillRect(24 + k * 16, 50 + s * 36, 12, 10);
-        if (k < 6) g.fillStyle(k % 2 ? 0x16161c : 0xf4f4f0, 1).fillRect(194 + k * 17, 50 + s * 36, 12, 10);
+        if (k < 6) g.fillStyle(k % 2 ? 0xf4f4f0 : 0x3a3a46, 1).fillRect(13 + k * 15, 44 + s * 34, 11, 10);
+        if (k < 6) g.fillStyle(k % 2 ? 0x3a3a46 : 0xf4f4f0, 1).fillRect(157 + k * 15, 44 + s * 34, 11, 10);
       }
     }
     // lampadina appesa
@@ -33,12 +33,12 @@ export class IntroScene extends Phaser.Scene {
     this.glow = this.add.circle(W / 2, 34, 60, 0xffe7a0, 0.08);
     this.dark = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0).setDepth(5);
 
-    this.pet = this.add.image(150, 168, 'petrosino').setDepth(6);
-    this.bag = this.add.image(124, 176, 'kitbag').setDepth(6);
-    this.tweens.add({ targets: this.pet, y: 166, yoyo: true, repeat: -1, duration: 420 });
+    this.pet = this.add.image(128, 154, 'petrosino').setDepth(6);
+    this.bag = this.add.image(104, 162, 'kitbag').setDepth(6);
+    this.tweens.add({ targets: this.pet, y: 152, yoyo: true, repeat: -1, duration: 420 });
 
-    this.caption = center(this, 196, '', { color: C.white, wrap: 300 }).setDepth(10);
-    this.caption2 = center(this, 222, '', { color: C.grey, wrap: 300 }).setDepth(10);
+    this.caption = center(this, 180, '', { color: C.white, wrap: 240 }).setDepth(10);
+    this.caption2 = center(this, 204, '', { color: C.grey, wrap: 240 }).setDepth(10);
 
     const seq = [
       [300, () => this.say(t('intro1'))],
@@ -77,9 +77,9 @@ export class IntroScene extends Phaser.Scene {
 
   countAppears() {
     this.cameras.main.flash(120, 255, 255, 255);
-    this.count = this.add.sprite(200, 150, 'count').play('count_fly').setDepth(8).setScale(1.5);
+    this.count = this.add.sprite(176, 136, 'count').play('count_fly').setDepth(8).setScale(1.5);
     this.count.setAlpha(0);
-    this.tweens.add({ targets: this.count, alpha: 1, x: 168, duration: 400 });
+    this.tweens.add({ targets: this.count, alpha: 1, x: 146, duration: 400 });
     this.time.delayedCall(700, () => {
       Sfx.hurt();
       this.tweens.killTweensOf(this.pet);
@@ -93,7 +93,7 @@ export class IntroScene extends Phaser.Scene {
     this.dark.setAlpha(0.5);
     this.cameras.main.shake(300, 0.01);
     Sfx.explosion();
-    const big = center(this, 96, t('kidnapped'), { color: C.red, stroke: '#000', strokeThickness: 3 }).setDepth(12);
+    const big = center(this, 80, t('kidnapped'), { color: C.red, stroke: '#000', strokeThickness: 3, wrap: 230 }).setDepth(12);
     this.tweens.add({ targets: big, alpha: 0.2, yoyo: true, repeat: -1, duration: 160 });
     this.say(t('intro3'));
   }

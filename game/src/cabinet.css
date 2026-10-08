@@ -242,3 +242,6 @@ body.crt-off #game canvas { filter: none; }
 @media (hover: hover) and (pointer: fine) {
   .panel { min-height: calc(var(--u) * 34); }
 }
+
+/* con il tubo catodico in WebGL attivo, l'effetto CSS di riserva si spegne */
+body.crt-gl .crt { display: none; }

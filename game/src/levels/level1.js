@@ -29,9 +29,11 @@ export const LEVEL1 = {
   crates: [
     { x: 17, row: 12, item: 'pumpkinGold' },
     { x: 52, row: 8, item: 'seahorse' },
+    { x: 61, row: 12, item: 'shirt' },
     { x: 94, row: 12, item: 'shirt' },
     { x: 143, row: 10, item: 'shirt' },
     { x: 162, row: 6, item: 'seahorse' },
+    { x: 188, row: 12, item: 'shirt' },
     { x: 232, row: 12, item: 'piadina' },
   ],
   // zucche da raccogliere: archi sopra le buche e premi sulle piattaforme alte
@@ -41,21 +43,21 @@ export const LEVEL1 = {
   ],
   // ondate a comparsa: quando il bordo destro dello schermo arriva alla tile `at`
   waves: [
-    { at: 30, type: 'bat', n: 2 }, { at: 46, type: 'pumpkin', n: 1 }, { at: 62, type: 'bat', n: 2 },
-    { at: 80, type: 'pumpkin', n: 2 }, { at: 100, type: 'bat', n: 3 },
+    { at: 30, type: 'bat', n: 1 }, { at: 46, type: 'pumpkin', n: 1 }, { at: 62, type: 'bat', n: 2 },
+    { at: 80, type: 'pumpkin', n: 2 }, { at: 100, type: 'bat', n: 2 },
     { at: 132, type: 'ghost', n: 2 }, { at: 150, type: 'pumpkin', n: 2 }, { at: 162, type: 'ghost', n: 2 },
-    { at: 176, type: 'bat', n: 3 }, { at: 192, type: 'ghost', n: 3 }, { at: 204, type: 'pumpkin', n: 2 },
-    { at: 216, type: 'ghost', n: 3 }, { at: 226, type: 'bat', n: 3 },
+    { at: 176, type: 'bat', n: 2 }, { at: 192, type: 'ghost', n: 2 }, { at: 204, type: 'pumpkin', n: 2 },
+    { at: 216, type: 'ghost', n: 2 }, { at: 226, type: 'bat', n: 2 },
   ],
   // zombie che emergono dal terreno, a ritmo continuo, in questi tratti
   zombieZones: [
-    { from: 4, to: 118, every: 2300, max: 4, sliders: 0.25 },
-    { from: 124, to: 238, every: 3000, max: 3, sliders: 0.4 },
+    { from: 6, to: 118, every: 4200, max: 2, sliders: 0.08 },
+    { from: 126, to: 238, every: 4600, max: 2, sliders: 0.15 },
   ],
   goals: [124, 236],
   ledFrom: 126, ledTo: 234, ledStep: 6,
   checkpoint: 121,
   darkFrom: 124, darkTo: 240,
   arena: 242,
-  timeA: 120, timeB: 150,
+  timeA: 150, timeB: 180,
 };
