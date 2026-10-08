@@ -1,5 +1,5 @@
 // Animazioni condivise, create una volta sola all'accensione.
-import { CHARACTERS } from '../data/characters.js';
+import { CHARACTERS, KITS, hasKits, texPrefix } from '../data/characters.js';
 
 export function buildAnims(scene) {
   const a = scene.anims;
@@ -20,8 +20,9 @@ export function buildAnims(scene) {
     if (c.id === 'shpendi') vars.push('gold');
     if (c.id === 'ciofi') vars.push('mane', 'mane_naked');
     if (c.id === 'klinsmann') vars.push('hero', 'hero_naked');
-    for (const v of vars) {
-      const tex = `pl_${c.id}_${v}`;
+    const kits = hasKits(c) ? KITS.map((k) => k.id) : ['home'];
+    for (const kit of kits) for (const v of vars) {
+      const tex = `${texPrefix(c.id, kit)}_${v}`;
       mk(`${tex}_idle`, tex, ['idle0', 'idle1'], 2);
       mk(`${tex}_run`, tex, ['run0', 'run1', 'run2', 'run3'], 10);
       mk(`${tex}_cheer`, tex, ['cheer0', 'cheer1'], 5);

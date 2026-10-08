@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Input } from '../systems/input.js';
 import { Sfx, playMusic, stopMusic } from '../systems/sfx.js';
 import { Api, Unlock } from '../systems/api.js';
-import { CHARACTERS } from '../data/characters.js';
+import { CHARACTERS, KITS, hasKits, texPrefix } from '../data/characters.js';
 import { Run } from '../systems/state.js';
 import { t, getLang } from '../i18n.js';
 import { center, txt, C, W, H } from '../systems/ui.js';
@@ -21,6 +21,7 @@ export class SelectScene extends Phaser.Scene {
     this.idx = Math.max(0, CHARACTERS.findIndex((c) => c.id === (this.registry.get('lastChar') || 'shpendi')));
     this.locked = false;   // input bloccato durante animazioni
     this.magicOpen = false;
+    this.kitIdx = Math.max(0, KITS.findIndex((k) => k.id === (this.registry.get('lastKit') || 'home')));
 
     center(this, 6, t('choose'), { color: C.orange });
 
@@ -41,8 +42,10 @@ export class SelectScene extends Phaser.Scene {
       for (let s = 0; s < 6; s++) segs.push(this.add.rectangle(162 + s * 12, y + 3, 10, 4, 0xff7a1a).setOrigin(0, 0.5).setVisible(false));
       this.bars.push({ key: k, segs, box });
     });
-    this.passiveText = txt(this, 10, 108, '', { color: C.ghost, wrap: 236, lineSpacing: 2 });
-    this.boostText = txt(this, 10, 128, '', { color: C.gold, wrap: 236, lineSpacing: 2 });
+    this.passiveText = txt(this, 10, 104, '', { color: C.ghost, wrap: 236, lineSpacing: 2 });
+    this.boostText = txt(this, 10, 124, '', { color: C.gold, wrap: 236, lineSpacing: 2 });
+    // scelta della maglia: su e giù (le tre maglie della stagione)
+    this.kitText = center(this, 139, '', { color: C.white });
 
     // fila dei personaggi
     this.slots = CHARACTERS.map((c, i) => {
@@ -69,7 +72,7 @@ export class SelectScene extends Phaser.Scene {
     const c = s.c;
     this.cursor.setX(26 + this.idx * 51);
     this.slots.forEach((o, i) => {
-      if (!o.isLocked) o.spr.play(i === this.idx ? `pl_${o.c.id}_base_run` : `pl_${o.c.id}_base_idle`, true);
+      if (!o.isLocked) o.spr.play(i === this.idx ? `${this.prefixFor(o.c)}_base_run` : `pl_${o.c.id}_base_idle`, true);
     });
     if (s.isLocked) {
       this.portrait.setTexture('portrait_locked');
@@ -78,6 +81,7 @@ export class SelectScene extends Phaser.Scene {
       this.numText.setText('');
       this.passiveText.setText(t('magicPrompt'));
       this.boostText.setText('');
+      this.kitText.setText('');
       this.bars.forEach((b) => b.segs.forEach((sg) => sg.setVisible(false)));
       return;
     }
@@ -88,6 +92,8 @@ export class SelectScene extends Phaser.Scene {
     this.numText.setText(c.number ? `#${c.number}` : '');
     this.passiveText.setText(c.passive[lang]);
     this.boostText.setText(`★ ${c.boost[lang]}`);
+    this.kitText.setText(hasKits(c) ? `${t('kit')}  ◀ ${KITS[this.kitIdx][lang]} ▶` : (c.look.coach ? t('kitFixedCoach') : t('kitFixedRetro')));
+    this.kitText.setColor(hasKits(c) ? C.white : C.grey);
     // le barre si riempiono una alla volta con un suono crescente
     if (this.barTimer) this.barTimer.remove();
     this.bars.forEach((b) => b.segs.forEach((sg) => sg.setVisible(false)));
@@ -109,6 +115,16 @@ export class SelectScene extends Phaser.Scene {
     if (over) this.overTween = this.tweens.add({ targets: shotBar.segs[5], alpha: 0.2, yoyo: true, repeat: -1, duration: 120 });
   }
 
+  prefixFor(c) { return texPrefix(c.id, hasKits(c) ? KITS[this.kitIdx].id : 'home'); }
+
+  changeKit(d) {
+    const c = this.slots[this.idx].c;
+    if (this.slots[this.idx].isLocked || !hasKits(c)) return;
+    this.kitIdx = (this.kitIdx + d + KITS.length) % KITS.length;
+    Sfx.select();
+    this.refresh(true);
+  }
+
   move(d) {
     this.idx = (this.idx + d + this.slots.length) % this.slots.length;
     Sfx.blip();
@@ -123,7 +139,9 @@ export class SelectScene extends Phaser.Scene {
     Sfx.confirm();
     const c = s.c;
     this.registry.set('lastChar', c.id);
-    s.spr.play(`pl_${c.id}_base_cheer`);
+    s.spr.play(`${this.prefixFor(c)}_base_cheer`);
+    const kit = hasKits(c) ? KITS[this.kitIdx].id : 'home';
+    this.registry.set('lastKit', KITS[this.kitIdx].id);
     // lo speaker annuncia il giocatore come alla lettura delle formazioni (voce vera in arrivo)
     const it = getLang() === 'it';
     const pre = c.number ? (it ? `CON IL NUMERO ${c.number}...` : `WEARING NUMBER ${c.number}...`) : (c.id === 'diamanti' ? (it ? 'IN PANCHINA, IL MISTER...' : 'ON THE BENCH, THE GAFFER...') : (it ? 'DALLA LEGGENDA...' : 'FROM THE LEGENDS...'));
@@ -132,7 +150,7 @@ export class SelectScene extends Phaser.Scene {
     const b = center(this, H / 2 + 2, c.short + '!', { size: 16, color: C.white, stroke: '#ff7a1a', strokeThickness: 2 }).setDepth(11).setAlpha(0);
     this.time.delayedCall(700, () => { b.setAlpha(1); this.cameras.main.shake(200, 0.006); Sfx.daiburdel(); });
     this.time.delayedCall(2200, () => {
-      Run.reset(c.id);
+      Run.reset(c.id, kit);
       this.scene.start('Intro');
     });
     [box, a].forEach((o) => o.setAlpha(0));
@@ -199,6 +217,7 @@ export class SelectScene extends Phaser.Scene {
 
   closeMagic(silent) {
     this.magicOpen = false;
+    this.kitIdx = Math.max(0, KITS.findIndex((k) => k.id === (this.registry.get('lastKit') || 'home')));
     if (this.magicInput) { this.magicInput.remove(); this.magicInput = null; }
     if (this.magicClose) { this.magicClose.remove(); this.magicClose = null; }
     if (this.magicLayer && !silent) { this.magicLayer.destroy(); }
@@ -232,6 +251,8 @@ export class SelectScene extends Phaser.Scene {
     }
     if (Input.pressed('left')) this.move(-1);
     if (Input.pressed('right')) this.move(1);
+    if (Input.pressed('up')) this.changeKit(1);
+    if (Input.pressed('down')) this.changeKit(-1);
     if (Input.pressed('start') || Input.pressed('a')) this.confirm();
   }
 }

@@ -2,7 +2,7 @@
 // Quando arrivano gli sprite veri, basta caricarli con le stesse chiavi
 // e gli stessi nomi dei fotogrammi: il resto del gioco non cambia.
 
-import { CHARACTERS } from '../data/characters.js';
+import { CHARACTERS, KIT_COLORS, KITS, hasKits, texPrefix } from '../data/characters.js';
 
 const OUTLINE = '#0b0b10';
 const PAL = {
@@ -80,14 +80,15 @@ const POSES = {
   slide: { slide: true },
 };
 
-function playerColors(c, variant) {
+function playerColors(c, variant, kit = 'home') {
   const L = c.look;
+  const K = KIT_COLORS[kit] || KIT_COLORS.home;
   const col = {
     skin: L.skin, skinSh: shade(L.skin, 0.8), hair: L.hair,
-    shirt: PAL.white, shirtSh: PAL.whiteSh, trim: PAL.black,
-    shorts: PAL.black, sock: PAL.sock, sockBand: PAL.black, boot: PAL.boot,
+    shirt: K.shirt, shirtSh: K.shirtSh, trim: K.trim,
+    shorts: K.shorts, sock: K.sock, sockBand: K.sockBand, boot: PAL.boot,
   };
-  if (L.keeper) { col.shirt = '#2d2d36'; col.shirtSh = '#1d1d24'; col.trim = PAL.orange; }
+  if (L.keeper) { col.shirt = K.gk; col.shirtSh = K.gkSh; col.trim = K.gkTrim; }
   if (L.coach) { col.shirt = '#1b1b22'; col.shirtSh = '#101015'; col.trim = PAL.white; col.shorts = '#1b1b22'; col.sock = '#1b1b22'; col.sockBand = '#1b1b22'; }
   if (L.retro) { col.shirt = PAL.white; col.shirtSh = '#d8d8cc'; col.trim = PAL.black; }
   const v = variant || 'base';
@@ -100,9 +101,9 @@ function playerColors(c, variant) {
   return col;
 }
 
-function drawPlayer(ctx, ox, poseName, c, variant) {
+function drawPlayer(ctx, ox, poseName, c, variant, kit) {
   const p = POSES[poseName];
-  const col = playerColors(c, variant);
+  const col = playerColors(c, variant, kit);
   const L = c.look;
   const R = scaled(ctx, ox);
   const muscular = variant.includes('mane');
@@ -206,14 +207,17 @@ export function buildPlayerTextures(scene) {
     if (c.id === 'shpendi') variants.push('gold');
     if (c.id === 'ciofi') variants.push('mane', 'mane_naked');
     if (c.id === 'klinsmann') variants.push('hero', 'hero_naked');
-    for (const v of variants) {
-      const key = `pl_${c.id}_${v}`;
-      const { tex, ctx } = canvasTex(scene, key, PW * PLAYER_FRAMES.length, PH);
-      PLAYER_FRAMES.forEach((f, i) => {
-        drawPlayer(ctx, i * PW, f, c, v);
-        outline(ctx, i * PW, 0, PW, PH);
-      });
-      addFrames(tex, PLAYER_FRAMES, PW, PH);
+    const kits = hasKits(c) ? KITS.map((k) => k.id) : ['home'];
+    for (const kit of kits) {
+      for (const v of variants) {
+        const key = `${texPrefix(c.id, kit)}_${v}`;
+        const { tex, ctx } = canvasTex(scene, key, PW * PLAYER_FRAMES.length, PH);
+        PLAYER_FRAMES.forEach((f, i) => {
+          drawPlayer(ctx, i * PW, f, c, v, kit);
+          outline(ctx, i * PW, 0, PW, PH);
+        });
+        addFrames(tex, PLAYER_FRAMES, PW, PH);
+      }
     }
   }
 }

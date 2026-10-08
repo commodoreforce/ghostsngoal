@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Input } from '../systems/input.js';
 import { Sfx } from '../systems/sfx.js';
-import { charById, tuning } from '../data/characters.js';
+import { charById, tuning, hasKits, texPrefix } from '../data/characters.js';
 import { Run } from '../systems/state.js';
 
 const COYOTE_MS = 120;       // si può saltare poco dopo aver lasciato il bordo
@@ -11,8 +11,10 @@ const CHARGE_MS = 650;
 const INVULN_MS = 2200;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y, charId) {
-    super(scene, x, y, `pl_${charId}_base`, 'idle0');
+  constructor(scene, x, y, charId, kit = 'home') {
+    const prefix = texPrefix(charId, hasKits(charById(charId)) ? kit : 'home');
+    super(scene, x, y, `${prefix}_base`, 'idle0');
+    this.prefix = prefix;
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.scene = scene;
@@ -61,7 +63,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   applyLook() {
-    const key = `pl_${this.char.id}_${this.texVariant()}`;
+    const key = `${this.prefix}_${this.texVariant()}`;
     if (key !== this.currentTex) {
       const frame = this.frame ? this.frame.name : 'idle0';
       this.currentTex = key;

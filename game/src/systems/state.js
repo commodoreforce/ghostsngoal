@@ -6,6 +6,7 @@ export const EXTRA_LIFE_EVERY = 100000;
 
 export const Run = {
   character: 'shpendi',
+  kit: 'home',
   score: 0,
   lives: 3,
   level: 1,
@@ -18,8 +19,9 @@ export const Run = {
   deathCause: null,
   stats: { shots: 0, hits: 0, kills: 0, deaths: 0, boosts: 0 },
 
-  reset(character) {
+  reset(character, kit = 'home') {
     this.character = character;
+    this.kit = kit;
     this.score = 0; this.lives = 3; this.level = 1; this.loop = 1;
     this.token = null; this.startedAt = Date.now();
     this.nextLife = EXTRA_LIFE_AT[0]; this.lifeIdx = 0; this.levelReached = 1;

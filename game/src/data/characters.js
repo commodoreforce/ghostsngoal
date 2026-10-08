@@ -46,6 +46,22 @@ export const CHARACTERS = [
   },
 ];
 
+// Le tre maglie 2026-27. I colori qui sono PROVVISORI: vanno sostituiti con quelli ufficiali.
+// Con gli sprite veri le maglie si ottengono cambiando i colori in codice (un solo set di disegni).
+export const KITS = [
+  { id: 'home', it: 'CASA', en: 'HOME' },
+  { id: 'away', it: 'TRASFERTA', en: 'AWAY' },
+  { id: 'third', it: 'TERZA', en: 'THIRD' },
+];
+export const KIT_COLORS = {
+  home: { shirt: '#f4f4f0', shirtSh: '#c9c9d2', trim: '#16161c', shorts: '#16161c', sock: '#f4f4f0', sockBand: '#16161c', gk: '#2d2d36', gkSh: '#1d1d24', gkTrim: '#ff7a1a' },
+  away: { shirt: '#16161c', shirtSh: '#0b0b10', trim: '#f4f4f0', shorts: '#f4f4f0', sock: '#16161c', sockBand: '#f4f4f0', gk: '#ffd23f', gkSh: '#c98a12', gkTrim: '#16161c' },
+  third: { shirt: '#4a5162', shirtSh: '#343a48', trim: '#ff7a1a', shorts: '#343a48', sock: '#4a5162', sockBand: '#ff7a1a', gk: '#7fd06a', gkSh: '#4e7a3e', gkTrim: '#16161c' },
+};
+// solo i giocatori in campo scelgono la maglia: il Mister ha la tuta, Hubner la maglia storica
+export const hasKits = (c) => !c.look.coach && !c.look.retro;
+export const texPrefix = (id, kit) => (!kit || kit === 'home' ? `pl_${id}` : `pl_${id}_${kit}`);
+
 export const charById = (id) => CHARACTERS.find((c) => c.id === id) || CHARACTERS[0];
 
 // Tradurre le barre in numeri di gioco
