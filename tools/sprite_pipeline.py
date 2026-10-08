@@ -1,6 +1,6 @@
 """Pipeline sprite: da un'immagine AI su verde a vera pixel art per il gioco.
 
-Uso:  python3 tools/sprite_pipeline.py input.png output.png --height 37 [--colors 24] [--no-ball]
+Uso:  python3 tools/sprite_pipeline.py input.png output.png --height 46 [--colors 24] [--no-ball]
 
 1. toglie lo sfondo verde (anche se non è perfettamente uniforme)
 2. ritaglia il personaggio
@@ -77,7 +77,7 @@ def process(path, height, colors, no_ball):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('input'); ap.add_argument('output')
-    ap.add_argument('--height', type=int, default=37)
+    ap.add_argument('--height', type=int, default=46)
     ap.add_argument('--colors', type=int, default=24)
     ap.add_argument('--no-ball', action='store_true')
     a = ap.parse_args()

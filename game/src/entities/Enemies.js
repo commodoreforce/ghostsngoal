@@ -54,8 +54,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 // Zombie che emerge dal terreno, poi cammina verso di te. Alcuni entrano in scivolata.
 export class Zombie extends Enemy {
   constructor(scene, x, groundY, slider = false) {
-    super(scene, x, groundY - 15, 'zombie', 'rise0', { hp: 1, points: 100, eyeOffset: { x: 4, y: -10 } });
-    this.body.setSize(12, 25).setOffset(4, 5);
+    super(scene, x, groundY - 17, 'zombie', 'rise0', { hp: 1, points: 100, eyeOffset: { x: 4, y: -11 } });
+    this.body.setSize(14, 28).setOffset(4, 6);
     this.slider = slider;
     this.speed = Phaser.Math.Between(20, 30);
     this.rising = true;
@@ -78,7 +78,7 @@ export class Zombie extends Enemy {
     const dx = player.x - this.x;
     const dir = Math.sign(dx) || 1;
     if (this.sliding) {
-      if (time > this.slideEnd) { this.sliding = false; this.play('zombie_walk'); this.body.setSize(12, 25).setOffset(4, 5); }
+      if (time > this.slideEnd) { this.sliding = false; this.play('zombie_walk'); this.body.setSize(14, 28).setOffset(4, 6); }
       return;
     }
     this.setFlipX(dir < 0);
@@ -93,7 +93,7 @@ export class Zombie extends Enemy {
         if (!this.active || !this.alive) return;
         this.clearTint();
         this.anims.stop(); this.setFrame('slide');
-        this.body.setSize(18, 10).setOffset(1, 20);
+        this.body.setSize(20, 11).setOffset(1, 22);
         this.body.setVelocityX(dir * 130);
       });
     }
@@ -105,7 +105,7 @@ export class Bat extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'bat', 'bat0', { hp: 1, points: 100, eyeOffset: { x: 0, y: -1 } });
     this.body.setAllowGravity(false);
-    this.body.setSize(15, 9).setOffset(2, 2);
+    this.body.setSize(17, 10).setOffset(3, 3);
     this.baseY = y;
     this.t0 = Phaser.Math.Between(0, 1000);
     this.diveAt = scene.time.now + Phaser.Math.Between(2800, 4200);
@@ -144,7 +144,7 @@ export class Bat extends Enemy {
 export class Pumpkin extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'pumpkin', 'pk0', { hp: 2, points: 200, eyeOffset: { x: 0, y: -1 } });
-    this.body.setSize(15, 14).setOffset(1, 4);
+    this.body.setSize(17, 15).setOffset(1, 4);
     this.nextHop = scene.time.now + 600;
   }
 
@@ -167,7 +167,7 @@ export class Ghost extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'ghost', 'gh0', { hp: 1, points: 300, eyeOffset: { x: 0, y: -2 } });
     this.body.setAllowGravity(false);
-    this.body.setSize(12, 15).setOffset(3, 3);
+    this.body.setSize(14, 17).setOffset(3, 3);
     this.t0 = Phaser.Math.Between(0, 3000);
     this.play('ghost_fly');
   }

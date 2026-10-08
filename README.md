@@ -81,4 +81,4 @@ Shader WebGL in `game/src/systems/crt.js`, basato su [CRTFilter](https://github.
 
 Risoluzione nativa **256x224**, la stessa di Ghosts'n Goblins, mostrata in 4:3 come su un monitor da cabinato. Il gioco disegna **20 fotogrammi al secondo** (`ARCADE_FPS` in `game/src/main.js`) per il movimento a scatti dei cabinati; la fisica resta calcolata a 60 passi al secondo.
 
-Il personaggio occupa un fotogramma di **30x40 pixel**. Gli sprite provvisori sono generati in `game/src/systems/textures.js`. Gli sprite veri useranno **le stesse chiavi e gli stessi nomi dei fotogrammi** (es. `pl_shpendi_base`, fotogrammi `idle0`, `run0`…): il resto del gioco non cambia. Le varianti (oro, senza maglia) si ottengono in codice dalla palette.
+Il personaggio è alto **46 pixel** in un fotogramma di **36x48** (sprite veri: si riducono con `tools/sprite_pipeline.py --height 46`). Gli sprite provvisori sono generati in `game/src/systems/textures.js`. Gli sprite veri useranno **le stesse chiavi e gli stessi nomi dei fotogrammi** (es. `pl_shpendi_base`, fotogrammi `idle0`, `run0`…): il resto del gioco non cambia. Le varianti (oro, senza maglia) si ottengono in codice dalla palette.

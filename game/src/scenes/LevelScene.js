@@ -55,7 +55,7 @@ export class LevelScene extends Phaser.Scene {
     this.buildFx();
 
     const startX = this.fromCheckpoint ? (L.checkpoint + 2) * T : 2.5 * T;
-    this.player = new Player(this, startX, GROUND_Y - 24, Run.character, Run.kit);
+    this.player = new Player(this, startX, GROUND_Y - 30, Run.character, Run.kit);
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setDeadzone(24, 60);
     this.cameras.main.setFollowOffset(-30, 0);

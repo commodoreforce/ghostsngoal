@@ -21,7 +21,9 @@ function canvasTex(scene, key, w, h) {
 function rect(ctx, x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
 // disegno in scala: gli sprite sono pensati su una griglia piccola e ingranditi
 // arrotondando i bordi (non i pixel), così restano pixel art pulita
-export const SC = 1.25;
+export const SC = 1.4;   // nemici e personaggi delle scene
+export const SCP = 1.5;  // giocatore: figura alta 46 px, la misura scelta per gli sprite veri
+export const SCB = 1.5;  // boss
 function scaled(ctx, ox, S = SC) {
   return (x, y, w, h, c) => {
     const x0 = Math.round(x * S), y0 = Math.round(y * S);
@@ -30,6 +32,7 @@ function scaled(ctx, ox, S = SC) {
   };
 }
 const sz = (n) => Math.round(n * SC);
+const szB = (n) => Math.round(n * SCB);
 function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16);
   const f = (v) => Math.max(0, Math.min(255, Math.round(v * amt)));
@@ -58,7 +61,7 @@ function addFrames(tex, names, fw, fh) {
 // ---------------------------------------------------------------- giocatori
 export const PLAYER_FRAMES = ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'fall', 'kick', 'crouch',
   'crouchkick', 'up', 'hurt', 'ko0', 'ko1', 'cheer0', 'cheer1', 'slide'];
-export const PW = 30; export const PH = 40; // 24x32 di progetto, ingrandito x1.25
+export const PW = 36; export const PH = 48; // 24x32 di progetto, ingrandito x1.5: figura di 46 px
 
 const POSES = {
   idle0: { bob: 0, back: -1, front: 1, armF: 0, armB: 0 },
@@ -105,7 +108,7 @@ function drawPlayer(ctx, ox, poseName, c, variant, kit) {
   const p = POSES[poseName];
   const col = playerColors(c, variant, kit);
   const L = c.look;
-  const R = scaled(ctx, ox);
+  const R = scaled(ctx, ox, SCP);
   const muscular = variant.includes('mane');
   const naked = variant.includes('naked');
   const hero = variant.includes('hero') && !naked;
@@ -350,10 +353,10 @@ export function buildEnemyTextures(scene) {
   // Arbitro Non-Morto 40x56: idle0, idle1, throw, whistle, hurt
   {
     const names = ['ref0', 'ref1', 'refThrow', 'refWhistle', 'refHurt'];
-    const { tex, ctx } = canvasTex(scene, 'referee', sz(40) * names.length, sz(56));
+    const { tex, ctx } = canvasTex(scene, 'referee', szB(40) * names.length, szB(56));
     names.forEach((n, i) => {
-      const ox = i * sz(40);
-      const R = scaled(ctx, ox);
+      const ox = i * szB(40);
+      const R = scaled(ctx, ox, SCB);
       const b = n === 'ref1' ? 1 : 0;
       const skin = n === 'refHurt' ? '#f4f4f0' : '#8fbf7a';
       // gambe
@@ -374,9 +377,9 @@ export function buildEnemyTextures(scene) {
       if (n === 'refThrow') { R(30, 6, 5, 16, skin); R(31, 2, 5, 6, '#ffd23f'); R(2, 20, 6, 12, skin); }
       else if (n === 'refWhistle') { R(26, 14, 8, 5, skin); R(2, 20, 6, 12, skin); }
       else { R(2, 20 + b, 6, 14, skin); R(32, 20 + b, 6, 14, skin); }
-      outline(ctx, ox, 0, sz(40), sz(56));
+      outline(ctx, ox, 0, szB(40), szB(56));
     });
-    addFrames(tex, names, sz(40), sz(56));
+    addFrames(tex, names, szB(40), szB(56));
   }
   // cartellino giallo 6x8, onda del fischio 10x24, maxischermo VAR 56x34
   {

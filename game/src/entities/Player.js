@@ -44,9 +44,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.applyLook();
   }
 
-  standBody() { this.body.setSize(12, 32).setOffset(9, 8); }
-  crouchBody() { this.body.setSize(12, 21).setOffset(9, 19); }
-  slideBody() { this.body.setSize(20, 12).setOffset(5, 28); }
+  standBody() { this.body.setSize(15, 39).setOffset(11, 9); }
+  crouchBody() { this.body.setSize(15, 26).setOffset(11, 22); }
+  slideBody() { this.body.setSize(24, 15).setOffset(6, 33); }
 
   get boosted() { return this.scene.time.now < this.boostUntil; }
   get invulnerable() {
@@ -171,8 +171,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     let angle = 0; // gradi: 0 avanti, -45 su, 45 giù
     if (up) angle = -45;
     else if (airDown) angle = 45;
-    const ox = dir * 12;
-    const oy = up ? -22 : crouching ? 6 : airDown ? 5 : -2;
+    const ox = dir * 15;
+    const oy = up ? -27 : crouching ? 8 : airDown ? 6 : -2;
     const base = { x: this.x + ox, y: this.y + oy, dir, angle, charged, owner: this };
     if (fire) sc.spawnBall({ ...base, kind: 'fire' });
     else if (boostKind === 'shpendi') sc.spawnBall({ ...base, kind: 'gold' });

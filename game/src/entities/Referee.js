@@ -6,7 +6,7 @@ import { Sfx } from '../systems/sfx.js';
 // accovacciati, salto schiacciante, e il VAR CHECK che riavvolge il tempo.
 export class Referee extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, groundY, arena) {
-    super(scene, x, groundY - 35, 'referee', 'ref0');
+    super(scene, x, groundY - 42, 'referee', 'ref0');
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.level = scene;
@@ -20,7 +20,7 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
     this.points = 10000;
     this.kind = 'boss';
     this.setDepth(35);
-    this.body.setSize(30, 62).setOffset(10, 8);
+    this.body.setSize(36, 75).setOffset(12, 9);
     this.state = 'enter';
     this.nextAction = 0;
     this.varsDone = 0;
@@ -37,7 +37,7 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
   damage(n, fromX, ballY) {
     if (!this.alive || !this.vulnerable) return false;
     // colpi alla testa (al fischietto) valgono doppio: premia il colpo di testa
-    const head = ballY !== undefined && ballY < this.y - 12;
+    const head = ballY !== undefined && ballY < this.y - 15;
     const dmg = head ? n * 2 : n;
     this.hp -= dmg;
     if (head) this.level.spark(this.x + (this.flipX ? -6 : 6), this.y - 12);
@@ -56,7 +56,7 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
 
   tick(time, player) {
     if (!this.alive) return;
-    this.eyes.setPosition(this.x + (this.flipX ? -5 : 5), this.y - 23);
+    this.eyes.setPosition(this.x + (this.flipX ? -6 : 6), this.y - 27);
     this.history.push({ x: this.x, y: this.y, t: time });
     while (this.history.length && time - this.history[0].t > 3200) this.history.shift();
     if (this.state === 'var' || this.state === 'enter') return;
@@ -119,8 +119,8 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
       if (!this.alive) return;
       Sfx.whistle();
       const dir = this.flipX ? -1 : 1;
-      this.level.spawnWave(this.x + dir * 16, this.groundY - 36, dir * (p === 3 ? 135 : 110));
-      if (p === 3) this.level.time.delayedCall(500, () => { if (this.alive) this.level.spawnWave(this.x + dir * 16, this.groundY - 36, dir * 120); });
+      this.level.spawnWave(this.x + dir * 16, this.groundY - 40, dir * (p === 3 ? 135 : 110));
+      if (p === 3) this.level.time.delayedCall(500, () => { if (this.alive) this.level.spawnWave(this.x + dir * 16, this.groundY - 40, dir * 120); });
       this.level.time.delayedCall(p >= 2 ? 900 : 500, () => { if (this.alive) { this.state = 'idle'; this.play('ref_idle'); this.nextAction = this.level.time.now + 1300; } });
     });
   }
@@ -153,7 +153,7 @@ export class Referee extends Phaser.Physics.Arcade.Sprite {
       if (!this.alive) return;
       Sfx.rewind();
       lvl.tweens.add({
-        targets: this, x: past.x, y: Math.min(past.y, this.groundY - 35), duration: 900, ease: 'Sine.easeInOut',
+        targets: this, x: past.x, y: Math.min(past.y, this.groundY - 42), duration: 900, ease: 'Sine.easeInOut',
         onUpdate: () => this.setFlipX(!this.flipX),
         onComplete: () => {
           lvl.varEffect(false);
