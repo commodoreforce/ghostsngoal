@@ -64,22 +64,22 @@ class InputHub {
     this.bindButton('btnB', 'b');
     this.bindButton('btnStart', 'start');
 
-    // Joystick: l'area di tocco è tutto il riquadro, molto più grande del disegno
+    // Joystick "mobile": dove appoggi il pollice, nella metà sinistra del pannello,
+    // lì nasce il centro del joystick. Non serve centrare il disegno guardando il gioco.
     const stick = document.getElementById('stick');
-    if (!stick) return;
+    const zone = document.getElementById('stickZone');
+    if (!stick || !zone) return;
     const knob = stick.querySelector('.stick-knob');
     let pid = null;
+    let ox = 0, oy = 0;      // centro del joystick (dove è iniziato il tocco)
+    let radius = 40;
     const set = (e) => {
-      const r = stick.getBoundingClientRect();
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      let dx = e.clientX - cx, dy = e.clientY - cy;
-      const max = r.width * 0.32;
+      let dx = e.clientX - ox, dy = e.clientY - oy;
       const len = Math.hypot(dx, dy);
-      if (len > max) { dx = (dx / len) * max; dy = (dy / len) * max; }
+      if (len > radius) { dx = (dx / len) * radius; dy = (dy / len) * radius; }
       knob.style.transform = `translate(${dx}px, ${dy}px)`;
-      const dead = r.width * 0.09;
+      const on = len > radius * 0.22;
       const ang = Math.atan2(dy, dx);
-      const on = len > dead;
       // 8 direzioni con settori larghi in orizzontale (si corre più spesso di quanto si guardi su)
       const c = Math.cos(ang), s = Math.sin(ang);
       this.touch.left = on && c < -0.38;
@@ -87,17 +87,31 @@ class InputHub {
       this.touch.up = on && s < -0.55;
       this.touch.down = on && s > 0.55;
     };
-    const clear = () => {
+    const start = (e) => {
+      e.preventDefault();
+      pid = e.pointerId;
+      zone.setPointerCapture(pid);
+      const r = stick.getBoundingClientRect();
+      radius = r.width * 0.32;
+      // il disegno del joystick si sposta sotto il pollice
+      const restX = r.left + r.width / 2 - (stick._dx || 0), restY = r.top + r.height / 2 - (stick._dy || 0);
+      ox = e.clientX; oy = e.clientY;
+      stick._dx = ox - restX; stick._dy = oy - restY;
+      stick.style.transform = `translate(${stick._dx}px, ${stick._dy}px)`;
+      stick.classList.add('active');
+      set(e);
+      this.anyListeners.forEach((fn) => fn());
+    };
+    const clear = (e) => {
+      if (e && e.pointerId !== pid) return;
       pid = null; knob.style.transform = '';
+      stick._dx = 0; stick._dy = 0; stick.style.transform = ''; stick.classList.remove('active');
       this.touch.left = this.touch.right = this.touch.up = this.touch.down = false;
     };
-    stick.addEventListener('pointerdown', (e) => {
-      e.preventDefault(); pid = e.pointerId; stick.setPointerCapture(pid); set(e);
-      this.anyListeners.forEach((fn) => fn());
-    });
-    stick.addEventListener('pointermove', (e) => { if (e.pointerId === pid) set(e); });
-    stick.addEventListener('pointerup', clear);
-    stick.addEventListener('pointercancel', clear);
+    zone.addEventListener('pointerdown', start);
+    zone.addEventListener('pointermove', (e) => { if (e.pointerId === pid) set(e); });
+    zone.addEventListener('pointerup', clear);
+    zone.addEventListener('pointercancel', clear);
   }
 
   pollPad() {

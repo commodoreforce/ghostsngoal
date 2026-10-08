@@ -5,6 +5,7 @@ import { Api } from '../systems/api.js';
 import { Run } from '../systems/state.js';
 import { t } from '../i18n.js';
 import { center, C, W, H } from '../systems/ui.js';
+import { diveIn } from '../systems/layout.js';
 
 // Il rapimento di Petrosino. Si salta con un tasto.
 export class IntroScene extends Phaser.Scene {
@@ -101,7 +102,8 @@ export class IntroScene extends Phaser.Scene {
   finish() {
     if (this.done) return;
     this.done = true;
-    this.scene.start('Level', { fresh: true });
+    Sfx.charge();
+    diveIn(() => this.scene.start('Level', { fresh: true }));
   }
 
   update() {

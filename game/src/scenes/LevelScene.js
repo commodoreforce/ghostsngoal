@@ -79,6 +79,10 @@ export class LevelScene extends Phaser.Scene {
       playMusic('level1');
     });
     this.time.delayedCall(2700, () => { a.destroy(); b.destroy(); });
+    if (window.matchMedia && window.matchMedia('(pointer: fine)').matches && !this.fromCheckpoint) {
+      const legend = center(this, H - 30, t('legend'), { fixed: true, depth: 120, color: C.grey });
+      this.time.delayedCall(3600, () => this.tweens.add({ targets: legend, alpha: 0, duration: 400, onComplete: () => legend.destroy() }));
+    }
     stopMusic();
     if (this.fromCheckpoint) this.placeCheckpointFlag(true);
   }

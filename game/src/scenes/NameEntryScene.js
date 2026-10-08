@@ -6,6 +6,7 @@ import { Run } from '../systems/state.js';
 import { charById } from '../data/characters.js';
 import { t } from '../i18n.js';
 import { center, txt, pad, C, W, H } from '../systems/ui.js';
+import { surface } from '../systems/layout.js';
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-!'.split('');
 const MAX = 10;
@@ -19,6 +20,7 @@ export class NameEntryScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.setBackgroundColor('#07050f');
+    surface();
     playMusic('title');
     LocalBest.set(Run.score);
     this.phase = 'loading';
