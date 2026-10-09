@@ -5,8 +5,10 @@ Uso:  python3 tools/sprite_pipeline.py input.png output.png --height 46 [--color
 1. toglie lo sfondo verde (anche se non è perfettamente uniforme)
 2. ritaglia il personaggio
 3. lo riduce all'altezza voluta in pixel di gioco (media dei colori, niente sfumature inventate)
-4. limita la palette e ripulisce i bordi semitrasparenti
-5. aggiunge il contorno scuro da cabinato
+4. tiene solo il personaggio: scarta i pezzi staccati (arti doppi, frammenti)
+5. toglie l'alone verde dai bordi
+6. limita la palette e ripulisce i bordi semitrasparenti
+7. aggiunge il contorno scuro da cabinato
 """
 import argparse
 from PIL import Image, ImageFilter
@@ -24,6 +26,63 @@ def key_out(im):
             r, g, b, a = px[x, y]
             if is_green(r, g, b):
                 px[x, y] = (0, 0, 0, 0)
+    return im
+
+def keep_main_body(im, min_share=0.02):
+    """Tiene solo il pezzo connesso più grande (il personaggio) più quelli
+    che lo toccano quasi: elimina arti duplicati e frammenti sparsi."""
+    w, h = im.size
+    px = im.load()
+    seen = bytearray(w * h)
+    comps = []
+    for sy in range(h):
+        for sx in range(w):
+            i = sy * w + sx
+            if seen[i] or px[sx, sy][3] == 0:
+                continue
+            stack = [(sx, sy)]; seen[i] = 1; pts = []
+            while stack:
+                x, y = stack.pop(); pts.append((x, y))
+                for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                    if 0 <= nx < w and 0 <= ny < h:
+                        j = ny * w + nx
+                        if not seen[j] and px[nx, ny][3] > 0:
+                            seen[j] = 1; stack.append((nx, ny))
+            comps.append(pts)
+    if not comps:
+        return im
+    comps.sort(key=len, reverse=True)
+    main = comps[0]
+    total = sum(len(c) for c in comps)
+    removed = 0
+    for c in comps[1:]:
+        # un pezzo piccolo ma molto vicino al corpo (es. una punta di capelli) si tiene
+        if len(c) < total * min_share:
+            for x, y in c: px[x, y] = (0, 0, 0, 0)
+            removed += len(c)
+            continue
+        for x, y in c: px[x, y] = (0, 0, 0, 0)
+        removed += len(c)
+    if removed:
+        print(f'  tolti {len(comps) - 1} frammenti staccati ({removed} px)')
+    return im
+
+def despill(im):
+    """Toglie la sfumatura verde lasciata dallo sfondo sui bordi (capelli, contorni)."""
+    px = im.load()
+    w, h = im.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            m = max(r, b)
+            if g > m + 18:
+                # pixel "contaminati": se sono quasi verdi si buttano, altrimenti si neutralizzano
+                if g > max(r, b) * 1.6 and g > 90:
+                    px[x, y] = (0, 0, 0, 0)
+                else:
+                    px[x, y] = (r, m, b, a)
     return im
 
 def remove_ball(im):
@@ -59,6 +118,13 @@ def outline(im, color=(11, 11, 16, 255)):
 
 def process(path, height, colors, no_ball):
     im = key_out(Image.open(path))
+    im = despill(im)
+    # prima di cercare i pezzi staccati si chiudono i buchi di 1-2 px del contorno
+    alpha = im.getchannel('A').filter(ImageFilter.MaxFilter(5))
+    probe = Image.new('RGBA', im.size, (0, 0, 0, 0)); probe.putalpha(alpha)
+    probe = keep_main_body(probe)
+    keep = probe.getchannel('A')
+    im.putalpha(Image.composite(im.getchannel('A'), Image.new('L', im.size, 0), keep))
     im = im.crop(im.getbbox())
     if no_ball:
         im = remove_ball(im)
