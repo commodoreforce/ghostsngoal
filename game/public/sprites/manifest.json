@@ -1,0 +1,36 @@
+{
+  "shpendi": {
+    "frameWidth": 56,
+    "frameHeight": 54,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "jump",
+      "fall",
+      "kick",
+      "crouch",
+      "crouchkick",
+      "up",
+      "hurt",
+      "ko0",
+      "ko1",
+      "cheer0",
+      "cheer1",
+      "slide"
+    ],
+    "sheets": [
+      "pl_shpendi_base",
+      "pl_shpendi_away_base",
+      "pl_shpendi_third_base",
+      "pl_shpendi_naked",
+      "pl_shpendi_away_naked",
+      "pl_shpendi_third_naked",
+      "pl_shpendi_gold"
+    ],
+    "portrait": "portrait_shpendi"
+  }
+}

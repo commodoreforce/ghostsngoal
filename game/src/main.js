@@ -2,7 +2,7 @@ import '@fontsource/press-start-2p/400.css';
 import './cabinet.css';
 import Phaser from 'phaser';
 import { Input } from './systems/input.js';
-import { unlockAudio, isMuted, setMuted, resumePendingMusic } from './systems/sfx.js';
+import { unlockAudio, isMuted, setMuted, resumePendingMusic, preloadMusicFiles } from './systems/sfx.js';
 import { getLang, setLang } from './i18n.js';
 import { BootScene } from './scenes/BootScene.js';
 import { TitleScene } from './scenes/TitleScene.js';
@@ -19,6 +19,7 @@ export const ARCADE_FPS = 20;
 
 setLang(getLang());
 Input.init();
+preloadMusicFiles();
 
 // l'audio dei browser parte solo dopo un'interazione
 const wakeAudio = () => { unlockAudio(); resumePendingMusic(); };

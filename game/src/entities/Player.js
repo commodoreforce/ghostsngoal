@@ -44,9 +44,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.applyLook();
   }
 
-  standBody() { this.body.setSize(15, 39).setOffset(11, 9); }
-  crouchBody() { this.body.setSize(15, 26).setOffset(11, 22); }
-  slideBody() { this.body.setSize(24, 15).setOffset(6, 33); }
+  // il corpo fisico sta sempre in basso al centro del fotogramma, qualunque sia la sua misura
+  bodyBox(w, h) {
+    const fw = this.frame.width, fh = this.frame.height;
+    const foot = this.footY ?? fh - 1;
+    this.body.setSize(w, h).setOffset(Math.round((fw - w) / 2), foot - h);
+  }
+  standBody() { this.bodyBox(15, 39); }
+  crouchBody() { this.bodyBox(15, 26); }
+  slideBody() { this.bodyBox(24, 15); }
 
   get boosted() { return this.scene.time.now < this.boostUntil; }
   get invulnerable() {

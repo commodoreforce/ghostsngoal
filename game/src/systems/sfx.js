@@ -6,6 +6,7 @@ let master = null;
 let musicGain = null;
 let sfxGain = null;
 let noiseBuf = null;
+let fileGain = null;
 let muted = false;
 try { muted = localStorage.getItem('gng_mute') === '1'; } catch (e) { /* storage non disponibile */ }
 
@@ -19,6 +20,8 @@ export function unlockAudio() {
   master = ctx.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(ctx.destination);
   musicGain = ctx.createGain(); musicGain.gain.value = 0.32; musicGain.connect(master);
   sfxGain = ctx.createGain(); sfxGain.gain.value = 0.55; sfxGain.connect(master);
+  fileGain = ctx.createGain(); fileGain.gain.value = 0.75; fileGain.connect(master);
+  decodeFiles();
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const d = noiseBuf.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -141,6 +144,7 @@ let tempoMul = 1;
 export function setMusicTempo(m) { tempoMul = m; }
 
 export function playMusic(name) {
+  if (FILE_TRACKS[name]) { playFile(name); return; }
   if (!ctx) { current = name; return; }
   if (current === name && timer) return;
   stopMusic();
@@ -168,8 +172,55 @@ export function playMusic(name) {
 export function stopMusic() {
   if (timer) clearInterval(timer);
   timer = null;
+  if (fileSrc) { try { fileSrc.stop(); } catch (e) { /* già ferma */ } fileSrc = null; }
+  fileName = null;
 }
 
 export function resumePendingMusic() {
-  if (current && !timer) { const c = current; current = null; playMusic(c); }
+  if (current && !timer && !fileSrc) { const c = current; current = null; playMusic(c); }
+}
+
+// ---------------- brani registrati (file audio)
+// Il file si scarica subito, ma si decodifica solo dopo il primo tocco (regola dei browser).
+const FILE_TRACKS = {
+  title: './audio/intro.mp3',
+};
+const fileRaw = {};
+const fileBuf = {};
+let fileSrc = null;
+let fileName = null;
+
+export function preloadMusicFiles() {
+  for (const [name, url] of Object.entries(FILE_TRACKS)) {
+    if (fileRaw[name]) continue;
+    fileRaw[name] = fetch(url).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null);
+  }
+}
+
+function decodeFiles() {
+  for (const name of Object.keys(FILE_TRACKS)) {
+    if (fileBuf[name] || !fileRaw[name]) continue;
+    fileRaw[name].then((ab) => {
+      if (!ab) return;
+      return ctx.decodeAudioData(ab.slice(0)).then((buf) => {
+        fileBuf[name] = buf;
+        // se il brano era stato chiesto prima che fosse pronto, parte adesso
+        if (current === name && !fileSrc) { current = null; playFile(name); }
+      });
+    }).catch(() => { /* senza file si resta con la musica sintetizzata */ });
+  }
+}
+
+function playFile(name) {
+  if (fileName === name && fileSrc) return;
+  stopMusic();
+  current = name;
+  if (!ctx || !fileBuf[name]) return; // partirà appena pronto
+  const src = ctx.createBufferSource();
+  src.buffer = fileBuf[name];
+  src.loop = true;
+  src.connect(fileGain);
+  src.start();
+  fileSrc = src;
+  fileName = name;
 }

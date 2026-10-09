@@ -10,8 +10,40 @@ import { center, C, W, H, makeLightTexture } from '../systems/ui.js';
 export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
 
+  preload() {
+    // sprite veri (generati con tools/build_sprites.py); chi non li ha ancora usa quelli provvisori
+    this.load.json('spriteManifest', './sprites/manifest.json');
+    this.load.on('filecomplete-json-spriteManifest', (key, type, data) => {
+      for (const ch of Object.values(data || {})) {
+        for (const sheet of ch.sheets) this.load.image(`real_${sheet}`, `./sprites/${sheet}.png`);
+        if (ch.portrait) this.load.image(`real_${ch.portrait}`, `./sprites/${ch.portrait}.png`);
+      }
+    });
+    this.load.on('loaderror', () => { /* manca un file: resta lo sprite provvisorio */ });
+  }
+
+  // sostituisce le texture provvisorie con quelle vere, con gli stessi nomi di fotogramma
+  useRealSprites() {
+    const data = this.cache.json.get('spriteManifest') || {};
+    for (const ch of Object.values(data)) {
+      for (const sheet of ch.sheets) {
+        const raw = `real_${sheet}`;
+        if (!this.textures.exists(raw)) continue;
+        if (this.textures.exists(sheet)) this.textures.remove(sheet);
+        const tex = this.textures.addImage(sheet, this.textures.get(raw).getSourceImage());
+        ch.frames.forEach((f, i) => tex.add(f, 0, i * ch.frameWidth, 0, ch.frameWidth, ch.frameHeight));
+      }
+      const rp = `real_${ch.portrait}`;
+      if (ch.portrait && this.textures.exists(rp)) {
+        if (this.textures.exists(ch.portrait)) this.textures.remove(ch.portrait);
+        this.textures.addImage(ch.portrait, this.textures.get(rp).getSourceImage());
+      }
+    }
+  }
+
   create() {
     buildAll(this);
+    this.useRealSprites();
     buildAnims(this);
     makeLightTexture(this);
     this.step = 0;

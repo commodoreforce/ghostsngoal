@@ -51,7 +51,7 @@ export class SelectScene extends Phaser.Scene {
     this.slots = CHARACTERS.map((c, i) => {
       const x = 26 + i * 51;
       const frame = this.add.rectangle(x, 180, 46, 54, 0x000000, 0.6).setStrokeStyle(1, 0x34343f);
-      const spr = this.add.sprite(x, 182, `pl_${c.id}_base`, 'idle0');
+      const spr = this.add.sprite(x, 180, `pl_${c.id}_base`, 'idle0');
       const isLocked = c.hidden && !this.unlocked;
       if (isLocked) spr.setTintFill(0x000000);
       const q = isLocked ? txt(this, x, 176, '?', { size: 16, color: C.orange, ox: 0.5, oy: 0.5 }) : null;

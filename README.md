@@ -73,6 +73,14 @@ GNG_CONFIG=$PWD/scripts/test/config.php php -S localhost:8000 -t server
 - **Filtro nomi**: parole vietate, con riconoscimento di varianti tipo D10 o C4ZZ0. Con `=` davanti si blocca solo la parola intera.
 - **Statistiche**: partite, personaggi, livello raggiunto, cause di morte. Dati anonimi: gli IP non sono mai salvati in chiaro.
 
+## Sprite veri e musica
+
+1. Metti le pose generate in `assets/sprites/<personaggio>/` con i nomi `<personaggio>_idle.png`, `_run01..04`, `_jump`, `_kick`, `_crouch`, `_ko`, `_cheer` (Ciofi anche `_slide`). Sfondo verde pieno.
+2. Lancia `python3 tools/build_sprites.py <personaggio> assets/sprites/<personaggio>`.
+3. Lo strumento toglie il verde e i pezzi staccati, porta tutte le pose alla stessa scala (posa ferma alta 46 px), crea le varianti senza maglia, oro (Shpendi), maglia trasferta e terza, e il ritratto. I fogli finiscono in `game/public/sprites/` e il gioco li usa da soli al posto di quelli provvisori.
+
+La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` dentro `game/src/systems/sfx.js` (oggi: `intro.mp3` su titolo e selezione). I brani senza file usano ancora la musica sintetizzata.
+
 ## Effetto CRT
 
 Shader WebGL in `game/src/systems/crt.js`, basato su [CRTFilter](https://github.com/Ichiaka/CRTFilter) di Aka (licenza MIT). Se il browser non supporta WebGL resta un effetto leggero in CSS. Si spegne con il pulsante CRT.
