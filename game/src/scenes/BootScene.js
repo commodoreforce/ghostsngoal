@@ -19,6 +19,8 @@ export class BootScene extends Phaser.Scene {
         if (ch.portrait) this.load.image(`real_${ch.portrait}`, `./sprites/${ch.portrait}.png`);
       }
     });
+    // sfondi dipinti (tools/build_backgrounds.py): se mancano resta il parallasse provvisorio
+    for (const k of ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso']) this.load.image(k, `./backgrounds/${k}.png`);
     this.load.on('loaderror', () => { /* manca un file: resta lo sprite provvisorio */ });
   }
 

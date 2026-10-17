@@ -13,6 +13,9 @@ import { txt, center, pad, floatText, C, W, H } from '../systems/ui.js';
 const T = 16;
 const L = LEVEL1;
 const GROUND_Y = L.groundRow * T; // 208
+const CITY_F = 0.15;      // velocità della città (rispetto alla telecamera)
+const STADIUM_F = 0.35;   // velocità dello stadio
+const SIGN_X = 262;       // centro dell'insegna OROGEL STADIUM nel piano dell'ingresso
 
 export class LevelScene extends Phaser.Scene {
   constructor() { super('Level'); }
@@ -98,12 +101,26 @@ export class LevelScene extends Phaser.Scene {
       return ts;
     };
     this.parallax = [];
-    this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0).setScrollFactor(0).setDepth(-12);
-    this.bgClouds = layer('clouds', 0, 90, -11.5, 0.03);
-    this.bgClouds.drift = 0.004;
-    this.bgCity = layer('bg_city', 0, H, -11, 0.08);
-    this.bgStadium = layer('bg_stadium', 24, H, -10, 0.18);
-    this.bgNear = layer('bg_near', 0, H, -9, 0.38);
+    const painted = ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso'].every((k) => this.textures.exists(k));
+    if (painted) {
+      // Sfondi dipinti: ogni piano è più largo dello schermo e scorre una volta sola, senza ripetersi.
+      // Cielo su tutto il livello; Cesena in lontananza; poi lo stadio arriva da destra (visto da dietro)
+      // e, dentro un banco di nebbia, diventa l'ingresso con l'insegna proprio al checkpoint.
+      const img = (k, d) => this.add.image(0, 0, k).setOrigin(0).setScrollFactor(0).setDepth(d);
+      this.realBg = {
+        sky: img('l1_sky', -12),
+        city: img('l1_cesena', -11),
+        back: img('l1_stadio_retro', -10),
+        front: img('l1_stadio_ingresso', -9.9).setAlpha(0),
+      };
+    } else {
+      this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0).setScrollFactor(0).setDepth(-12);
+      this.bgClouds = layer('clouds', 0, 90, -11.5, 0.03);
+      this.bgClouds.drift = 0.004;
+      this.bgCity = layer('bg_city', 0, H, -11, 0.08);
+      this.bgStadium = layer('bg_stadium', 24, H, -10, 0.18);
+      this.bgNear = layer('bg_near', 0, H, -9, 0.38);
+    }
     this.bgStands = layer('bg_stands0', 0, H, -9.5, 0.3, 0);
     this.fogBack = layer('fog', 150, 60, -8, 0.5, 0.8);
     this.fogBack.drift = 0.01;
@@ -126,6 +143,28 @@ export class LevelScene extends Phaser.Scene {
     this.time.addEvent({ delay: 420, loop: true, callback: () => {
       this.bgStands.setTexture(this.bgStands.texture.key === 'bg_stands0' ? 'bg_stands1' : 'bg_stands0');
     } });
+  }
+
+  // posizione dei piani dipinti: pixel interi, nessuna ripetizione
+  placePaintedBg(sx, k) {
+    const R = this.realBg;
+    const maxScroll = this.worldW - W;
+    R.sky.x = -Math.round(Phaser.Math.Clamp(sx, 0, maxScroll) * (R.sky.width - W) / maxScroll);
+    R.city.x = -Math.round(Phaser.Math.Clamp(sx * CITY_F, 0, R.city.width - W));
+    // lo stadio entra da destra e si ferma con l'insegna al centro dello schermo al checkpoint
+    const signScroll = L.checkpoint * T - W / 2;
+    const from = signScroll - (W - (W / 2 - SIGN_X)) / STADIUM_F;
+    const x = Math.round(Phaser.Math.Clamp(W - (sx - from) * STADIUM_F, W - R.back.width, W));
+    R.back.x = x; R.front.x = x;
+    // giro attorno allo stadio: nella nebbia il retro diventa l'ingresso
+    const c = Phaser.Math.Clamp((sx - (signScroll - 560)) / 260, 0, 1);
+    R.back.setAlpha((1 - c) * (1 - k));
+    R.front.setAlpha(c * (1 - k));
+    R.city.setAlpha(1 - k);
+    const surge = 1 - Math.abs(c - 0.5) * 2;      // 0 → 1 → 0 durante il passaggio
+    this.fogBack.setAlpha(0.4 + surge * 0.5);
+    this.fogBack.y = 150 - Math.round(surge * 40);
+    this.fogBack.setSize(W, 60 + Math.round(surge * 40));
   }
 
   addSolid(x, y, w, h) {
@@ -294,9 +333,12 @@ export class LevelScene extends Phaser.Scene {
     this.bgStands.setAlpha(k);
     this.pitchRows.forEach((r) => r.setAlpha(k));
     this.fgPitch.setAlpha(k);
-    this.bgNear.setAlpha(1 - k);
     this.fgCemetery.setAlpha(1 - k);
-    this.bgStadium.setAlpha(1 - k * 0.7);
+    if (this.realBg) this.placePaintedBg(sx, k);
+    else {
+      this.bgNear.setAlpha(1 - k);
+      this.bgStadium.setAlpha(1 - k * 0.7);
+    }
 
     if (P.state === 'play' || P.state === 'hurt') {
       // buche

@@ -533,15 +533,18 @@ export function buildBackgrounds(scene) {
     const W = 512;
     const { tex, ctx } = canvasTex(scene, 'fog', W, 60);
     for (let i = 0; i < 18; i++) {
-      const x = (i * 97) % W, y = 18 + ((i * 37) % 30);
-      const g = ctx.createRadialGradient(x, y, 2, x, y, 60);
-      g.addColorStop(0, 'rgba(200,190,230,0.20)'); g.addColorStop(1, 'rgba(200,190,230,0)');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, 60);
+      const x0 = (i * 97) % W, y = 18 + ((i * 37) % 30);
+      // ogni banco si disegna anche a cavallo dei bordi: la texture si ripete senza giunture
+      for (const x of [x0 - W, x0, x0 + W]) {
+        const g = ctx.createRadialGradient(x, y, 2, x, y, 60);
+        g.addColorStop(0, 'rgba(200,190,230,0.20)'); g.addColorStop(1, 'rgba(200,190,230,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, 60);
+      }
     }
     // sfuma i bordi superiore e inferiore: niente linee nette
     ctx.globalCompositeOperation = 'destination-in';
     const m = ctx.createLinearGradient(0, 0, 0, 60);
-    m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(0.45, 'rgba(0,0,0,1)'); m.addColorStop(1, 'rgba(0,0,0,0.6)');
+    m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(0.45, 'rgba(0,0,0,1)'); m.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = m; ctx.fillRect(0, 0, W, 60);
     ctx.globalCompositeOperation = 'source-over';
     tex.refresh();

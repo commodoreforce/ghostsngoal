@@ -1,0 +1,18 @@
+{
+  "l1_sky": {
+    "width": 528,
+    "height": 224
+  },
+  "l1_cesena": {
+    "width": 528,
+    "height": 224
+  },
+  "l1_stadio_retro": {
+    "width": 528,
+    "height": 224
+  },
+  "l1_stadio_ingresso": {
+    "width": 528,
+    "height": 224
+  }
+}
