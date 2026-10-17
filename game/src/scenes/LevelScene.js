@@ -5,7 +5,7 @@ import { Run } from '../systems/state.js';
 import { LocalBest } from '../systems/api.js';
 import { Player } from '../entities/Player.js';
 import { Zombie, Bat, Pumpkin, Ghost } from '../entities/Enemies.js';
-import { Referee } from '../entities/Referee.js';
+import { Mazapegul } from '../entities/Mazapegul.js';
 import { Weather } from '../systems/weather.js';
 import { LEVEL1 } from '../levels/level1.js';
 import { t } from '../i18n.js';
@@ -17,6 +17,7 @@ const GROUND_Y = L.groundRow * T; // 208
 const CITY_F = 0.15;      // velocità della città (rispetto alla telecamera)
 const STADIUM_F = 0.35;   // velocità dello stadio
 const SIGN_X = 262;       // centro dell'insegna OROGEL STADIUM nel piano dell'ingresso
+const INSIDE_F = 0.3;     // velocità della tavola dell'interno dello stadio
 
 export class LevelScene extends Phaser.Scene {
   constructor() { super('Level'); }
@@ -52,6 +53,7 @@ export class LevelScene extends Phaser.Scene {
     this.boss = null;
     this.lightsOn = true;
     this.darkness = 0;
+    this.inside = 0;
     this.reachedCheckpoint = this.fromCheckpoint;
 
     this.buildBackground();
@@ -115,6 +117,12 @@ export class LevelScene extends Phaser.Scene {
         back: img('l1_stadio_retro', -10),
         front: img('l1_stadio_ingresso', -9.9).setAlpha(0),
       };
+      // dentro lo stadio: la tavola disegnata (tribuna, distinti, tabellone, curva) e,
+      // dietro ai distinti senza tetto, di nuovo la Rocca in lontananza
+      if (this.textures.exists('l1_inside0')) {
+        this.realBg.city2 = img('l1_cesena', -9.8).setAlpha(0);
+        this.realBg.inside = img('l1_inside0', -9.5).setAlpha(0);
+      }
     } else {
       this.bgSky = this.add.image(0, 0, 'bg_sky').setOrigin(0).setScrollFactor(0).setDepth(-12);
       this.bgClouds = layer('clouds', 0, 90, -11.5, 0.03);
@@ -144,6 +152,7 @@ export class LevelScene extends Phaser.Scene {
     // la curva fantasma "balla" a tempo
     this.time.addEvent({ delay: 420, loop: true, callback: () => {
       this.bgStands.setTexture(this.bgStands.texture.key === 'bg_stands0' ? 'bg_stands1' : 'bg_stands0');
+      if (this.realBg && this.realBg.inside) this.realBg.inside.setTexture(this.realBg.inside.texture.key === 'l1_inside0' ? 'l1_inside1' : 'l1_inside0');
     } });
   }
 
@@ -163,6 +172,15 @@ export class LevelScene extends Phaser.Scene {
     R.back.setAlpha((1 - c) * (1 - k));
     R.front.setAlpha(c * (1 - k));
     R.city.setAlpha(1 - k);
+    if (R.inside) {
+      const sxB = (L.checkpoint - 8) * T;
+      const d = Math.max(0, sx - sxB);
+      R.inside.x = -Math.round(Phaser.Math.Clamp(d * INSIDE_F, 0, R.inside.width - W));
+      R.city2.x = Math.round(20 - d * 0.15);
+      R.city2.y = -30;
+      R.inside.setAlpha(k); R.city2.setAlpha(k);
+      this.bgStands.setAlpha(0);
+    }
     const surge = 1 - Math.abs(c - 0.5) * 2;      // 0 → 1 → 0 durante il passaggio
     this.fogBack.setAlpha(0.4 + surge * 0.5);
     this.fogBack.y = 150 - Math.round(surge * 40);
@@ -270,7 +288,7 @@ export class LevelScene extends Phaser.Scene {
     this.physics.add.collider(this.pickups, this.planks);
     this.physics.add.overlap(P, this.pickups, (p, it) => this.collect(it));
     this.physics.add.overlap(P, this.hazards, (p, hz) => { if (!hz.friendly) P.hurt(hz.x, 'boss'); });
-    this.physics.add.collider(this.hazards, this.solids, (hz) => { if (hz.kind === 'card') this.fadeHazard(hz); }, (hz) => hz.kind === 'card');
+    this.physics.add.collider(this.hazards, this.solids, (hz) => { if (hz.kind === 'shoe') this.fadeHazard(hz); }, (hz) => hz.kind === 'shoe');
   }
 
   // ------------------------------------------------------------------ HUD
@@ -335,7 +353,7 @@ export class LevelScene extends Phaser.Scene {
     for (const l of this.parallax) l.tilePositionX = Math.round(sx * l.factor + (l.drift ? time * l.drift : 0));
     // passaggio dall'esterno dello stadio al campo
     const inB = sx > (L.checkpoint - 8) * T;
-    const k = Phaser.Math.Linear(this.bgStands.alpha, inB ? 1 : 0, 0.08);
+    const k = this.inside = Phaser.Math.Linear(this.inside || 0, inB ? 1 : 0, 0.08);
     this.bgStands.setAlpha(k);
     this.pitchRows.forEach((r) => r.setAlpha(k));
     this.fgPitch.setAlpha(k);
@@ -377,7 +395,7 @@ export class LevelScene extends Phaser.Scene {
     for (let i = this.hazards.length - 1; i >= 0; i--) {
       const hz = this.hazards[i];
       if (!hz.active) { this.hazards.splice(i, 1); continue; }
-      if (hz.kind === 'card') hz.angle += 14;
+      if (hz.kind === 'shoe') hz.angle += 24 * Math.sign(hz.body.velocity.x || 1);
       if (time > hz.dieAt || hz.x < cam.scrollX - 40 || hz.x > cam.scrollX + W + 40) { hz.destroy(); this.hazards.splice(i, 1); continue; }
       if (hz.friendly && this.boss && this.boss.alive && Phaser.Geom.Intersects.RectangleToRectangle(hz.getBounds(), this.boss.getBounds())) {
         this.boss.damage(3, hz.x, hz.y); this.spark(hz.x, hz.y); hz.destroy(); this.hazards.splice(i, 1);
@@ -480,6 +498,14 @@ export class LevelScene extends Phaser.Scene {
     return null;
   }
 
+  // per i collaudi: un nemico in un punto preciso
+  spawnAt(type, x, y = 120) {
+    const C = { zombie: () => new Zombie(this, x, GROUND_Y), bat: () => new Bat(this, x, y), pumpkin: () => new Pumpkin(this, x, y), ghost: () => new Ghost(this, x, y) };
+    const e = C[type] && C[type]();
+    if (e) this.addEnemy(e);
+    return e;
+  }
+
   spawnEnemy(type, k, cam) {
     const rx = cam.scrollX + W + 12 + k * 28;
     if (type === 'bat') this.addEnemy(new Bat(this, rx, Phaser.Math.Between(60, 130)));
@@ -507,8 +533,24 @@ export class LevelScene extends Phaser.Scene {
     if (P.hurt(e.x, e === this.boss ? 'boss' : e.kind)) return;
   }
 
+  // la fine di ogni nemico ha la sua animazione: lo zombie si sbriciola, la zucca esplode,
+  // il pipistrello precipita a testa in giù
+  corpse(e) {
+    if (!e.texture || !e.texture.has('die0')) return;
+    const c = this.add.sprite(e.x, e.y, e.texture.key, 'die0').setDepth(29).setFlipX(e.flipX);
+    if (e.kind === 'bat') {
+      this.tweens.add({ targets: c, y: e.y + 120, angle: e.flipX ? -90 : 90, duration: 900, ease: 'Quad.easeIn', onComplete: () => c.destroy() });
+      this.tweens.add({ targets: c, alpha: 0, delay: 500, duration: 400 });
+      return;
+    }
+    const step = e.kind === 'pumpkin' ? 90 : 160;
+    this.time.delayedCall(step, () => c.active && c.setFrame('die1'));
+    this.tweens.add({ targets: c, alpha: 0, delay: step + (e.kind === 'pumpkin' ? 120 : 500), duration: 300, onComplete: () => c.destroy() });
+  }
+
   onEnemyKilled(e, fromX, silent) {
     if (silent) return;
+    this.corpse(e);
     const now = this.time.now;
     this.combo = now - this.lastKill < 1000 ? this.combo + 1 : 1;
     this.lastKill = now;
@@ -625,11 +667,11 @@ export class LevelScene extends Phaser.Scene {
   tryParry(P) {
     const range = 30;
     for (const hz of this.hazards) {
-      if (!hz.active || hz.friendly || hz.kind !== 'card') continue;
+      if (!hz.active || hz.friendly || hz.kind !== 'shoe') continue;
       const dx = (hz.x - P.x) * P.facing;
       if (dx > -6 && dx < range && Math.abs(hz.y - (P.y - 4)) < 26) {
         hz.friendly = true;
-        hz.setTexture('redcard');
+        hz.setTexture('mazfx', 'shoeGold');
         const target = this.boss && this.boss.alive ? this.boss : null;
         const a = target ? Phaser.Math.Angle.Between(hz.x, hz.y, target.x, target.y - 10) : (P.facing > 0 ? 0 : Math.PI);
         hz.body.setAllowGravity(false);
@@ -637,7 +679,7 @@ export class LevelScene extends Phaser.Scene {
         hz.dieAt = this.time.now + 1500;
         Sfx.parry();
         this.spark(hz.x, hz.y);
-        floatText(this, P.x, P.y - 22, 'PARATA!', C.ghost);
+        floatText(this, P.x, P.y - 22, t('parry'), C.ghost);
         this.award(300, hz.x, hz.y);
         return true;
       }
@@ -742,16 +784,17 @@ export class LevelScene extends Phaser.Scene {
     for (const e of [...this.enemies]) if (e.alive) e.kill(e.x, true);
     stopMusic();
     this.timeLeft = Math.max(this.timeLeft, 90);
-    const title = center(this, 80, "L'ARBITRO NON-MORTO", { color: C.red, fixed: true, depth: 120, stroke: '#000', strokeThickness: 3 });
+    const title = center(this, 80, t('bossName'), { color: C.red, fixed: true, depth: 120, stroke: '#000', strokeThickness: 3 });
     this.time.delayedCall(700, () => {
       Sfx.thunder();
-      const ref = new Referee(this, this.arenaX + W - 50, GROUND_Y, { left: this.arenaX, right: this.arenaX + W });
+      Sfx.laugh();
+      const ref = new Mazapegul(this, this.arenaX + W - 50, GROUND_Y, { left: this.arenaX, right: this.arenaX + W });
       ref.y = -40;
       this.boss = ref;
       this.enemies.push(ref);
       this.time.delayedCall(900, () => {
         Sfx.slam(); this.cameras.main.shake(300, 0.015); this.dust(ref.x, GROUND_Y);
-        this.bossName.setText("L'ARBITRO NON-MORTO");
+        this.bossName.setText(t('bossName'));
         [this.bossBarBg, this.bossBar].forEach((o) => o.setVisible(true));
         this.updateBossBar(1);
         playMusic('boss');
@@ -769,30 +812,33 @@ export class LevelScene extends Phaser.Scene {
     Sfx.blip();
   }
 
-  spawnCard(x, y, vx, vy) {
-    const c = this.physics.add.image(x, y, 'card').setDepth(44);
-    c.kind = 'card';
-    c.body.setSize(6, 6);
+  // ferro di cavallo lanciato dal Mazapegùl: gira su se stesso e rimbalza via dal terreno
+  spawnShoe(x, y, vx, vy) {
+    const c = this.physics.add.image(x, y, 'mazfx', 'shoe').setDepth(44);
+    c.kind = 'shoe';
+    c.body.setSize(10, 10);
     c.body.setVelocity(vx, vy);
     c.body.setGravityY(-350);
     c.dieAt = this.time.now + 3000;
     this.hazards.push(c);
   }
 
+  // la risata del folletto: onde che volano ad altezza testa (ci si accovaccia)
   spawnWave(x, y, vx) {
-    const w = this.physics.add.image(x, y, 'wave').setDepth(44);
+    const w = this.physics.add.sprite(x, y, 'mazfx', 'laugh0').setDepth(44);
     w.kind = 'wave';
     w.body.setAllowGravity(false);
+    w.body.setSize(10, 20);
     w.body.setVelocityX(vx);
     w.setFlipX(vx < 0);
+    w.play('maz_laugh');
     w.dieAt = this.time.now + 2500;
-    this.tweens.add({ targets: w, alpha: 0.6, yoyo: true, repeat: -1, duration: 80 });
     this.hazards.push(w);
   }
 
   groundShock(x, y) {
     [-1, 1].forEach((dir) => {
-      const s = this.physics.add.image(x + dir * 16, y - 4, 'wave').setDepth(44).setScale(1, 0.4).setTint(0xff7a1a);
+      const s = this.physics.add.image(x + dir * 16, y - 4, 'mazfx', 'laugh1').setDepth(44).setScale(1, 0.4).setTint(0xff9a3a);
       s.kind = 'shock';
       s.body.setAllowGravity(false);
       s.body.setSize(10, 8);
@@ -809,36 +855,41 @@ export class LevelScene extends Phaser.Scene {
     this.tweens.add({ targets: hz, alpha: 0, duration: 200, onComplete: () => hz.destroy() });
   }
 
-  // effetto VAR: maxischermo, immagine bloccata, righe da videocassetta
-  varEffect(on) {
+  // INCUBO: lo schermo diventa un brutto sogno viola, con le righe che ondeggiano
+  nightmareEffect(on) {
     if (on) {
-      this.varLayer = this.add.container(0, 0).setScrollFactor(0).setDepth(110);
-      const scr = this.add.image(W / 2, -20, 'varscreen').setScale(1.5);
-      this.varLayer.add(scr);
-      this.tweens.add({ targets: scr, y: 46, duration: 400, ease: 'Bounce.easeOut' });
-      const label = center(this, 92, 'VAR CHECK', { color: C.ghost, stroke: '#000', strokeThickness: 3 });
-      this.varLayer.add(label);
-      this.tweens.add({ targets: label, alpha: 0.3, yoyo: true, repeat: -1, duration: 200 });
+      this.dreamLayer = this.add.container(0, 0).setScrollFactor(0).setDepth(110);
+      const veil = this.add.rectangle(0, 0, W, H, 0x2a0a4a, 0).setOrigin(0);
+      this.dreamLayer.add(veil);
+      this.tweens.add({ targets: veil, fillAlpha: 0.5, duration: 300 });
+      const label = center(this, 70, t('nightmare'), { size: 16, color: '#ff9af0', stroke: '#000', strokeThickness: 3 });
+      this.dreamLayer.add(label);
+      this.tweens.add({ targets: label, y: 66, yoyo: true, repeat: -1, duration: 260, ease: 'Sine.easeInOut' });
       const lines = this.add.graphics();
-      this.varLayer.add(lines);
-      this.varLines = lines;
-      this.varTimer = this.time.addEvent({
+      this.dreamLayer.add(lines);
+      let ph = 0;
+      this.dreamTimer = this.time.addEvent({
         delay: 50, loop: true,
         callback: () => {
+          ph += 0.6;
           lines.clear();
-          for (let i = 0; i < 6; i++) { lines.fillStyle(0xffffff, 0.08 + Math.random() * 0.1); lines.fillRect(0, Math.random() * H, W, 1 + Math.random() * 3); }
+          for (let i = 0; i < 10; i++) {
+            const y = (i * 23 + ph * 7) % H;
+            lines.fillStyle(0xff9af0, 0.06 + 0.05 * Math.sin(ph + i));
+            lines.fillRect(Math.sin(ph + i) * 6, y, W, 2);
+          }
         },
       });
-      // tutto si ferma tranne il boss
+      // tutto si ferma tranne il folletto
       for (const hz of this.hazards) hz.destroy();
       this.hazards.length = 0;
       this.player.body.setVelocity(0, this.player.body.velocity.y);
       this.cameras.main.shake(150, 0.004);
-    } else if (this.varLayer) {
-      this.varTimer.remove();
-      this.varLayer.destroy();
-      this.varLayer = null;
-      this.cameras.main.flash(120, 159, 232, 255);
+    } else if (this.dreamLayer) {
+      this.dreamTimer.remove();
+      this.dreamLayer.destroy();
+      this.dreamLayer = null;
+      this.cameras.main.flash(120, 255, 154, 240);
     }
   }
 
@@ -860,10 +911,17 @@ export class LevelScene extends Phaser.Scene {
       this.cameras.main.shake(140, 0.01);
       if (i === booms.length - 1) {
         this.physics.world.timeScale = 1; this.time.timeScale = 1;
-        const red = this.add.image(boss.x + 14, boss.y - 30, 'redcard').setScale(3).setDepth(90);
-        const txtE = txt(this, boss.x, boss.y - 54, 'ESPULSO!', { color: C.red, ox: 0.5, stroke: '#000', strokeThickness: 3, depth: 91 });
-        this.tweens.add({ targets: [boss], alpha: 0, delay: 900, duration: 600 });
-        this.tweens.add({ targets: [red, txtE], alpha: 0, delay: 1400, duration: 400 });
+        // il berretto vola via: senza, il folletto non ha più poteri e scappa via piccolo piccolo
+        const dir = boss.flipX ? 1 : -1;
+        const cap = this.add.image(boss.x, boss.y - 30, 'mazfx', 'cap').setScale(2).setDepth(90).setFlipX(boss.flipX);
+        this.tweens.add({ targets: cap, y: boss.y - 120, x: boss.x + dir * 30, angle: dir * 540, duration: 1100, ease: 'Quad.easeOut' });
+        this.tweens.add({ targets: cap, alpha: 0, delay: 1300, duration: 300 });
+        Sfx.bell();
+        boss.setFrame('mazCapless');
+        const txtE = center(this, 64, t('capStolen'), { color: C.gold, fixed: true, stroke: '#000', strokeThickness: 3, depth: 120 });
+        this.tweens.add({ targets: boss, scale: 0.35, y: GROUND_Y - 14, x: boss.x - dir * 90, delay: 900, duration: 700, ease: 'Quad.easeIn' });
+        this.tweens.add({ targets: boss, alpha: 0, delay: 1400, duration: 300 });
+        this.tweens.add({ targets: txtE, alpha: 0, delay: 1400, duration: 400 });
         [this.bossBarBg, this.bossBar].forEach((o) => o.setVisible(false));
         this.bossName.setText('');
         this.time.delayedCall(1700, () => this.levelClear());
@@ -877,6 +935,9 @@ export class LevelScene extends Phaser.Scene {
     P.boostUntil = 0; P.clearTint(); P.applyLook();
     [this.hudBoostBg, this.hudBoost, this.hudBoostIcon].forEach((o) => o.setVisible(false));
     Sfx.daiburdel();
+    // velo scuro dietro al conteggio: sopra la curva piena di gente le scritte devono leggersi
+    const veil = this.add.rectangle(0, 36, W, 128, 0x07050f, 0).setOrigin(0).setScrollFactor(0).setDepth(119);
+    this.tweens.add({ targets: veil, fillAlpha: 0.72, duration: 300 });
     const big = center(this, 56, 'DAIBURDEL!', { size: 24, color: C.white, fixed: true, depth: 120, stroke: '#ff7a1a', strokeThickness: 4 });
     big.setScale(0.2);
     this.tweens.add({ targets: big, scale: 1, duration: 500, ease: 'Back.easeOut' });

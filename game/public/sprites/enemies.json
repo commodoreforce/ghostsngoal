@@ -1,0 +1,95 @@
+{
+  "zombie": {
+    "sheet": "en_zombie",
+    "frameWidth": 50,
+    "frameHeight": 48,
+    "frames": [
+      "walk0",
+      "walk1",
+      "walk2",
+      "walk3",
+      "rise0",
+      "rise1",
+      "rise2",
+      "slide",
+      "die0",
+      "die1"
+    ]
+  },
+  "bat": {
+    "sheet": "en_bat",
+    "frameWidth": 34,
+    "frameHeight": 26,
+    "frames": [
+      "bat0",
+      "bat1",
+      "bat2",
+      "dive",
+      "die0"
+    ]
+  },
+  "pumpkin": {
+    "sheet": "en_pumpkin",
+    "frameWidth": 30,
+    "frameHeight": 28,
+    "frames": [
+      "pk0",
+      "pkb",
+      "pk1",
+      "pk2",
+      "pk0c",
+      "pkbc",
+      "pk1c",
+      "pk2c",
+      "die0",
+      "die1"
+    ]
+  },
+  "mazapegul": {
+    "sheet": "en_mazapegul",
+    "frameWidth": 76,
+    "frameHeight": 78,
+    "frames": [
+      "maz0",
+      "maz1",
+      "mazWalk0",
+      "mazWalk1",
+      "mazWalk2",
+      "mazWalk3",
+      "mazThrow",
+      "mazLaugh",
+      "mazCrouch",
+      "mazJump",
+      "mazHurt",
+      "mazCapless"
+    ]
+  },
+  "mazfx": {
+    "sheet": "en_mazfx",
+    "frameWidth": 18,
+    "frameHeight": 24,
+    "frames": [
+      "shoe",
+      "shoeGold",
+      "laugh0",
+      "laugh1",
+      "cap"
+    ]
+  },
+  "pumpkinItem": {
+    "sheet": "en_pumpkinItem",
+    "frameWidth": 14,
+    "frameHeight": 14,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "pumpkinGold": {
+    "sheet": "en_pumpkinGold",
+    "frameWidth": 14,
+    "frameHeight": 14,
+    "frames": [
+      "__solo"
+    ]
+  }
+}

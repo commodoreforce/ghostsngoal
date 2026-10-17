@@ -6,3 +6,4 @@ dist/
 server/config.php
 dist/config.php
 scripts/test/*.sqlite
+__pycache__/

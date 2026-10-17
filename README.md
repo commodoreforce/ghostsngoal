@@ -12,7 +12,7 @@ Il documento di game design completo è su claude.ai (link condiviso in chat).
 | Selezione con barre stile NBA JAM, 5 personaggi, abilità e boost | grafica provvisoria disegnata in codice |
 | Hubner sbloccabile con la parola magica (controllo sul server) | |
 | Intro del rapimento | |
-| Livello 1 completo: sezione A, checkpoint, sezione B al buio, boss Arbitro Non-Morto con VAR | |
+| Livello 1 completo: sezione A, checkpoint, sezione B al buio, boss il Mazapegùl (il folletto romagnolo: si vince rubandogli il berretto rosso) | |
 | Maglia come armatura, combo, bonus, casse, zucche, cavalluccio d'oro | |
 | Inserimento nome da sala giochi, classifica, pannello admin | |
 | Comandi touch sul cabinato, tastiera, joypad | |
@@ -93,6 +93,14 @@ GNG_CONFIG=$PWD/scripts/test/config.php php -S localhost:8000 -t server
 
 La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` dentro `game/src/systems/sfx.js` (oggi: `intro.mp3` su titolo e selezione). I brani senza file usano ancora la musica sintetizzata.
 
+## Nemici e boss
+
+`python3 tools/build_enemies.py` genera i fogli in `game/public/sprites/en_*.png` più `enemies.json`.
+
+- **Zombie**: dalle due pose di riferimento in `assets/sprites/enemies/` (laterale e frontale). Lo strumento scompone la figura (busto, braccio, gambe, scarpe), la rimonta in ogni posa ad alta risoluzione e solo alla fine la riduce a 44 px con una palette scelta a mano: esce dal terreno (3), cammina (4), scivolata, si sbriciola (2).
+- **Pipistrello e zucca**: disegnati direttamente in pixel di gioco seguendo il design dei riferimenti (a quella misura il riferimento ridotto diventerebbe una macchia). Pipistrello: volo (3), picchiata, caduta. Zucca: ferma (2), si carica, in volo di tre quarti, le stesse quattro pose crepate dopo il primo colpo, esplosione (2).
+- **Mazapegùl**: disegnato da zero, 12 pose (fermo, camminata, lancio dei ferri di cavallo, risata, salto, colpito, senza berretto) più ferri di cavallo, risata e berretto che vola.
+
 ## Sfondi
 
 Le illustrazioni originali (3168x1344) stanno in `assets/backgrounds/level1/`. Lo strumento le riduce di 6 volte sulla stessa griglia di pixel, toglie cieli e fondi verdi, scurisce i piani lontani e sfuma a retino il bordo dello stadio:
@@ -100,6 +108,8 @@ Le illustrazioni originali (3168x1344) stanno in `assets/backgrounds/level1/`. L
 ```bash
 python3 tools/build_backgrounds.py assets/backgrounds/level1/{sfondo,stadio1,stadio2,cesena}.png
 ```
+
+Dentro lo stadio (sezione B) c'è una tavola disegnata pixel per pixel con `tools/build_inside.py`: tribuna con la scritta CESENA fatta di seggiolini, distinti senza tetto con la Rocca che spunta dietro, tabellone (CESENA - VAMPIRI, ogni tanto AIUTO!), Curva Mare con bandieroni e fumogeni.
 
 Ogni piano è largo 528 px e scorre una sola volta in tutto il tratto in cui si vede: niente ripetizioni e niente giunture. Velocità e posizione dell'insegna sono in cima a `LevelScene.js` (`CITY_F`, `STADIUM_F`, `SIGN_X`).
 

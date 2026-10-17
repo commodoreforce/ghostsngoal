@@ -350,56 +350,31 @@ export function buildEnemyTextures(scene) {
     rect(ctx, 0, 0, 2, 2, '#ff3b3b'); rect(ctx, 4, 0, 2, 2, '#ff3b3b');
     tex.refresh();
   }
-  // Arbitro Non-Morto 40x56: idle0, idle1, throw, whistle, hurt
+  // Mazapegùl provvisorio (quello vero è in sprites/en_mazapegul.png): stessi nomi di fotogramma
   {
-    const names = ['ref0', 'ref1', 'refThrow', 'refWhistle', 'refHurt'];
-    const { tex, ctx } = canvasTex(scene, 'referee', szB(40) * names.length, szB(56));
+    const names = ['maz0', 'maz1', 'mazWalk0', 'mazWalk1', 'mazWalk2', 'mazWalk3', 'mazThrow', 'mazLaugh', 'mazCrouch', 'mazJump', 'mazHurt', 'mazCapless'];
+    const FW = 76, FH = 78;
+    const { tex, ctx } = canvasTex(scene, 'mazapegul', FW * names.length, FH);
     names.forEach((n, i) => {
-      const ox = i * szB(40);
-      const R = scaled(ctx, ox, SCB);
-      const b = n === 'ref1' ? 1 : 0;
-      const skin = n === 'refHurt' ? '#f4f4f0' : '#8fbf7a';
-      // gambe
-      R(12, 40, 6, 13, '#1a1a1a'); R(22, 40, 6, 13, '#1a1a1a');
-      R(10, 52, 9, 4, PAL.boot); R(21, 52, 9, 4, PAL.boot);
-      // corpo: divisa nera da arbitro, strappata
-      R(8, 18 + b, 24, 23, '#1d1d24'); R(8, 18 + b, 24, 2, '#3a3a46');
-      R(10, 30 + b, 4, 3, '#0b0b10'); R(26, 24 + b, 3, 5, '#0b0b10');
-      R(14, 22 + b, 3, 3, '#ffd23f'); // stemma
-      // testa
-      R(12, 4 + b, 16, 15, skin); R(12, 15 + b, 16, 4, shade(skin, 0.8));
-      R(13, 2 + b, 14, 4, '#2b2b2b');
-      R(15, 9 + b, 3, 3, '#ff3b3b'); R(23, 9 + b, 3, 3, '#ff3b3b');
-      R(16, 15 + b, 9, 2, '#2a0a0a');
-      // fischietto
-      R(24, 16 + b, 4, 3, '#c0c0c8');
-      // braccia
-      if (n === 'refThrow') { R(30, 6, 5, 16, skin); R(31, 2, 5, 6, '#ffd23f'); R(2, 20, 6, 12, skin); }
-      else if (n === 'refWhistle') { R(26, 14, 8, 5, skin); R(2, 20, 6, 12, skin); }
-      else { R(2, 20 + b, 6, 14, skin); R(32, 20 + b, 6, 14, skin); }
-      outline(ctx, ox, 0, szB(40), szB(56));
+      const ox = i * FW;
+      rect(ctx, ox + 24, 40, 28, 34, '#3a2a36');
+      rect(ctx, ox + 28, 18, 24, 22, '#bc9a76');
+      if (n !== 'mazCapless') rect(ctx, ox + 26, 6, 26, 12, '#a8182a');
+      rect(ctx, ox + 34, 24, 3, 3, '#ffd23a'); rect(ctx, ox + 42, 24, 3, 3, '#ffd23a');
     });
-    addFrames(tex, names, szB(40), szB(56));
-  }
-  // cartellino giallo 6x8, onda del fischio 10x24, maxischermo VAR 56x34
-  {
-    const { tex, ctx } = canvasTex(scene, 'card', 6, 8);
-    rect(ctx, 0, 0, 6, 8, '#ffd23f'); rect(ctx, 0, 7, 6, 1, '#c98a12'); tex.refresh();
+    addFrames(tex, names, FW, FH);
   }
   {
-    const { tex, ctx } = canvasTex(scene, 'redcard', 6, 8);
-    rect(ctx, 0, 0, 6, 8, '#ff3b3b'); rect(ctx, 0, 7, 6, 1, '#9a1a1a'); tex.refresh();
+    const names = ['shoe', 'shoeGold', 'laugh0', 'laugh1', 'cap'];
+    const { tex, ctx } = canvasTex(scene, 'mazfx', 18 * names.length, 24);
+    rect(ctx, 3, 6, 12, 12, '#8a8aa6'); rect(ctx, 21, 6, 12, 12, '#ffc02e');
+    rect(ctx, 40, 2, 4, 20, '#ff9af0'); rect(ctx, 58, 4, 4, 16, '#b03ad0');
+    rect(ctx, 74, 8, 14, 10, '#a8182a');
+    addFrames(tex, names, 18, 24);
   }
   {
     const { tex, ctx } = canvasTex(scene, 'wave', 10, 22);
     for (let k = 0; k < 3; k++) { rect(ctx, k * 3, 2 + k * 2, 2, 18 - k * 4, k === 0 ? '#ffffff' : '#9fe8ff'); }
-    tex.refresh();
-  }
-  {
-    const { tex, ctx } = canvasTex(scene, 'varscreen', 56, 34);
-    rect(ctx, 0, 0, 56, 34, '#2a2a34'); rect(ctx, 2, 2, 52, 26, '#05050a');
-    rect(ctx, 26, 28, 4, 6, '#2a2a34');
-    ctx.fillStyle = '#9fe8ff'; ctx.font = '8px monospace'; ctx.fillText('VAR', 19, 18);
     tex.refresh();
   }
 }

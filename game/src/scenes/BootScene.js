@@ -19,8 +19,13 @@ export class BootScene extends Phaser.Scene {
         if (ch.portrait) this.load.image(`real_${ch.portrait}`, `./sprites/${ch.portrait}.png`);
       }
     });
+    // nemici e boss disegnati (tools/build_enemies.py)
+    this.load.json('enemyManifest', './sprites/enemies.json');
+    this.load.on('filecomplete-json-enemyManifest', (key, type, data) => {
+      for (const en of Object.values(data || {})) this.load.image(`real_${en.sheet}`, `./sprites/${en.sheet}.png`);
+    });
     // sfondi dipinti (tools/build_backgrounds.py): se mancano resta il parallasse provvisorio
-    for (const k of ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso']) this.load.image(k, `./backgrounds/${k}.png`);
+    for (const k of ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso', 'l1_inside0', 'l1_inside1']) this.load.image(k, `./backgrounds/${k}.png`);
     this.load.on('loaderror', () => { /* manca un file: resta lo sprite provvisorio */ });
   }
 
@@ -43,9 +48,22 @@ export class BootScene extends Phaser.Scene {
     }
   }
 
+  useRealEnemies() {
+    const data = this.cache.json.get('enemyManifest') || {};
+    for (const [key, en] of Object.entries(data)) {
+      const raw = `real_${en.sheet}`;
+      if (!this.textures.exists(raw)) continue;
+      if (this.textures.exists(key)) this.textures.remove(key);
+      const tex = this.textures.addImage(key, this.textures.get(raw).getSourceImage());
+      // un solo disegno (oggetti): basta l'immagine intera
+      if (en.frames.length > 1 || en.frames[0] !== '__solo') en.frames.forEach((f, i) => tex.add(f, 0, i * en.frameWidth, 0, en.frameWidth, en.frameHeight));
+    }
+  }
+
   create() {
     buildAll(this);
     this.useRealSprites();
+    this.useRealEnemies();
     buildAnims(this);
     makeLightTexture(this);
     this.step = 0;

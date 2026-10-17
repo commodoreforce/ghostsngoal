@@ -37,11 +37,11 @@ export class Weather {
     this.nextStrike = scene.time.now + 3500;
     this.nextSplash = 0;
 
-    rainTexture(scene, 'rainFar', { drops: 22, len: 4, color: '#8a8fc8', alpha: 0.9 });
-    rainTexture(scene, 'rainNear', { drops: 9, len: 7, color: '#c8d0ff', alpha: 0.95 });
+    rainTexture(scene, 'rainFar', { drops: 13, len: 4, color: '#8a8fc8', alpha: 0.85 });
+    rainTexture(scene, 'rainNear', { drops: 4, len: 6, color: '#c8d0ff', alpha: 0.9 });
     const ts = (key, depth, alpha) => scene.add.tileSprite(0, 0, W, H, key).setOrigin(0).setScrollFactor(0).setDepth(depth).setAlpha(alpha);
-    this.far = ts('rainFar', -7.9, 0.55);      // dietro al terreno, davanti allo stadio
-    this.near = ts('rainNear', 48, 0.5);       // davanti a tutto, sotto al buio e all'HUD
+    this.far = ts('rainFar', -7.9, 0.4);      // dietro al terreno, davanti allo stadio
+    this.near = ts('rainNear', 48, 0.28);       // davanti a tutto, sotto al buio e all'HUD
 
     this.splash = scene.add.particles(0, 0, 'px', {
       speed: { min: 25, max: 60 }, angle: { min: 230, max: 310 }, gravityY: 420,
@@ -53,11 +53,15 @@ export class Weather {
     this.frontFlash = scene.add.rectangle(0, 0, W, H, 0xffffff, 0).setOrigin(0).setScrollFactor(0).setDepth(49);
     this.bolt = scene.add.graphics().setScrollFactor(0).setDepth(-11.45);
 
-    rainStart();
+    rainStart(0.06);
     scene.events.once('shutdown', () => rainStop());
   }
 
   update(time, sx) {
+    // la pioggia va e viene: momenti di pioviggine e qualche scroscio, mai un muro d'acqua
+    const gust = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(time / 7000) * Math.sin(time / 2900 + 1));
+    this.far.setAlpha(0.4 * gust);
+    this.near.setAlpha(0.28 * gust);
     // la pioggia lontana scorre poco con la telecamera, quella vicina più della telecamera
     const fall = (v) => Math.round(time * v);
     this.far.tilePositionY = -fall(0.26);
@@ -66,7 +70,7 @@ export class Weather {
     this.near.tilePositionX = Math.round(sx * 1.15) + fall(0.5 / 3);
 
     if (time > this.nextSplash) {
-      this.nextSplash = time + 45;
+      this.nextSplash = time + 110;
       const x = sx + Phaser.Math.Between(0, W);
       if (this.isGround(x)) this.splash.explode(2, x, this.groundY - 1);
     }

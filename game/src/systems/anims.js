@@ -3,16 +3,23 @@ import { CHARACTERS, KITS, hasKits, texPrefix } from '../data/characters.js';
 
 export function buildAnims(scene) {
   const a = scene.anims;
+  // i fotogrammi che una texture non ha (grafica provvisoria) vengono saltati
   const mk = (key, tex, frames, rate, repeat = -1) => {
     if (a.exists(key)) a.remove(key);
-    a.create({ key, frames: frames.map((f) => ({ key: tex, frame: f })), frameRate: rate, repeat });
+    const t = scene.textures.exists(tex) ? scene.textures.get(tex) : null;
+    const ok = frames.filter((f) => t && t.has(f));
+    if (!ok.length) return;
+    a.create({ key, frames: ok.map((f) => ({ key: tex, frame: f })), frameRate: rate, repeat });
   };
   mk('ghost_fly', 'ghost', ['gh0', 'gh1'], 4);
-  mk('bat_fly', 'bat', ['bat0', 'bat1'], 6.67);
-  mk('zombie_rise', 'zombie', ['rise0', 'rise1', 'rise2'], 6, 0);
-  mk('zombie_walk', 'zombie', ['walk0', 'walk1'], 4);
-  mk('pumpkin_idle', 'pumpkin', ['pk0', 'pk1'], 3);
-  mk('ref_idle', 'referee', ['ref0', 'ref1'], 3);
+  // il pipistrello sbatte le ali: su, in mezzo, giù, in mezzo
+  mk('bat_fly', 'bat', ['bat0', 'bat1', 'bat2', 'bat1'], 10);
+  mk('zombie_rise', 'zombie', ['rise0', 'rise1', 'rise2'], 5, 0);
+  mk('zombie_walk', 'zombie', ['walk0', 'walk1', 'walk2', 'walk3'], 5);
+  mk('pumpkin_idle', 'pumpkin', ['pk0', 'pkb'], 3);
+  mk('maz_idle', 'mazapegul', ['maz0', 'maz1'], 3);
+  mk('maz_walk', 'mazapegul', ['mazWalk0', 'mazWalk1', 'mazWalk2', 'mazWalk3'], 7);
+  mk('maz_laugh', 'mazfx', ['laugh0', 'laugh1'], 10);
   mk('count_fly', 'count', ['count0', 'count1'], 6);
 
   for (const c of CHARACTERS) {

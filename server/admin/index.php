@@ -245,7 +245,7 @@ if ($p === 'stats') {
     $hDay = $series('SELECT ' . $dayExpr('started_at') . " AS d, COALESCE(SUM(duration_ms), 0) / 60000 AS n FROM runs WHERE $E AND started_at >= ? GROUP BY d", [$from]);
     $hourly = $series('SELECT ' . sql_idiv("(started_at + $off) % 86400", 3600) . " AS d, COUNT(*) AS n FROM runs WHERE $G GROUP BY d", []);
 
-    $causeNames = ['pit' => 'Caduto in una buca', 'time' => 'Tempo scaduto', 'zombie' => 'Zombie', 'bat' => 'Pipistrello', 'pumpkin' => 'Zucca', 'ghost' => 'Fantasma', 'boss' => 'Arbitro Non-Morto', 'enemy' => 'Nemico'];
+    $causeNames = ['pit' => 'Caduto in una buca', 'time' => 'Tempo scaduto', 'zombie' => 'Zombie', 'bat' => 'Pipistrello', 'pumpkin' => 'Zucca', 'ghost' => 'Fantasma', 'boss' => 'Mazapegùl', 'enemy' => 'Nemico'];
     $kitNames = ['home' => 'Casa (bianca)', 'away' => 'Trasferta', 'third' => 'Terza maglia'];
     $deviceNames = ['mobile' => 'Telefono', 'tablet' => 'Tablet', 'desktop' => 'Computer', '' => 'Non rilevato'];
     $langNames = ['it' => 'Italiano', 'en' => 'Inglese', '' => 'Non rilevata'];
@@ -320,7 +320,7 @@ if ($p === 'stats') {
     <h2>In campo</h2>
     <div class="grid">
       <?= $stat($n($sum['kills']), 'nemici sconfitti', $ended ? number_format($sum['kills'] / $ended, 1, ',', '.') . ' a partita' : '') ?>
-      <?= $stat($n($sum['k_boss']), 'arbitri espulsi', 'boss sconfitti') ?>
+      <?= $stat($n($sum['k_boss']), 'berretti rubati', 'Mazapegùl sconfitti') ?>
       <?= $stat($n($sum['shots']), 'palloni calciati', 'precisione ' . $pct((int) $sum['hits'], (int) $sum['shots'])) ?>
       <?= $stat($n($sum['deaths']), 'vite perse') ?>
       <?= $stat($n($sum['boosts']), 'boost attivati', 'cavallucci d\'oro presi') ?>
@@ -353,7 +353,7 @@ if ($p === 'stats') {
       <div class="card"><h2>Nemici sconfitti</h2><?php $bars(array_values(array_filter([
           ['k' => 'Zombie', 'n' => (int) $sum['k_zombie']], ['k' => 'Pipistrelli', 'n' => (int) $sum['k_bat']],
           ['k' => 'Zucche', 'n' => (int) $sum['k_pumpkin']], ['k' => 'Fantasmi', 'n' => (int) $sum['k_ghost']],
-          ['k' => 'Arbitri Non-Morti', 'n' => (int) $sum['k_boss']]], fn ($r) => $r['n'] > 0)), fn ($v) => $v, true); ?></div>
+          ['k' => 'Mazapegùl', 'n' => (int) $sum['k_boss']]], fn ($r) => $r['n'] > 0)), fn ($v) => $v, true); ?></div>
       <div class="card"><h2>Livello raggiunto</h2><?php $bars($byLevel, fn ($v) => 'Livello ' . $v, true); ?></div>
       <div class="card"><h2>Come si muore</h2><?php $bars($byCause, fn ($v) => $causeNames[$v] ?? $v, true); ?></div>
       <div class="card"><h2>Dispositivo</h2><?php $bars($byDevice, fn ($v) => $deviceNames[$v] ?? $v, true); ?></div>

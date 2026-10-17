@@ -84,7 +84,15 @@ export const Sfx = {
   explosion: () => { noise({ dur: 0.6, vol: 0.7, f: 500, sweep: -420, q: 0.5 }); tone({ type: 'triangle', f0: 120, f1: 30, dur: 0.6, vol: 0.6 }); },
   whistle: () => { tone({ type: 'sine', f0: 2900, f1: 3100, dur: 0.45, vol: 0.25 }); tone({ type: 'sine', f0: 2600, f1: 2900, dur: 0.45, vol: 0.12 }); },
   card: () => tone({ type: 'square', f0: 1400, f1: 1000, dur: 0.06, vol: 0.15 }),
-  var: () => [220, 220, 330].forEach((f, i) => tone({ type: 'sawtooth', f0: f, dur: 0.18, vol: 0.25, at: i * 0.22 })),
+  // risata del Mazapegùl: "ih-ih-ih-ih" acuta e dispettosa, che scende
+  laugh: () => {
+    [1180, 1120, 1040, 980, 900, 820].forEach((f, i) => {
+      tone({ type: 'square', f0: f * 1.06, f1: f * 0.9, dur: 0.08, vol: 0.22, at: i * 0.11 });
+      tone({ type: 'triangle', f0: f / 2, dur: 0.06, vol: 0.18, at: i * 0.11 + 0.01 });
+    });
+  },
+  // sonaglio del berretto
+  bell: () => { tone({ type: 'triangle', f0: 2349, dur: 0.12, vol: 0.16 }); tone({ type: 'triangle', f0: 3136, dur: 0.16, vol: 0.12, at: 0.06 }); },
   rewind: () => { tone({ type: 'sawtooth', f0: 1200, f1: 80, dur: 0.9, vol: 0.18 }); noise({ dur: 0.9, vol: 0.15, f: 3000, sweep: -2500 }); },
   slam: () => { noise({ dur: 0.3, vol: 0.7, f: 300, q: 0.6 }); tone({ type: 'triangle', f0: 90, f1: 35, dur: 0.3, vol: 0.7 }); },
   parry: () => { tone({ f0: 1500, f1: 2400, dur: 0.07, vol: 0.3 }); tone({ type: 'triangle', f0: 400, dur: 0.1, vol: 0.4 }); },

@@ -51,11 +51,17 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+// corpo fisico in basso al centro del fotogramma, qualunque sia la misura dello sprite
+function footBody(sprite, w, h) {
+  const fw = sprite.frame.width, fh = sprite.frame.height;
+  sprite.body.setSize(w, h).setOffset(Math.round((fw - w) / 2), fh - h);
+}
+
 // Zombie che emerge dal terreno, poi cammina verso di te. Alcuni entrano in scivolata.
 export class Zombie extends Enemy {
   constructor(scene, x, groundY, slider = false) {
-    super(scene, x, groundY - 17, 'zombie', 'rise0', { kind: 'zombie', hp: 1, points: 100, eyeOffset: { x: 4, y: -11 } });
-    this.body.setSize(14, 28).setOffset(4, 6);
+    super(scene, x, groundY - 24, 'zombie', 'rise0', { kind: 'zombie', hp: 1, points: 100, eyeOffset: { x: 7, y: -16 } });
+    footBody(this, 14, 36);
     this.slider = slider;
     this.speed = Phaser.Math.Between(20, 30);
     this.rising = true;
@@ -78,7 +84,7 @@ export class Zombie extends Enemy {
     const dx = player.x - this.x;
     const dir = Math.sign(dx) || 1;
     if (this.sliding) {
-      if (time > this.slideEnd) { this.sliding = false; this.play('zombie_walk'); this.body.setSize(14, 28).setOffset(4, 6); }
+      if (time > this.slideEnd) { this.sliding = false; this.play('zombie_walk'); footBody(this, 14, 36); }
       return;
     }
     this.setFlipX(dir < 0);
@@ -93,7 +99,7 @@ export class Zombie extends Enemy {
         if (!this.active || !this.alive) return;
         this.clearTint();
         this.anims.stop(); this.setFrame('slide');
-        this.body.setSize(20, 11).setOffset(1, 22);
+        footBody(this, 30, 12);
         this.body.setVelocityX(dir * 130);
       });
     }
@@ -105,7 +111,7 @@ export class Bat extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'bat', 'bat0', { kind: 'bat', hp: 1, points: 100, eyeOffset: { x: 0, y: -1 } });
     this.body.setAllowGravity(false);
-    this.body.setSize(17, 10).setOffset(3, 3);
+    this.body.setSize(16, 12).setOffset(Math.round(this.frame.width / 2 - 8), Math.round(this.frame.height / 2 - 6));
     this.baseY = y;
     this.t0 = Phaser.Math.Between(0, 1000);
     this.diveAt = scene.time.now + Phaser.Math.Between(2800, 4200);
@@ -118,7 +124,7 @@ export class Bat extends Enemy {
     const dir = Math.sign(dx) || -1;
     this.setFlipX(dir < 0);
     if (this.diving) {
-      if (time > this.diving) { this.diving = 0; this.diveAt = time + 4200; }
+      if (time > this.diving) { this.diving = 0; this.diveAt = time + 4200; this.play('bat_fly'); }
       return;
     }
     this.baseY = Phaser.Math.Linear(this.baseY, Math.min(player.y - 26, 170), 0.01);
@@ -128,6 +134,7 @@ export class Bat extends Enemy {
       // annuncio: squittio e lampo, poi picchiata
       this.setTint(0xff6a6a);
       this.level.sfxBlip();
+      this.anims.stop(); this.setFrame(this.texture.has('dive') ? 'dive' : 'bat0');
       this.diving = time + 900;
       this.body.setVelocity(0, 0);
       this.level.time.delayedCall(380, () => {
@@ -140,25 +147,33 @@ export class Bat extends Enemy {
   }
 }
 
-// Zucca saltellante: due colpi per abbatterla.
+// Zucca saltellante: due colpi per abbatterla (al primo si crepa).
 export class Pumpkin extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'pumpkin', 'pk0', { kind: 'pumpkin', hp: 2, points: 200, eyeOffset: { x: 0, y: -1 } });
-    this.body.setSize(17, 15).setOffset(1, 4);
+    footBody(this, 20, 17);
     this.nextHop = scene.time.now + 600;
+  }
+
+  // dopo il primo colpo usa le pose crepate, se ci sono
+  f(name) {
+    const c = `${name}c`;
+    return this.hp < 2 && this.texture.has(c) ? c : name;
   }
 
   tick(time, player) {
     const onGround = this.body.blocked.down;
     if (onGround) {
       this.body.setVelocityX(0);
-      this.setFrame(time > this.nextHop - 200 ? 'pk1' : 'pk0'); // si schiaccia prima di saltare
+      if (time > this.nextHop - 200) this.setFrame(this.f('pk1'));      // si schiaccia prima di saltare
+      else this.setFrame(this.f((time >> 8) % 2 && this.texture.has('pkb') ? 'pkb' : 'pk0'));  // respira e ringhia
       if (time > this.nextHop) {
         const dir = Math.sign(player.x - this.x) || -1;
+        this.setFlipX(dir < 0);
         this.body.setVelocity(dir * 55, -240);
         this.nextHop = time + Phaser.Math.Between(1200, 1700);
       }
-    } else this.setFrame('pk2');
+    } else this.setFrame(this.f('pk2'));
   }
 }
 
