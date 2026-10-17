@@ -54,7 +54,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 // Zombie che emerge dal terreno, poi cammina verso di te. Alcuni entrano in scivolata.
 export class Zombie extends Enemy {
   constructor(scene, x, groundY, slider = false) {
-    super(scene, x, groundY - 17, 'zombie', 'rise0', { hp: 1, points: 100, eyeOffset: { x: 4, y: -11 } });
+    super(scene, x, groundY - 17, 'zombie', 'rise0', { kind: 'zombie', hp: 1, points: 100, eyeOffset: { x: 4, y: -11 } });
     this.body.setSize(14, 28).setOffset(4, 6);
     this.slider = slider;
     this.speed = Phaser.Math.Between(20, 30);
@@ -103,7 +103,7 @@ export class Zombie extends Enemy {
 // Pipistrello: volo ondulato, ogni tanto picchia verso il giocatore.
 export class Bat extends Enemy {
   constructor(scene, x, y) {
-    super(scene, x, y, 'bat', 'bat0', { hp: 1, points: 100, eyeOffset: { x: 0, y: -1 } });
+    super(scene, x, y, 'bat', 'bat0', { kind: 'bat', hp: 1, points: 100, eyeOffset: { x: 0, y: -1 } });
     this.body.setAllowGravity(false);
     this.body.setSize(17, 10).setOffset(3, 3);
     this.baseY = y;
@@ -143,7 +143,7 @@ export class Bat extends Enemy {
 // Zucca saltellante: due colpi per abbatterla.
 export class Pumpkin extends Enemy {
   constructor(scene, x, y) {
-    super(scene, x, y, 'pumpkin', 'pk0', { hp: 2, points: 200, eyeOffset: { x: 0, y: -1 } });
+    super(scene, x, y, 'pumpkin', 'pk0', { kind: 'pumpkin', hp: 2, points: 200, eyeOffset: { x: 0, y: -1 } });
     this.body.setSize(17, 15).setOffset(1, 4);
     this.nextHop = scene.time.now + 600;
   }
@@ -165,7 +165,7 @@ export class Pumpkin extends Enemy {
 // Fantasmino: attraversa i muri. Quando diventa trasparente è intoccabile (e innocuo).
 export class Ghost extends Enemy {
   constructor(scene, x, y) {
-    super(scene, x, y, 'ghost', 'gh0', { hp: 1, points: 300, eyeOffset: { x: 0, y: -2 } });
+    super(scene, x, y, 'ghost', 'gh0', { kind: 'ghost', hp: 1, points: 300, eyeOffset: { x: 0, y: -2 } });
     this.body.setAllowGravity(false);
     this.body.setSize(14, 17).setOffset(3, 3);
     this.t0 = Phaser.Math.Between(0, 3000);

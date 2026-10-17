@@ -4,7 +4,7 @@ L'arcade di Halloween del **Cesena FC**: un platform anni '80 nel browser, dentr
 
 Il documento di game design completo è su claude.ai (link condiviso in chat).
 
-## Stato: v0.1, prototipo giocabile
+## Stato: v0.5
 
 | Fatto | Note |
 | --- | --- |
@@ -16,6 +16,10 @@ Il documento di game design completo è su claude.ai (link condiviso in chat).
 | Maglia come armatura, combo, bonus, casse, zucche, cavalluccio d'oro | |
 | Inserimento nome da sala giochi, classifica, pannello admin | |
 | Comandi touch sul cabinato, tastiera, joypad | |
+| Sfondi dipinti del livello 1 con parallasse senza ripetizioni | `tools/build_backgrounds.py` |
+| Temporale: pioggia su due piani, schizzi, lampi, tuoni in ritardo | si attenua con "riduci movimento" del sistema |
+| Modalità prova (invincibile) | vedi sotto |
+| Statistiche: accessi, partite, ore di gioco, nemici, provenienza | pannello admin |
 | Livelli 2 e 3, secondo giro NOTTE FONDA, card social, landing con conto alla rovescia | prossime versioni |
 
 ## Struttura
@@ -42,6 +46,14 @@ scripts/         build e test in locale
 | M | audio sì/no · F schermo intero |
 
 Su telefono si usano joystick e pulsanti disegnati sul cabinato.
+
+## Modalità prova (trucco)
+
+Nella schermata del titolo scrivi **DAIBURDEL** sulla tastiera, oppure fai **↑ ↑ ↓ ↓ ← → ← → B A** con joystick, joypad o pulsanti touch. Si sente un jingle e appare "ORA SEI INVINCIBILE".
+
+- Il personaggio non perde la maglia e non muore; se cade in una buca torna sull'ultimo punto sicuro, il tempo non scade.
+- Sull'HUD lampeggia **TEST**. Le partite di prova non entrano mai in classifica (controllo anche sul server) e sono escluse dalle statistiche.
+- Dura finché non si ricarica la pagina.
 
 ## Sviluppo in locale
 
@@ -71,7 +83,7 @@ GNG_CONFIG=$PWD/scripts/test/config.php php -S localhost:8000 -t server
 - **Classifica**: nascondi un punteggio, sostituisci un nome con BURDEL, banna un nome.
 - **Parola magica**: parola attiva, calendario delle prossime (si attivano da sole), numero di sblocchi.
 - **Filtro nomi**: parole vietate, con riconoscimento di varianti tipo D10 o C4ZZ0. Con `=` davanti si blocca solo la parola intera.
-- **Statistiche**: partite, personaggi, livello raggiunto, cause di morte. Dati anonimi: gli IP non sono mai salvati in chiaro.
+- **Statistiche**: accessi totali e unici, partite (totali, per personaggio e per maglia), ore di gioco, nemici sconfitti per tipo, palloni calciati e precisione, livello raggiunto, cause di morte, andamento giorno per giorno, fasce orarie, dispositivi, lingua, provenienza (aggiungi `?utm_source=instagram` ai link per distinguere i canali). Dati anonimi: gli IP non sono mai salvati in chiaro, nessun cookie. Il database si aggiorna da solo alla nuova struttura.
 
 ## Sprite veri e musica
 
@@ -80,6 +92,16 @@ GNG_CONFIG=$PWD/scripts/test/config.php php -S localhost:8000 -t server
 3. Lo strumento toglie il verde e i pezzi staccati, porta tutte le pose alla stessa scala (posa ferma alta 46 px), crea le varianti senza maglia, oro (Shpendi), maglia trasferta e terza, e il ritratto. I fogli finiscono in `game/public/sprites/` e il gioco li usa da soli al posto di quelli provvisori.
 
 La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` dentro `game/src/systems/sfx.js` (oggi: `intro.mp3` su titolo e selezione). I brani senza file usano ancora la musica sintetizzata.
+
+## Sfondi
+
+Le illustrazioni originali (3168x1344) stanno in `assets/backgrounds/level1/`. Lo strumento le riduce di 6 volte sulla stessa griglia di pixel, toglie cieli e fondi verdi, scurisce i piani lontani e sfuma a retino il bordo dello stadio:
+
+```bash
+python3 tools/build_backgrounds.py assets/backgrounds/level1/{sfondo,stadio1,stadio2,cesena}.png
+```
+
+Ogni piano è largo 528 px e scorre una sola volta in tutto il tratto in cui si vede: niente ripetizioni e niente giunture. Velocità e posizione dell'insegna sono in cima a `LevelScene.js` (`CITY_F`, `STADIUM_F`, `SIGN_X`).
 
 ## Effetto CRT
 

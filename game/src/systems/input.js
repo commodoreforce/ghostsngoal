@@ -21,6 +21,7 @@ class InputHub {
     this.prev = {};
     this.latch = {};     // pressioni brevissime tra un fotogramma e l'altro (il gioco gira a 20 fps)
     this.lastTyped = [];  // per l'inserimento del nome e della parola magica
+    this.peekBuf = [];    // copia per i codici segreti, non toglie nulla all'inserimento del nome
     this.anyListeners = new Set();
     for (const b of BUTTONS) { this.state[b] = false; this.prev[b] = false; }
   }
@@ -30,7 +31,11 @@ class InputHub {
       if (e.target && e.target.tagName === 'INPUT') return; // si sta scrivendo nella parola magica
       const b = KEYMAP[e.code];
       if (b) { if (!this.keys[b]) this.latch[b] = true; this.keys[b] = true; e.preventDefault(); }
-      if (e.key.length === 1 || e.key === 'Backspace') this.lastTyped.push(e.key);
+      if (e.key.length === 1 || e.key === 'Backspace') {
+        this.lastTyped.push(e.key); this.peekBuf.push(e.key);
+        if (this.lastTyped.length > 32) this.lastTyped.shift();
+        if (this.peekBuf.length > 32) this.peekBuf.shift();
+      }
       this.anyListeners.forEach((fn) => fn());
     });
     window.addEventListener('keyup', (e) => {
@@ -142,6 +147,7 @@ class InputHub {
   pressed(k) { return this.state[k] && !this.prev[k]; }
   released(k) { return !this.state[k] && this.prev[k]; }
   anyPressed() { return ['a', 'b', 'start'].some((k) => this.pressed(k)); }
+  peekTyped() { const t = this.peekBuf; this.peekBuf = []; return t; }
   takeTyped() { const t = this.lastTyped; this.lastTyped = []; return t; }
 }
 

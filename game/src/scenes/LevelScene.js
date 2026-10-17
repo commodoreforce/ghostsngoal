@@ -6,6 +6,7 @@ import { LocalBest } from '../systems/api.js';
 import { Player } from '../entities/Player.js';
 import { Zombie, Bat, Pumpkin, Ghost } from '../entities/Enemies.js';
 import { Referee } from '../entities/Referee.js';
+import { Weather } from '../systems/weather.js';
 import { LEVEL1 } from '../levels/level1.js';
 import { t } from '../i18n.js';
 import { txt, center, pad, floatText, C, W, H } from '../systems/ui.js';
@@ -56,6 +57,7 @@ export class LevelScene extends Phaser.Scene {
     this.buildBackground();
     this.buildWorld();
     this.buildFx();
+    this.weather = new Weather(this, { groundY: GROUND_Y, isGround: (x) => L.ground.some(([a, b]) => x >= a * T && x < b * T) });
 
     const startX = this.fromCheckpoint ? (L.checkpoint + 2) * T : 2.5 * T;
     this.player = new Player(this, startX, GROUND_Y - 30, Run.character, Run.kit);
@@ -283,6 +285,10 @@ export class LevelScene extends Phaser.Scene {
     this.hudLifeIcon = this.add.image(10, H - 10, `portrait_${Run.character}`).setScale(0.18).setScrollFactor(0).setDepth(D);
     this.hudLives = txt(this, 20, H - 14, `x${Run.lives}`, { fixed: true, depth: D });
     this.hudShirt = this.add.image(50, H - 10, 'shirt').setScrollFactor(0).setDepth(D);
+    if (Run.cheat) {
+      const tag = txt(this, 62, H - 14, 'TEST', { color: C.red, fixed: true, depth: D });
+      this.tweens.add({ targets: tag, alpha: 0.3, yoyo: true, repeat: -1, duration: 500 });
+    }
     this.hudCombo = txt(this, W / 2, 30, '', { color: C.gold, fixed: true, depth: D, ox: 0.5, stroke: '#000', strokeThickness: 2 });
     // barra del boost
     this.hudBoostBg = this.add.rectangle(W / 2, H - 10, 82, 6, 0x000000).setStrokeStyle(1, 0xffd23f).setScrollFactor(0).setDepth(D).setVisible(false);
@@ -334,6 +340,7 @@ export class LevelScene extends Phaser.Scene {
     this.pitchRows.forEach((r) => r.setAlpha(k));
     this.fgPitch.setAlpha(k);
     this.fgCemetery.setAlpha(1 - k);
+    this.weather.update(time, sx);
     if (this.realBg) this.placePaintedBg(sx, k);
     else {
       this.bgNear.setAlpha(1 - k);
@@ -343,6 +350,7 @@ export class LevelScene extends Phaser.Scene {
     if (P.state === 'play' || P.state === 'hurt') {
       // buche
       if (P.y > 262) P.die('pit');
+      if (P.body.blocked.down && P.y < GROUND_Y) this.safeX = P.x;
       // checkpoint
       if (!this.reachedCheckpoint && P.x > L.checkpoint * T) this.reachCheckpoint();
       // fine del boost
@@ -400,6 +408,20 @@ export class LevelScene extends Phaser.Scene {
       playMusic(this.bossActive ? 'boss' : (this.player.boosted && this.player.char.id === 'diamanti') ? 'boost' : 'level1');
       this.pauseBox.destroy();
     }
+  }
+
+  // modalità prova: dalle buche si torna sull'ultimo punto sicuro, il tempo riparte
+  cheatRescue(cause) {
+    const P = this.player;
+    if (cause === 'pit') {
+      P.setPosition(this.safeX ?? P.x - 48, GROUND_Y - 60);
+      P.body.setVelocity(0, 0);
+      P.invulnUntil = this.time.now + 900;
+      Sfx.parry();
+    } else if (cause === 'time') {
+      this.timeLeft = 99;
+    }
+    return true;
   }
 
   tickTimer() {
@@ -482,7 +504,7 @@ export class LevelScene extends Phaser.Scene {
     // contatti offensivi: aura di Diamanti, scivolata di Ciofi
     if (P.boosted && P.char.id === 'diamanti' && e !== this.boss) { e.kill(P.x); return; }
     if (this.time.now < P.slideUntil && e !== this.boss && !(e instanceof Bat) && !(e instanceof Ghost)) { e.kill(P.x); return; }
-    if (P.hurt(e.x, e === this.boss ? 'boss' : e.constructor.name.toLowerCase())) return;
+    if (P.hurt(e.x, e === this.boss ? 'boss' : e.kind)) return;
   }
 
   onEnemyKilled(e, fromX, silent) {
@@ -499,6 +521,7 @@ export class LevelScene extends Phaser.Scene {
       this.tweens.add({ targets: this.hudCombo, scale: { from: 1.6, to: 1 }, duration: 160 });
     }
     Run.stats.kills++;
+    if (Run.stats.killsBy[e.kind] !== undefined) Run.stats.killsBy[e.kind]++;
     Sfx.enemyDie();
     // coriandoli bianconeri
     this.fxWhite.explode(8, e.x, e.y); this.fxBlack.explode(8, e.x, e.y);
@@ -588,6 +611,7 @@ export class LevelScene extends Phaser.Scene {
     this.time.delayedCall(50, () => c.active && c.clearTint());
     this.tweens.add({ targets: c, x: c.x + 1, duration: 30, yoyo: true, repeat: 1 });
     if (c.hp <= 0) {
+      Run.stats.crates++;
       this.fxDust.explode(10, c.x, c.y);
       this.fxWhite.explode(4, c.x, c.y);
       this.award(100, c.x, c.y - 8);
@@ -646,6 +670,7 @@ export class LevelScene extends Phaser.Scene {
     if (!it.active) return;
     const P = this.player;
     if (P.state !== 'play' && P.state !== 'hurt') return;
+    if (it.kind.startsWith('pumpkin')) Run.stats.pumpkins++;
     switch (it.kind) {
       case 'pumpkin': this.award(200, it.x, it.y); Sfx.pumpkin(); break;
       case 'pumpkinDrop': this.award(500, it.x, it.y); Sfx.pumpkin(); break;
@@ -819,6 +844,7 @@ export class LevelScene extends Phaser.Scene {
 
   onBossDefeated(boss) {
     this.ending = true;
+    Run.stats.killsBy.boss++;
     this.award(boss.points, boss.x, boss.y - 30, C.gold);
     for (const hz of this.hazards) hz.destroy();
     this.hazards.length = 0;
@@ -940,6 +966,8 @@ export class LevelScene extends Phaser.Scene {
     }
     const target = this.lightsOn ? 0 : 0.82;
     this.darkness = Phaser.Math.Linear(this.darkness, target, this.lightsOn ? 0.15 : 0.3);
+    // un lampo illumina anche lo stadio al buio, per un istante
+    if (time < this.weather.litUntil) this.darkness = Math.min(this.darkness, 0.18);
     if (this.darkness < 0.02) { this.darkRT.setVisible(false); return; }
     const cam = this.cameras.main;
     const rt = this.darkRT;

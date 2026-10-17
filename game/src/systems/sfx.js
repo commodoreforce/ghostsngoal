@@ -90,6 +90,19 @@ export const Sfx = {
   parry: () => { tone({ f0: 1500, f1: 2400, dur: 0.07, vol: 0.3 }); tone({ type: 'triangle', f0: 400, dur: 0.1, vol: 0.4 }); },
   fireball: () => { noise({ dur: 0.5, vol: 0.6, f: 700, sweep: 1200, q: 0.4 }); tone({ type: 'sawtooth', f0: 90, f1: 40, dur: 0.5, vol: 0.5 }); },
   thunder: () => { noise({ dur: 1.1, vol: 0.6, f: 180, q: 0.3 }); },
+  // tuono vero: schiocco (solo se vicino) e brontolio lungo che si spegne
+  storm: (near = 0.5) => {
+    if (near > 0.6) noise({ dur: 0.22, vol: 0.55 * near, f: 1400, q: 0.4, sweep: -900 });
+    noise({ dur: 2.6, vol: 0.35 + 0.4 * near, f: 110, q: 0.35, at: 0.05, sweep: -50 });
+    noise({ dur: 1.6, vol: 0.25 * near, f: 260, q: 0.5, at: 0.35, sweep: -150 });
+    tone({ type: 'triangle', f0: 55, f1: 30, dur: 2.2, vol: 0.3 * near, at: 0.05 });
+  },
+  // trucco attivato: il classico arpeggio "power up" da cabinato, più un accordo
+  cheat: () => {
+    [262, 330, 392, 523, 659, 784, 1046, 1318].forEach((f, i) => tone({ f0: f, dur: 0.06, vol: 0.3, at: i * 0.045 }));
+    [523, 659, 784].forEach((f) => tone({ type: 'sawtooth', f0: f, dur: 0.6, vol: 0.14, at: 0.4 }));
+    tone({ type: 'triangle', f0: 131, dur: 0.6, vol: 0.4, at: 0.4 });
+  },
   hooves: () => [0, 0.12, 0.3, 0.42, 0.6, 0.72].forEach((t) => noise({ dur: 0.07, vol: 0.6, f: 250, at: t })),
   unlockFail: () => { tone({ type: 'square', f0: 200, dur: 0.15, vol: 0.3 }); tone({ type: 'square', f0: 150, dur: 0.25, vol: 0.3, at: 0.15 }); },
   timeTick: () => tone({ f0: 1760, dur: 0.02, vol: 0.12 }),
@@ -101,6 +114,27 @@ export const Sfx = {
   },
   gameOver: () => [392, 370, 349, 330, 262].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: i === 4 ? 0.8 : 0.22, vol: 0.45, at: i * 0.24 })),
 };
+
+// ---------------- pioggia: fruscio continuo, filtrato come un vecchio chip PCM
+let rain = null;
+export function rainStart(vol = 0.11) {
+  if (!ctx || rain) return;
+  const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200;
+  const g = ctx.createGain(); g.gain.value = 0.0001;
+  g.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + 1.2);
+  src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(sfxGain);
+  src.start();
+  rain = { src, g };
+}
+export function rainStop() {
+  if (!rain || !ctx) { rain = null; return; }
+  const { src, g } = rain;
+  g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25);
+  src.stop(ctx.currentTime + 1.2);
+  rain = null;
+}
 
 // ---------------- musica provvisoria (temi originali) ----------------
 // Ogni traccia: bpm, step per misura, lead/basso come note MIDI (0 = pausa).

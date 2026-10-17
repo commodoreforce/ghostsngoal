@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Input } from '../systems/input.js';
 import { Sfx, playMusic } from '../systems/sfx.js';
 import { Api } from '../systems/api.js';
+import { Cheat } from '../systems/cheat.js';
 import { charById } from '../data/characters.js';
 import { t, getLang, setLang } from '../i18n.js';
 import { center, txt, blink, pad, C, W, H } from '../systems/ui.js';
@@ -12,6 +13,8 @@ export class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
 
   create() {
+    this.badge = null;
+    this.cheatTyped = Input.peekTyped(); // svuota ciò che si è scritto prima
     this.cameras.main.setBackgroundColor('#000000');
     this.add.image(0, 0, 'bg_sky').setOrigin(0);
     this.stadium = this.add.tileSprite(0, 28, W, H, 'bg_stadium').setOrigin(0);
@@ -26,6 +29,7 @@ export class TitleScene extends Phaser.Scene {
     this.plays = null;
     this.top = [];
     this.fetchBoard();
+    if (Cheat.on) this.cheatBadge();
   }
 
   buildTitle() {
@@ -95,6 +99,12 @@ export class TitleScene extends Phaser.Scene {
     });
   }
 
+  cheatBadge() {
+    if (this.badge) return;
+    this.badge = txt(this, W - 4, 4, 'TEST', { color: C.red, ox: 1, depth: 150 });
+    blink(this, this.badge, 600);
+  }
+
   toggleMode() {
     this.mode = this.mode === 'title' ? 'board' : 'title';
     this.page.setVisible(this.mode === 'title');
@@ -105,6 +115,9 @@ export class TitleScene extends Phaser.Scene {
   update(time) {
     this.stadium.tilePositionX = time * 0.006;
     this.fog.tilePositionX = time * 0.02;
+    if (Cheat.listen(this)) { this.cheatBadge(); return; }
+    // durante la combinazione segreta B e A non fanno partire la partita
+    const comboEnd = !Cheat.on && Cheat.combo >= 8 && time - Cheat.comboAt < 1000;
     if (Input.pressed('up') || Input.pressed('down')) {
       setLang(getLang() === 'it' ? 'en' : 'it');
       Sfx.blip();
@@ -112,7 +125,7 @@ export class TitleScene extends Phaser.Scene {
       this.buildBoard();
       this.page.setVisible(this.mode === 'title');
     }
-    if (Input.pressed('start') || Input.pressed('a') || Input.pressed('b')) {
+    if (Input.pressed('start') || (!comboEnd && (Input.pressed('a') || Input.pressed('b')))) {
       if (this.mode === 'board') { this.toggleMode(); this.modeTimer.reset({ delay: 9000, loop: true, callback: () => this.toggleMode() }); return; }
       Sfx.confirm();
       this.cameras.main.flash(200, 255, 255, 255);

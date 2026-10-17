@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/_layout.php';
 admin_session();
 gng_config();
+try { migrate(); } catch (Throwable $e) { /* database non ancora installato: ci pensa setup.php */ }
 
 $p = $_GET['p'] ?? 'scores';
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
@@ -184,46 +185,182 @@ if ($p === 'filter') {
 
 if ($p === 'stats') {
     page_head('Statistiche', true, 'stats');
+    $days = max(7, min(60, (int) ($_GET['days'] ?? 14)));
+    $now = time();
     $today = strtotime('today');
-    $runs = (int) q('SELECT COUNT(*) FROM runs')->fetchColumn();
-    $runsToday = (int) q('SELECT COUNT(*) FROM runs WHERE started_at >= ?', [$today])->fetchColumn();
-    $players = (int) q('SELECT COUNT(DISTINCT ip_hash) FROM runs')->fetchColumn();
-    $avg = (int) q('SELECT AVG(score) FROM runs WHERE ended_at IS NOT NULL AND plausible = 1')->fetchColumn();
-    $avgDur = (int) q('SELECT AVG(duration_ms) FROM runs WHERE ended_at IS NOT NULL AND plausible = 1')->fetchColumn();
-    $cleared = (int) q('SELECT COUNT(*) FROM runs WHERE cleared = 1')->fetchColumn();
-    $unlocks = (int) q('SELECT COUNT(*) FROM unlocks')->fetchColumn();
-    $byHero = q('SELECT hero, COUNT(*) AS n FROM runs GROUP BY hero ORDER BY n DESC')->fetchAll();
-    $byCause = q("SELECT cause, COUNT(*) AS n FROM runs WHERE cause IS NOT NULL AND cause <> '' GROUP BY cause ORDER BY n DESC")->fetchAll();
-    $byLevel = q('SELECT level_reached, COUNT(*) AS n FROM runs WHERE ended_at IS NOT NULL GROUP BY level_reached ORDER BY level_reached')->fetchAll();
+    $off = (int) date('Z');                          // fuso orario di Roma (ora legale compresa)
+    $one = fn (string $sql, array $a = []) => q($sql, $a)->fetchColumn();
+    $n = fn ($v) => number_format((float) $v, 0, ',', '.');
+    $pct = fn ($a, $b) => $b > 0 ? round($a / $b * 100) . '%' : '–';
+    $G = 'cheat = 0';                                // le partite di prova non contano
+    $E = "$G AND ended_at IS NOT NULL";
+
+    // accessi
+    $visits = (int) $one('SELECT COUNT(*) FROM visits');
+    $uniq = (int) $one('SELECT COUNT(DISTINCT ip_hash) FROM visits');
+    $visitsToday = (int) $one('SELECT COUNT(*) FROM visits WHERE created_at >= ?', [$today]);
+    $uniqToday = (int) $one('SELECT COUNT(DISTINCT ip_hash) FROM visits WHERE created_at >= ?', [$today]);
+    $playersAll = (int) $one("SELECT COUNT(DISTINCT ip_hash) FROM runs WHERE $G");
+    $visitorsWhoPlayed = (int) $one("SELECT COUNT(DISTINCT v.ip_hash) FROM visits v WHERE EXISTS (SELECT 1 FROM runs r WHERE r.ip_hash = v.ip_hash AND r.cheat = 0)");
+
+    // partite e tempo
+    $runs = (int) $one("SELECT COUNT(*) FROM runs WHERE $G");
+    $runsToday = (int) $one("SELECT COUNT(*) FROM runs WHERE $G AND started_at >= ?", [$today]);
+    $ended = (int) $one("SELECT COUNT(*) FROM runs WHERE $E");
+    $totMs = (float) $one("SELECT COALESCE(SUM(duration_ms), 0) FROM runs WHERE $E");
+    $maxMs = (int) $one("SELECT COALESCE(MAX(duration_ms), 0) FROM runs WHERE $E");
+    $cleared = (int) $one("SELECT COUNT(*) FROM runs WHERE $G AND cleared = 1");
+    $avgScore = (int) $one("SELECT COALESCE(AVG(score), 0) FROM runs WHERE $E AND plausible = 1");
+    $best = (int) $one('SELECT COALESCE(MAX(score), 0) FROM scores WHERE hidden = 0');
+    $names = (int) $one('SELECT COUNT(*) FROM scores WHERE hidden = 0');
+    $perPlayer = $playersAll ? $runs / $playersAll : 0;
+    $tests = (int) $one('SELECT COUNT(*) FROM runs WHERE cheat = 1');
+    $unlocks = (int) $one('SELECT COUNT(*) FROM unlocks');
+    $hours = $totMs / 3600000;
+    $fmtDur = fn (int $ms) => sprintf('%d:%02d', intdiv($ms, 60000), intdiv($ms % 60000, 1000));
+
+    // in campo
+    $sum = q("SELECT COALESCE(SUM(kills),0) kills, COALESCE(SUM(shots),0) shots, COALESCE(SUM(hits),0) hits, COALESCE(SUM(deaths),0) deaths,
+        COALESCE(SUM(boosts),0) boosts, COALESCE(SUM(pumpkins),0) pumpkins, COALESCE(SUM(crates),0) crates,
+        COALESCE(SUM(k_zombie),0) k_zombie, COALESCE(SUM(k_bat),0) k_bat, COALESCE(SUM(k_pumpkin),0) k_pumpkin,
+        COALESCE(SUM(k_ghost),0) k_ghost, COALESCE(SUM(k_boss),0) k_boss FROM runs WHERE $E")->fetch();
+
+    // distribuzioni
+    $byHero = q("SELECT hero AS k, COUNT(*) AS n FROM runs WHERE $G GROUP BY hero ORDER BY n DESC")->fetchAll();
+    $byKit = q("SELECT kit AS k, COUNT(*) AS n FROM runs WHERE $G GROUP BY kit ORDER BY n DESC")->fetchAll();
+    $heroScore = q("SELECT hero AS k, ROUND(AVG(score)) AS n FROM runs WHERE $E AND plausible = 1 GROUP BY hero ORDER BY n DESC")->fetchAll();
+    $byLevel = q("SELECT level_reached AS k, COUNT(*) AS n FROM runs WHERE $E GROUP BY level_reached ORDER BY level_reached")->fetchAll();
+    $byCause = q("SELECT cause AS k, COUNT(*) AS n FROM runs WHERE $G AND cause IS NOT NULL AND cause <> '' GROUP BY cause ORDER BY n DESC")->fetchAll();
+    $byDevice = q("SELECT device AS k, COUNT(*) AS n FROM visits GROUP BY device ORDER BY n DESC")->fetchAll();
+    $byLang = q("SELECT lang AS k, COUNT(*) AS n FROM visits GROUP BY lang ORDER BY n DESC")->fetchAll();
+    $bySource = q("SELECT source AS k, COUNT(*) AS n FROM visits GROUP BY source ORDER BY n DESC LIMIT 12")->fetchAll();
+
+    // andamento per giorno e fascia oraria
+    $from = $today - ($days - 1) * 86400;
+    $dayExpr = fn (string $col) => sql_idiv("$col + $off", 86400);
+    $series = function (string $sql, array $a) { $o = []; foreach (q($sql, $a)->fetchAll() as $r) $o[(int) $r['d']] = (int) $r['n']; return $o; };
+    $vDay = $series('SELECT ' . $dayExpr('created_at') . ' AS d, COUNT(*) AS n FROM visits WHERE created_at >= ? GROUP BY d', [$from]);
+    $uDay = $series('SELECT ' . $dayExpr('created_at') . ' AS d, COUNT(DISTINCT ip_hash) AS n FROM visits WHERE created_at >= ? GROUP BY d', [$from]);
+    $rDay = $series('SELECT ' . $dayExpr('started_at') . " AS d, COUNT(*) AS n FROM runs WHERE $G AND started_at >= ? GROUP BY d", [$from]);
+    $hDay = $series('SELECT ' . $dayExpr('started_at') . " AS d, COALESCE(SUM(duration_ms), 0) / 60000 AS n FROM runs WHERE $E AND started_at >= ? GROUP BY d", [$from]);
+    $hourly = $series('SELECT ' . sql_idiv("(started_at + $off) % 86400", 3600) . " AS d, COUNT(*) AS n FROM runs WHERE $G GROUP BY d", []);
+
     $causeNames = ['pit' => 'Caduto in una buca', 'time' => 'Tempo scaduto', 'zombie' => 'Zombie', 'bat' => 'Pipistrello', 'pumpkin' => 'Zucca', 'ghost' => 'Fantasma', 'boss' => 'Arbitro Non-Morto', 'enemy' => 'Nemico'];
-    $bars = function (array $rows, string $key, callable $label) {
+    $kitNames = ['home' => 'Casa (bianca)', 'away' => 'Trasferta', 'third' => 'Terza maglia'];
+    $deviceNames = ['mobile' => 'Telefono', 'tablet' => 'Tablet', 'desktop' => 'Computer', '' => 'Non rilevato'];
+    $langNames = ['it' => 'Italiano', 'en' => 'Inglese', '' => 'Non rilevata'];
+    $bars = function (array $rows, callable $label, bool $percent = false) {
         $max = max(1, ...array_map(fn ($r) => (int) $r['n'], $rows ?: [['n' => 1]]));
+        $tot = max(1, array_sum(array_map(fn ($r) => (int) $r['n'], $rows)));
         echo '<table>';
         foreach ($rows as $r) {
-            $pct = round((int) $r['n'] / $max * 100);
-            echo '<tr><td style="width:40%">' . h($label($r[$key])) . '</td><td><div class="bar"><i style="width:' . $pct . '%"></i></div></td><td class="num" style="width:70px">' . (int) $r['n'] . '</td></tr>';
+            $w = round((int) $r['n'] / $max * 100);
+            $val = number_format((int) $r['n'], 0, ',', '.') . ($percent ? ' <span class="muted">' . round((int) $r['n'] / $tot * 100) . '%</span>' : '');
+            echo '<tr><td style="width:38%">' . h($label($r['k'])) . '</td><td><div class="bar"><i style="width:' . $w . '%"></i></div></td><td class="num" style="width:110px">' . $val . '</td></tr>';
         }
-        if (!$rows) echo '<tr><td style="color:var(--muted)">Ancora nessun dato.</td></tr>';
+        if (!$rows) echo '<tr><td class="muted">Ancora nessun dato.</td></tr>';
         echo '</table>';
     };
+    // grafico a colonne (una o due serie), senza librerie esterne
+    $columns = function (array $keys, array $labels, array $a, ?array $b = null, string $unit = '') {
+        $max = max(1, ...array_map(fn ($k) => max($a[$k] ?? 0, $b[$k] ?? 0), $keys));
+        echo '<div class="cols">';
+        foreach ($keys as $i => $k) {
+            $va = $a[$k] ?? 0; $vb = $b !== null ? ($b[$k] ?? 0) : null;
+            $tip = number_format($va, 0, ',', '.') . $unit . ($vb !== null ? ' / ' . number_format($vb, 0, ',', '.') : '');
+            echo '<div class="col" title="' . h($labels[$i] . ': ' . $tip) . '"><div class="stack">';
+            echo '<i style="height:' . round($va / $max * 100) . '%"></i>';
+            if ($vb !== null) echo '<i class="b" style="height:' . round($vb / $max * 100) . '%"></i>';
+            echo '</div><span>' . h($labels[$i]) . '</span></div>';
+        }
+        echo '</div>';
+    };
+    $dayKeys = []; $dayLabels = [];
+    for ($t = $from; $t <= $today; $t += 86400) { $dayKeys[] = intdiv($t + $off, 86400); $dayLabels[] = date('d/m', $t); }
+    $stat = fn ($v, $label, $sub = '') => '<div class="card stat"><b>' . $v . '</b><span>' . $label . '</span>' . ($sub ? '<small>' . $sub . '</small>' : '') . '</div>';
     ?>
+    <style>
+      .muted { color:var(--muted); } .stat small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+      .cols { display:flex; align-items:flex-end; gap:3px; height:160px; padding-top:8px; }
+      .col { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; min-width:0; }
+      .col .stack { flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center; gap:1px; }
+      .col .stack i { display:block; width:45%; background:var(--orange); border-radius:2px 2px 0 0; min-height:1px; }
+      .col .stack i.b { background:var(--gold); }
+      .col span { font-size:10px; color:var(--muted); margin-top:4px; white-space:nowrap; }
+      .legend { display:flex; gap:14px; font-size:13px; color:var(--muted); margin-bottom:6px; }
+      .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; background:var(--orange); }
+      .legend i.b { background:var(--gold); }
+      .two { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; }
+      .two .card { margin:0; } .two h2 { margin-top:0; }
+      @media (max-width:640px) { .col span { display:none; } }
+    </style>
     <h1>Statistiche</h1>
-    <p class="lead">Dati anonimi: nessun indirizzo IP è salvato in chiaro, nessun cookie di profilazione.</p>
+    <p class="lead">Dati anonimi: nessun indirizzo IP salvato in chiaro, nessun cookie. "Unici" vuol dire dispositivi/reti diversi, quindi è una stima. Le partite in modalità prova (trucco DAIBURDEL) sono escluse.</p>
+
+    <h2>Accessi</h2>
     <div class="grid">
-      <div class="card stat"><b><?= number_format($runs, 0, ',', '.') ?></b><span>partite giocate</span></div>
-      <div class="card stat"><b><?= number_format($runsToday, 0, ',', '.') ?></b><span>oggi</span></div>
-      <div class="card stat"><b><?= number_format($players, 0, ',', '.') ?></b><span>giocatori diversi (circa)</span></div>
-      <div class="card stat"><b><?= number_format($avg, 0, ',', '.') ?></b><span>punteggio medio</span></div>
-      <div class="card stat"><b><?= gmdate('i:s', intdiv($avgDur, 1000)) ?></b><span>durata media partita</span></div>
-      <div class="card stat"><b><?= number_format($cleared, 0, ',', '.') ?></b><span>partite finite fino in fondo</span></div>
-      <div class="card stat"><b><?= number_format($unlocks, 0, ',', '.') ?></b><span>sblocchi di Tatanka</span></div>
+      <?= $stat($n($visits), 'accessi totali') ?>
+      <?= $stat($n($uniq), 'accessi unici') ?>
+      <?= $stat($n($visitsToday), 'accessi oggi', $n($uniqToday) . ' unici') ?>
+      <?= $stat($pct($visitorsWhoPlayed, $uniq), 'di chi entra gioca', 'almeno una partita') ?>
     </div>
-    <h2>Personaggio scelto</h2>
-    <div class="card"><?php $bars($byHero, 'hero', fn ($v) => $heroNames[$v] ?? $v); ?></div>
-    <h2>Livello raggiunto</h2>
-    <div class="card"><?php $bars($byLevel, 'level_reached', fn ($v) => 'Livello ' . $v); ?></div>
-    <h2>Come si muore</h2>
-    <div class="card"><?php $bars($byCause, 'cause', fn ($v) => $causeNames[$v] ?? $v); ?></div>
+
+    <h2>Partite</h2>
+    <div class="grid">
+      <?= $stat($n($runs), 'partite giocate', $n($runsToday) . ' oggi') ?>
+      <?= $stat($n($playersAll), 'giocatori diversi', number_format($perPlayer, 1, ',', '.') . ' partite a testa') ?>
+      <?= $stat($n(floor($hours)) . ' h ' . sprintf('%02d', (int) round(($hours - floor($hours)) * 60)), 'ore di gioco in tutto', 'sulle partite concluse') ?>
+      <?= $stat($fmtDur($ended ? (int) ($totMs / $ended) : 0), 'durata media', 'più lunga ' . $fmtDur($maxMs)) ?>
+      <?= $stat($n($cleared), 'livelli completati', $pct($cleared, $ended) . ' delle partite') ?>
+      <?= $stat($n($avgScore), 'punteggio medio', 'record ' . $n($best)) ?>
+      <?= $stat($n($names), 'nomi in classifica') ?>
+      <?= $stat($n($unlocks), 'sblocchi di Tatanka') ?>
+    </div>
+
+    <h2>In campo</h2>
+    <div class="grid">
+      <?= $stat($n($sum['kills']), 'nemici sconfitti', $ended ? number_format($sum['kills'] / $ended, 1, ',', '.') . ' a partita' : '') ?>
+      <?= $stat($n($sum['k_boss']), 'arbitri espulsi', 'boss sconfitti') ?>
+      <?= $stat($n($sum['shots']), 'palloni calciati', 'precisione ' . $pct((int) $sum['hits'], (int) $sum['shots'])) ?>
+      <?= $stat($n($sum['deaths']), 'vite perse') ?>
+      <?= $stat($n($sum['boosts']), 'boost attivati', 'cavallucci d\'oro presi') ?>
+      <?= $stat($n($sum['pumpkins']), 'zucche raccolte') ?>
+      <?= $stat($n($sum['crates']), 'casse distrutte') ?>
+      <?= $stat($n($tests), 'partite di prova', 'con il trucco attivo') ?>
+    </div>
+
+    <h2>Ultimi <?= $days ?> giorni</h2>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="legend"><span><i></i>accessi</span><span><i class="b"></i>accessi unici</span></div>
+        <div class="row"><?php foreach ([7, 14, 30, 60] as $d): ?><a class="btn <?= $d === $days ? '' : 'ghost' ?>" style="padding:3px 9px;font-size:13px;<?= $d === $days ? '' : 'background:transparent;color:var(--text);border:1px solid var(--line)' ?>" href="?p=stats&days=<?= $d ?>"><?= $d ?> gg</a><?php endforeach; ?></div>
+      </div>
+      <?php $columns($dayKeys, $dayLabels, $vDay, $uDay); ?>
+    </div>
+    <div class="card">
+      <div class="legend"><span><i></i>partite</span><span><i class="b"></i>minuti di gioco</span></div>
+      <?php $columns($dayKeys, $dayLabels, $rDay, $hDay); ?>
+    </div>
+    <div class="card">
+      <div class="legend"><span><i></i>partite per fascia oraria (tutto il periodo)</span></div>
+      <?php $columns(range(0, 23), array_map(fn ($h) => sprintf('%02d', $h), range(0, 23)), $hourly); ?>
+    </div>
+
+    <div class="two">
+      <div class="card"><h2>Personaggio scelto</h2><?php $bars($byHero, fn ($v) => $heroNames[$v] ?? $v, true); ?></div>
+      <div class="card"><h2>Punteggio medio per personaggio</h2><?php $bars($heroScore, fn ($v) => $heroNames[$v] ?? $v); ?></div>
+      <div class="card"><h2>Maglia</h2><?php $bars($byKit, fn ($v) => $kitNames[$v] ?? $v, true); ?></div>
+      <div class="card"><h2>Nemici sconfitti</h2><?php $bars(array_values(array_filter([
+          ['k' => 'Zombie', 'n' => (int) $sum['k_zombie']], ['k' => 'Pipistrelli', 'n' => (int) $sum['k_bat']],
+          ['k' => 'Zucche', 'n' => (int) $sum['k_pumpkin']], ['k' => 'Fantasmi', 'n' => (int) $sum['k_ghost']],
+          ['k' => 'Arbitri Non-Morti', 'n' => (int) $sum['k_boss']]], fn ($r) => $r['n'] > 0)), fn ($v) => $v, true); ?></div>
+      <div class="card"><h2>Livello raggiunto</h2><?php $bars($byLevel, fn ($v) => 'Livello ' . $v, true); ?></div>
+      <div class="card"><h2>Come si muore</h2><?php $bars($byCause, fn ($v) => $causeNames[$v] ?? $v, true); ?></div>
+      <div class="card"><h2>Dispositivo</h2><?php $bars($byDevice, fn ($v) => $deviceNames[$v] ?? $v, true); ?></div>
+      <div class="card"><h2>Lingua</h2><?php $bars($byLang, fn ($v) => $langNames[$v] ?? $v, true); ?></div>
+      <div class="card"><h2>Da dove arrivano</h2><?php $bars($bySource, fn ($v) => $v === '' ? 'Diretto / non rilevato' : $v, true); ?>
+        <p class="muted" style="font-size:13px;margin:8px 0 0">Per sapere quale post funziona meglio, aggiungi ai link <code>?utm_source=instagram</code> (o newsletter, facebook…).</p></div>
+    </div>
     <?php
     page_foot(); exit;
 }

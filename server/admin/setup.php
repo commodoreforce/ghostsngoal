@@ -8,6 +8,7 @@ gng_config();
 
 try {
     ensure_schema();
+    migrate();
 } catch (Throwable $e) {
     page_head('Installazione', false);
     echo '<div class="card"><h1>Database non raggiungibile</h1><p class="lead">Controlla i dati di accesso al database in config.php.</p></div>';

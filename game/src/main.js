@@ -4,6 +4,7 @@ import Phaser from 'phaser';
 import { Input } from './systems/input.js';
 import { unlockAudio, isMuted, setMuted, resumePendingMusic, preloadMusicFiles } from './systems/sfx.js';
 import { getLang, setLang } from './i18n.js';
+import { Api } from './systems/api.js';
 import { BootScene } from './scenes/BootScene.js';
 import { TitleScene } from './scenes/TitleScene.js';
 import { SelectScene } from './scenes/SelectScene.js';
@@ -20,6 +21,7 @@ export const ARCADE_FPS = 20;
 setLang(getLang());
 Input.init();
 preloadMusicFiles();
+Api.visit(getLang()); // conteggio accessi (anonimo)
 
 // l'audio dei browser parte solo dopo un'interazione
 const wakeAudio = () => { unlockAudio(); resumePendingMusic(); };

@@ -56,7 +56,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   get boosted() { return this.scene.time.now < this.boostUntil; }
   get invulnerable() {
-    return this.scene.time.now < this.invulnUntil || (this.boosted && this.char.id === 'diamanti') || this.state !== 'play';
+    return Run.cheat || this.scene.time.now < this.invulnUntil || (this.boosted && this.char.id === 'diamanti') || this.state !== 'play';
   }
 
   texVariant() {
@@ -247,6 +247,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   die(cause) {
     if (this.state === 'dead') return;
+    if (Run.cheat && this.scene.cheatRescue(cause)) return;
     this.state = 'dead';
     Run.deathCause = cause;
     this.charging = false;

@@ -4,6 +4,7 @@
 declare(strict_types=1);
 require __DIR__ . '/../lib/bootstrap.php';
 require_post();
+migrate();
 $in = read_json();
 $action = $in['action'] ?? '';
 
@@ -13,7 +14,12 @@ if ($action === 'start') {
     if (too_many('run', 120, 3600)) json_out(['ok' => false, 'error' => 'rate'], 429);
     log_attempt('run');
     $token = bin2hex(random_bytes(24));
-    q('INSERT INTO runs (token, hero, started_at, ip_hash) VALUES (?, ?, ?, ?)', [$token, $hero, time(), client_hash()]);
+    $kit = in_array($in['kit'] ?? '', GNG_KITS, true) ? $in['kit'] : 'home';
+    $device = in_array($in['device'] ?? '', ['mobile', 'tablet', 'desktop'], true) ? $in['device'] : '';
+    $lang = in_array($in['lang'] ?? '', ['it', 'en'], true) ? $in['lang'] : '';
+    $cheat = !empty($in['cheat']) ? 1 : 0;
+    q('INSERT INTO runs (token, hero, started_at, ip_hash, kit, device, lang, cheat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [$token, $hero, time(), client_hash(), $kit, $device, $lang, $cheat]);
     json_out(['ok' => true, 'token' => $token]);
 }
 
@@ -29,7 +35,15 @@ if ($action === 'end') {
     $cleared = !empty($in['cleared']) ? 1 : 0;
     $durMs = max(0, (int) ($in['durationMs'] ?? 0));
     $cause = substr(preg_replace('/[^a-z_]/', '', strtolower((string) ($in['cause'] ?? ''))) ?? '', 0, 24);
-    $stats = json_encode(array_map('intval', array_intersect_key((array) ($in['stats'] ?? []), array_flip(['shots', 'hits', 'kills', 'deaths', 'boosts']))));
+    $raw = (array) ($in['stats'] ?? []);
+    $num = fn ($v, $max = 100000) => max(0, min($max, (int) $v));
+    $st = [];
+    foreach (['shots', 'hits', 'kills', 'deaths', 'boosts', 'pumpkins', 'crates'] as $k) $st[$k] = $num($raw[$k] ?? 0);
+    $by = (array) ($raw['killsBy'] ?? []);
+    foreach (GNG_KILL_KINDS as $k) $st["k_$k"] = $num($by[$k] ?? 0, $k === 'boss' ? 10 : 100000);
+    $stats = json_encode($st);
+    // modalità prova: dichiarata all'inizio o alla fine, la partita non va mai in classifica
+    $cheat = ((int) $run['cheat'] === 1 || !empty($in['cheat'])) ? 1 : 0;
 
     // plausibilità: la durata dichiarata deve stare dentro quella misurata dal server,
     // e i punti non possono crescere più velocemente di quanto il gioco permetta
@@ -41,14 +55,21 @@ if ($action === 'end') {
     if ($serverSec < 20 && $score > 5000) $plausible = 0;
     $maxScore = 120000 + $serverSec * 1500;
     if ($score > $maxScore) $plausible = 0;
+    if ($cheat) $plausible = 0;
+    if ($st['hits'] > $st['shots'] * 3 + 10) $plausible = 0;
 
-    q('UPDATE runs SET ended_at = ?, score = ?, level_reached = ?, lap = ?, cleared = ?, duration_ms = ?, cause = ?, stats = ?, plausible = ? WHERE id = ?',
-        [$now, $score, $level, $lap, $cleared, $durMs, $cause, $stats, $plausible, $run['id']]);
+    // la durata che conta per le statistiche non può superare quella vista dal server
+    $durMs = min($durMs, ($serverSec + 5) * 1000);
+    $set = 'ended_at = ?, score = ?, level_reached = ?, lap = ?, cleared = ?, duration_ms = ?, cause = ?, stats = ?, plausible = ?, cheat = ?';
+    $args = [$now, $score, $level, $lap, $cleared, $durMs, $cause, $stats, $plausible, $cheat];
+    foreach ($st as $k => $v) { $set .= ", $k = ?"; $args[] = $v; }
+    $args[] = $run['id'];
+    q("UPDATE runs SET $set WHERE id = ?", $args);
 
     $size = (int) (gng_config()['leaderboard_size'] ?? 100);
     $better = (int) q('SELECT COUNT(*) FROM scores WHERE hidden = 0 AND score >= ?', [$score])->fetchColumn();
     $rank = $better + 1;
-    $qualifies = $plausible && $score > 0 && $rank <= $size;
+    $qualifies = $plausible && !$cheat && $score > 0 && $rank <= $size;
     json_out(['ok' => true, 'qualifies' => (bool) $qualifies, 'rank' => $rank]);
 }
 

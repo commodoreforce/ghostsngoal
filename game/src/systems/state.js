@@ -1,5 +1,9 @@
 // Stato della partita in corso, condiviso fra le scene.
 import { LocalBest } from './api.js';
+import { Cheat } from './cheat.js';
+
+const newStats = () => ({ shots: 0, hits: 0, kills: 0, deaths: 0, boosts: 0, pumpkins: 0, crates: 0,
+  killsBy: { zombie: 0, bat: 0, pumpkin: 0, ghost: 0, boss: 0 } });
 
 export const EXTRA_LIFE_AT = [20000, 60000];
 export const EXTRA_LIFE_EVERY = 100000;
@@ -17,7 +21,8 @@ export const Run = {
   lifeIdx: 0,
   levelReached: 1,
   deathCause: null,
-  stats: { shots: 0, hits: 0, kills: 0, deaths: 0, boosts: 0 },
+  cheat: false,
+  stats: newStats(),
 
   reset(character, kit = 'home') {
     this.character = character;
@@ -26,7 +31,8 @@ export const Run = {
     this.token = null; this.startedAt = Date.now();
     this.nextLife = EXTRA_LIFE_AT[0]; this.lifeIdx = 0; this.levelReached = 1;
     this.deathCause = null;
-    this.stats = { shots: 0, hits: 0, kills: 0, deaths: 0, boosts: 0 };
+    this.stats = newStats();
+    this.cheat = Cheat.on;   // partita di prova: niente classifica
   },
 
   // restituisce true se il punteggio ha fatto guadagnare una vita

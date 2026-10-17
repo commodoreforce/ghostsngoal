@@ -4,7 +4,7 @@ import { Sfx, playMusic } from '../systems/sfx.js';
 import { Api, LocalBest } from '../systems/api.js';
 import { Run } from '../systems/state.js';
 import { charById } from '../data/characters.js';
-import { t } from '../i18n.js';
+import { t, getLang } from '../i18n.js';
 import { center, txt, pad, C, W, H } from '../systems/ui.js';
 import { surface } from '../systems/layout.js';
 
@@ -33,9 +33,16 @@ export class NameEntryScene extends Phaser.Scene {
     const payload = {
       score: Run.score, character: Run.character, level: Run.levelReached, loop: Run.loop,
       cleared: this.cleared, durationMs, stats: Run.stats, cause: Run.deathCause,
+      kit: Run.kit, cheat: Run.cheat,
     };
     const finish = (r) => {
       if (!this.scene.isActive()) return;
+      if (Run.cheat) {
+        // partita di prova: il punteggio non entra in classifica
+        this.status.setText(getLang() === 'it' ? 'MODALITÀ PROVA: NIENTE CLASSIFICA' : 'TEST MODE: NO HIGH SCORE').setColor(C.red);
+        this.time.delayedCall(2600, () => this.showBoard(null, r && r.offline));
+        return;
+      }
       if (r && r.ok && r.qualifies) this.startEntry(r.rank);
       else this.showBoard(null, r && r.offline);
     };

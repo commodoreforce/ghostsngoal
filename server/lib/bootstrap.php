@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 const GNG_HEROES = ['shpendi', 'ciofi', 'klinsmann', 'diamanti', 'hubner'];
 const GNG_NAME_MAX = 10;
+const GNG_SCHEMA = 2;   // si alza quando cambia la struttura del database
+const GNG_KITS = ['home', 'away', 'third'];
+const GNG_KILL_KINDS = ['zombie', 'bat', 'pumpkin', 'ghost', 'boss'];
 
 function gng_config(): array {
     static $cfg = null;
@@ -201,6 +204,21 @@ function schema_statements(string $driver): array {
             name_norm VARCHAR(64) NOT NULL UNIQUE,
             created_at INT NOT NULL
         )$eng",
+        "CREATE TABLE IF NOT EXISTS visits (
+            id $pk,
+            created_at INT NOT NULL,
+            ip_hash CHAR(64) NOT NULL,
+            device VARCHAR(8) NOT NULL DEFAULT '',
+            lang VARCHAR(2) NOT NULL DEFAULT '',
+            source VARCHAR(60) NOT NULL DEFAULT ''
+        )$eng",
+        "CREATE INDEX idx_visits_time ON visits (created_at)",
+        "CREATE INDEX idx_visits_ip ON visits (ip_hash, created_at)",
+        "CREATE INDEX idx_runs_time ON runs (started_at)",
+        "CREATE TABLE IF NOT EXISTS meta (
+            k VARCHAR(32) NOT NULL PRIMARY KEY,
+            v VARCHAR(255) NOT NULL
+        )$eng",
         "CREATE TABLE IF NOT EXISTS admins (
             id $pk,
             username VARCHAR(64) NOT NULL UNIQUE,
@@ -237,4 +255,46 @@ function ensure_schema(): void {
     if ((int) q('SELECT COUNT(*) FROM badwords')->fetchColumn() === 0) {
         foreach (default_badwords() as $w) q('INSERT INTO badwords (word) VALUES (?)', [$w]);
     }
+}
+
+
+// colonne aggiunte nelle versioni successive (le installazioni esistenti si aggiornano da sole)
+function run_extra_columns(): array {
+    $cols = [
+        'kit' => "VARCHAR(8) NOT NULL DEFAULT 'home'",
+        'device' => "VARCHAR(8) NOT NULL DEFAULT ''",
+        'lang' => "VARCHAR(2) NOT NULL DEFAULT ''",
+        'cheat' => 'SMALLINT NOT NULL DEFAULT 0',
+    ];
+    foreach (['kills', 'shots', 'hits', 'deaths', 'boosts', 'pumpkins', 'crates'] as $c) $cols[$c] = 'INT NOT NULL DEFAULT 0';
+    foreach (GNG_KILL_KINDS as $k) $cols["k_$k"] = 'INT NOT NULL DEFAULT 0';
+    return $cols;
+}
+
+function table_columns(string $table): array {
+    if (db_driver() === 'sqlite') return array_column(q("PRAGMA table_info($table)")->fetchAll(), 'name');
+    return array_column(q("SHOW COLUMNS FROM $table")->fetchAll(), 'Field');
+}
+
+// crea o aggiorna il database se serve: una sola query leggera quando è già tutto a posto
+function migrate(): void {
+    static $done = false;
+    if ($done) return;
+    $done = true;
+    try {
+        $v = (int) q("SELECT v FROM meta WHERE k = 'schema'")->fetchColumn();
+        if ($v >= GNG_SCHEMA) return;
+    } catch (PDOException $e) { /* tabella meta non ancora creata */ }
+    ensure_schema();
+    $have = table_columns('runs');
+    foreach (run_extra_columns() as $name => $def) {
+        if (!in_array($name, $have, true)) db()->exec("ALTER TABLE runs ADD COLUMN $name $def");
+    }
+    q("DELETE FROM meta WHERE k = 'schema'");
+    q("INSERT INTO meta (k, v) VALUES ('schema', ?)", [(string) GNG_SCHEMA]);
+}
+
+// divisione intera valida sia su MySQL sia su SQLite
+function sql_idiv(string $expr, int $n): string {
+    return db_driver() === 'sqlite' ? "(($expr) / $n)" : "(($expr) DIV $n)";
 }

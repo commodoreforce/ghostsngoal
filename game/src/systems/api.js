@@ -20,9 +20,29 @@ async function call(path, body) {
   }
 }
 
+// tipo di dispositivo, solo per le statistiche (nessun dato personale)
+export function deviceKind() {
+  const ua = navigator.userAgent || '';
+  if (/iPad|Tablet/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'tablet';
+  if (/Mobi|Android|iPhone/i.test(ua)) return 'mobile';
+  return 'desktop';
+}
+
+// da dove arriva il visitatore: solo il nome del sito (instagram.com, facebook.com...) o il parametro utm_source
+function source() {
+  try {
+    const utm = new URLSearchParams(location.search).get('utm_source');
+    if (utm) return utm.toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 40);
+    if (!document.referrer) return '';
+    const host = new URL(document.referrer).hostname.replace(/^www\./, '').replace(/^(l|lm|m)\./, '');
+    return host === location.hostname ? '' : host.slice(0, 60);
+  } catch (e) { return ''; }
+}
+
 export const Api = {
+  visit: (lang) => call('visit.php', { device: deviceKind(), lang, source: source() }),
   // ogni partita ottiene un gettone dal server: serve a verificare che il punteggio sia plausibile
-  startRun: (character) => call('run.php', { action: 'start', character }),
+  startRun: (character, extra = {}) => call('run.php', { action: 'start', character, device: deviceKind(), ...extra }),
   endRun: (token, payload) => call('run.php', { action: 'end', token, ...payload }),
   submitScore: (token, nickname) => call('score.php', { token, nickname }),
   leaderboard: (limit = 10) => call(`leaderboard.php?limit=${limit}`),
