@@ -142,5 +142,47 @@
     "frames": [
       "__solo"
     ]
+  },
+  "crate": {
+    "sheet": "en_crate",
+    "frameWidth": 16,
+    "frameHeight": 16,
+    "frames": [
+      "crate0",
+      "crate1",
+      "crate2"
+    ]
+  },
+  "stoneTile": {
+    "sheet": "en_stoneTile",
+    "frameWidth": 16,
+    "frameHeight": 16,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "stoneTop": {
+    "sheet": "en_stoneTop",
+    "frameWidth": 16,
+    "frameHeight": 16,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "grave": {
+    "sheet": "en_grave",
+    "frameWidth": 16,
+    "frameHeight": 20,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "graveBig": {
+    "sheet": "en_graveBig",
+    "frameWidth": 22,
+    "frameHeight": 28,
+    "frames": [
+      "__solo"
+    ]
   }
 }

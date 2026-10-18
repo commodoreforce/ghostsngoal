@@ -205,7 +205,11 @@ export class LevelScene extends Phaser.Scene {
     // gradoni di pietra
     for (const bl of L.blocks) {
       const x = bl.x * T, y = bl.row * T, w = bl.w * T, h = GROUND_Y - y;
-      this.add.tileSprite(x, y, w, h, 'tiles', 'stone').setOrigin(0).setDepth(12);
+      // muretto di pietre squadrate (sprite disegnati), con la fila di copertura in cima
+      if (this.textures.exists('stoneTile')) {
+        this.add.tileSprite(x, y, w, h, 'stoneTile').setOrigin(0).setDepth(12);
+        this.add.tileSprite(x, y, w, Math.min(16, h), 'stoneTop').setOrigin(0).setDepth(12);
+      } else this.add.tileSprite(x, y, w, h, 'tiles', 'stone').setOrigin(0).setDepth(12);
       this.addSolid(x, y, w, h);
     }
     // assi
@@ -222,11 +226,11 @@ export class LevelScene extends Phaser.Scene {
     }
     // lapidi (solide: ci si sale sopra e fermano i palloni)
     for (const gx of L.graves) {
-      const g = this.physics.add.staticImage(gx * T + 8, GROUND_Y - 9, 'grave').setDepth(20);
-      g.body.setSize(12, 16).setOffset(1, 2);
+      const g = this.physics.add.staticImage(gx * T + 8, GROUND_Y - this.textures.getFrame('grave').height / 2, 'grave').setDepth(20);
+      g.body.setSize(12, 16).setOffset(Math.round(g.width / 2 - 6), g.height - 16);
       this.graves.push(g);
     }
-    for (const gx of L.bigGraves) this.add.image(gx * T + 8, GROUND_Y - 11, 'graveBig').setDepth(8).setTint(0xb0b0c0);
+    for (const gx of L.bigGraves) this.add.image(gx * T + 8, GROUND_Y - this.textures.getFrame('graveBig').height / 2, 'graveBig').setDepth(8).setTint(0xb0b0c0);
     for (const lx of L.lamps) {
       this.add.image(lx * T, GROUND_Y - 32, 'lamp').setDepth(5);
       const glow = this.add.circle(lx * T, GROUND_Y - 58, 22, 0xffe7a0, 0.12).setDepth(4);
@@ -246,7 +250,8 @@ export class LevelScene extends Phaser.Scene {
     this.cpFlag = this.add.image(L.checkpoint * T, GROUND_Y - 16, 'checkpointFlag').setDepth(8).setTint(0x666677);
     // casse
     for (const c of L.crates) {
-      const cr = this.physics.add.staticImage(c.x * T + 8, c.row * T + 8, 'tiles', 'crate').setDepth(21);
+      const real = this.textures.exists('crate');
+      const cr = this.physics.add.staticImage(c.x * T + 8, c.row * T + 8, real ? 'crate' : 'tiles', real ? 'crate0' : 'crate').setDepth(21);
       cr.hp = 3; cr.item = c.item;
       this.crates.push(cr);
     }
@@ -647,6 +652,7 @@ export class LevelScene extends Phaser.Scene {
   hitCrate(b, c) {
     if (!b.active || !c.active) return;
     if (b.kind === 'fire' || b.kind === 'gold') c.hp = 0; else c.hp -= b.dmg;
+    if (c.hp > 0 && c.texture.key === 'crate') c.setFrame(`crate${Math.min(2, 3 - c.hp)}`);   // si incrina
     if (b.kind !== 'fire' && b.kind !== 'gold') this.killBall(b);
     Sfx.crate();
     c.setTintFill(0xffffff);
