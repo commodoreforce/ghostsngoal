@@ -52,7 +52,11 @@ export class TitleScene extends Phaser.Scene {
 
     const ps = center(this, 132, t('pressStart'), { size: 8, color: C.gold });
     blink(this, ps, 480);
-    const sub = center(this, 146, t('pressStartSub'), { color: C.grey });
+    // sottotitolo ufficiale su due righe (a 256 px non ci sta in una)
+    const [s1, s2] = t('pressStartSub').split('|');
+    const sub = center(this, 145, s1, { color: C.grey });
+    const subB = center(this, 155, s2 || '', { color: C.grey });
+    this.page.add(subB);
     this.playsText = center(this, 172, '', { color: C.ghost });
     const lang = center(this, 190, `↑ ${t('lang')}`, { color: C.grey });
     const cr = center(this, 208, t('credits'), { color: C.grey });

@@ -32,5 +32,44 @@
       "pl_shpendi_gold"
     ],
     "portrait": "portrait_shpendi"
+  },
+  "klinsmann": {
+    "frameWidth": 56,
+    "frameHeight": 54,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "jump",
+      "fall",
+      "kick",
+      "crouch",
+      "crouchkick",
+      "up",
+      "hurt",
+      "ko0",
+      "ko1",
+      "cheer0",
+      "cheer1",
+      "slide"
+    ],
+    "sheets": [
+      "pl_klinsmann_base",
+      "pl_klinsmann_naked",
+      "pl_klinsmann_hero",
+      "pl_klinsmann_hero_naked",
+      "pl_klinsmann_away_base",
+      "pl_klinsmann_away_naked",
+      "pl_klinsmann_third_base",
+      "pl_klinsmann_third_naked",
+      "pl_klinsmann_away_hero",
+      "pl_klinsmann_away_hero_naked",
+      "pl_klinsmann_third_hero",
+      "pl_klinsmann_third_hero_naked"
+    ],
+    "portrait": "portrait_klinsmann"
   }
 }

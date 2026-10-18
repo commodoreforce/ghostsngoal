@@ -147,6 +147,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (Input.pressed('b')) {
       if (this.char.id === 'klinsmann' && this.scene.tryParry(this)) {
         this.kickUntil = time + KICK_ANIM_MS;
+        this.diveUntil = time + 260;          // tuffo in parata
       } else {
         this.shoot(up, down && !onGround, crouching, false);
       }
@@ -177,8 +178,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     let angle = 0; // gradi: 0 avanti, -45 su, 45 giù
     if (up) angle = -45;
     else if (airDown) angle = 45;
-    const ox = dir * 15;
-    const oy = up ? -27 : crouching ? 8 : airDown ? 6 : -2;
+    // il portiere lancia con le mani: il pallone parte dalla mano, non dal piede
+    const keeper = this.char.look && this.char.look.keeper;
+    const ox = dir * (keeper ? 12 : 15);
+    const oy = keeper ? (up ? -34 : crouching ? 7 : airDown ? 2 : -16) : (up ? -27 : crouching ? 8 : airDown ? 6 : -2);
     const base = { x: this.x + ox, y: this.y + oy, dir, angle, charged, owner: this };
     if (fire) sc.spawnBall({ ...base, kind: 'fire' });
     else if (boostKind === 'shpendi') sc.spawnBall({ ...base, kind: 'gold' });
@@ -187,7 +190,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       [-18, 0, 18].forEach((da) => sc.spawnBall({ ...base, angle: angle + da, kind: 'normal', extra: da !== 0 }));
     } else sc.spawnBall({ ...base, kind: charged ? 'charged' : 'normal' });
     Run.stats.shots++;
-    if (fire) { Sfx.fireball(); sc.cameras.main.shake(160, 0.008); } else Sfx.kick();
+    if (fire) { Sfx.fireball(); sc.cameras.main.shake(160, 0.008); } else if (keeper) Sfx.throw(); else Sfx.kick();
   }
 
   landPound() {

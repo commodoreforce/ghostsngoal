@@ -182,7 +182,7 @@ export class Ghost extends Enemy {
   constructor(scene, x, y) {
     super(scene, x, y, 'ghost', 'gh0', { kind: 'ghost', hp: 1, points: 300, eyeOffset: { x: 0, y: -2 } });
     this.body.setAllowGravity(false);
-    this.body.setSize(14, 17).setOffset(3, 3);
+    this.body.setSize(18, 20).setOffset(Math.round(this.frame.width / 2 - 9), Math.round(this.frame.height / 2 - 10));
     this.t0 = Phaser.Math.Between(0, 3000);
     this.play('ghost_fly');
   }
@@ -196,5 +196,9 @@ export class Ghost extends Enemy {
     const sp = 24;
     this.body.setVelocity(Math.cos(a) * sp, Math.sin(a) * sp + Math.sin(time / 300) * 20);
     this.setFlipX(player.x < this.x);
+    // da vicino si lancia a bocca spalancata (la posa di profilo)
+    const near = !faded && Phaser.Math.Distance.Between(this.x, this.y, player.x, player.y - 10) < 54 && this.texture.has('attack');
+    if (near) { this.anims.stop(); this.setFrame('attack'); }
+    else if (!this.anims.isPlaying) this.play('ghost_fly');
   }
 }

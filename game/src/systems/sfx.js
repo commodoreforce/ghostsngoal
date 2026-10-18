@@ -70,6 +70,8 @@ export const Sfx = {
   jump: () => tone({ f0: 260, f1: 620, dur: 0.12, vol: 0.28 }),
   kick: () => { noise({ dur: 0.05, vol: 0.5, f: 900 }); tone({ type: 'triangle', f0: 180, f1: 60, dur: 0.08, vol: 0.5 }); },
   charge: () => tone({ f0: 200, f1: 900, dur: 0.6, vol: 0.12, type: 'sawtooth' }),
+  // lancio con le mani del portiere: fruscio d'aria e schiocco del pallone sui guanti
+  throw: () => { noise({ dur: 0.12, vol: 0.4, f: 2400, q: 0.6, sweep: -1600 }); tone({ type: 'triangle', f0: 260, f1: 140, dur: 0.06, vol: 0.35, at: 0.02 }); },
   bounce: () => tone({ type: 'triangle', f0: 520, f1: 300, dur: 0.05, vol: 0.3 }),
   hit: () => { noise({ dur: 0.08, vol: 0.5, f: 2500 }); tone({ f0: 400, f1: 120, dur: 0.08, vol: 0.3 }); },
   enemyDie: () => { noise({ dur: 0.18, vol: 0.45, f: 1200, sweep: -900 }); tone({ f0: 600, f1: 90, dur: 0.18, vol: 0.25 }); },
@@ -91,8 +93,8 @@ export const Sfx = {
       tone({ type: 'triangle', f0: f / 2, dur: 0.06, vol: 0.18, at: i * 0.11 + 0.01 });
     });
   },
-  // sonaglio del berretto
-  bell: () => { tone({ type: 'triangle', f0: 2349, dur: 0.12, vol: 0.16 }); tone({ type: 'triangle', f0: 3136, dur: 0.16, vol: 0.12, at: 0.06 }); },
+  // il bastone nodoso del folletto che batte a terra: toc-toc di legno
+  stick: () => { noise({ dur: 0.05, vol: 0.45, f: 1100, q: 2 }); tone({ type: 'triangle', f0: 320, f1: 180, dur: 0.07, vol: 0.3 }); noise({ dur: 0.04, vol: 0.3, f: 1300, q: 2, at: 0.12 }); },
   rewind: () => { tone({ type: 'sawtooth', f0: 1200, f1: 80, dur: 0.9, vol: 0.18 }); noise({ dur: 0.9, vol: 0.15, f: 3000, sweep: -2500 }); },
   slam: () => { noise({ dur: 0.3, vol: 0.7, f: 300, q: 0.6 }); tone({ type: 'triangle', f0: 90, f1: 35, dur: 0.3, vol: 0.7 }); },
   parry: () => { tone({ f0: 1500, f1: 2400, dur: 0.07, vol: 0.3 }); tone({ type: 'triangle', f0: 400, dur: 0.1, vol: 0.4 }); },

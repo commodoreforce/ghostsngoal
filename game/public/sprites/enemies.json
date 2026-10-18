@@ -47,8 +47,8 @@
   },
   "mazapegul": {
     "sheet": "en_mazapegul",
-    "frameWidth": 76,
-    "frameHeight": 78,
+    "frameWidth": 88,
+    "frameHeight": 80,
     "frames": [
       "maz0",
       "maz1",
@@ -66,7 +66,7 @@
   },
   "mazfx": {
     "sheet": "en_mazfx",
-    "frameWidth": 18,
+    "frameWidth": 28,
     "frameHeight": 24,
     "frames": [
       "shoe",
@@ -88,6 +88,57 @@
     "sheet": "en_pumpkinGold",
     "frameWidth": 14,
     "frameHeight": 14,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "ghost": {
+    "sheet": "en_ghost",
+    "frameWidth": 36,
+    "frameHeight": 34,
+    "frames": [
+      "gh0",
+      "gh1",
+      "attack",
+      "die0",
+      "die1"
+    ]
+  },
+  "seahorse": {
+    "sheet": "en_seahorse",
+    "frameWidth": 14,
+    "frameHeight": 25,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "count": {
+    "sheet": "en_count",
+    "frameWidth": 80,
+    "frameHeight": 80,
+    "frames": [
+      "count0",
+      "count1",
+      "vampSide",
+      "vampGrab"
+    ]
+  },
+  "petrosino": {
+    "sheet": "en_petrosino",
+    "frameWidth": 34,
+    "frameHeight": 44,
+    "frames": [
+      "pet0",
+      "pet1",
+      "petSide",
+      "petScared",
+      "petCarried"
+    ]
+  },
+  "crest": {
+    "sheet": "en_crest",
+    "frameWidth": 60,
+    "frameHeight": 76,
     "frames": [
       "__solo"
     ]

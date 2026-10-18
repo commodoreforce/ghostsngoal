@@ -2,8 +2,8 @@ import Phaser from 'phaser';
 import { Sfx } from '../systems/sfx.js';
 
 // Boss del livello 1: il Mazapegùl, il folletto dispettoso della tradizione romagnola.
-// Piccolo, peloso, con il berretto rosso: la notte di Halloween la luna lo ha fatto diventare
-// grosso come un armadio. Chi gli ruba il berretto gli toglie i poteri.
+// Magro, grigio, con il cilindro rosso e il bastone nodoso: la notte di Halloween la luna lo ha
+// fatto diventare grande come un uomo. Chi gli ruba il cappello gli toglie i poteri.
 // Mosse (sempre annunciate):
 //  - ferri di cavallo lanciati a ventaglio (li ruba dalle stalle, come nella leggenda)
 //  - risata che vola ad altezza testa: ci si accovaccia
@@ -11,7 +11,7 @@ import { Sfx } from '../systems/sfx.js';
 //  - INCUBO: tutto diventa un brutto sogno e lui torna dov'era qualche secondo prima
 export class Mazapegul extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, groundY, arena) {
-    super(scene, x, groundY - 39, 'mazapegul', 'maz0');
+    super(scene, x, groundY - 40, 'mazapegul', 'maz0');
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.level = scene;
@@ -25,7 +25,7 @@ export class Mazapegul extends Phaser.Physics.Arcade.Sprite {
     this.points = 10000;
     this.kind = 'boss';
     this.setDepth(35);
-    this.body.setSize(30, 54).setOffset(23, 22);
+    this.body.setSize(32, 56).setOffset(Math.round((this.frame.width - 32) / 2), this.frame.height - 56);
     this.state = 'enter';
     this.nextAction = 0;
     this.dreamsDone = 0;
@@ -50,11 +50,11 @@ export class Mazapegul extends Phaser.Physics.Arcade.Sprite {
 
   damage(n, fromX, ballY) {
     if (!this.alive || !this.vulnerable) return false;
-    // colpi alla testa (sotto il berretto) valgono doppio: premia il colpo di testa
+    // colpi alla testa (sotto il cilindro) valgono doppio: premia il colpo di testa
     const head = ballY !== undefined && ballY < this.y - 10;
     const dmg = head ? n * 2 : n;
     this.hp -= dmg;
-    if (head) { this.level.spark(this.x + (this.flipX ? -4 : 4), this.y - 20); Sfx.bell(); }
+    if (head) { this.level.spark(this.x + (this.flipX ? -4 : 4), this.y - 20); Sfx.stick(); }
     this.setTintFill(0xffffff);
     this.level.time.delayedCall(50, () => { if (this.active) this.clearTint(); });
     this.level.updateBossBar(this.hp / this.maxHp);
@@ -78,7 +78,7 @@ export class Mazapegul extends Phaser.Physics.Arcade.Sprite {
     const onGround = this.body.blocked.down;
     if (this.state === 'jump') {
       if (onGround && time > this.jumpStart + 200) {
-        Sfx.slam(); Sfx.bell();
+        Sfx.slam(); Sfx.stick();
         this.level.cameras.main.shake(260, 0.014);
         this.level.dust(this.x - 12, this.groundY); this.level.dust(this.x + 12, this.groundY);
         // onda d'urto a terra: si evita saltando
@@ -93,14 +93,14 @@ export class Mazapegul extends Phaser.Physics.Arcade.Sprite {
     }
     if (this.state !== 'idle') return;
 
-    // saltella verso il giocatore, con il sonaglio del berretto che tintinna
+    // saltella verso il giocatore, battendo il bastone a terra
     const dx = player.x - this.x;
     this.setFlipX(dx < 0);
     const speed = this.phase === 3 ? 34 : 22;
     const moving = Math.abs(dx) > 50;
     this.body.setVelocityX(moving ? Math.sign(dx) * speed : 0);
     this.play(moving ? 'maz_walk' : 'maz_idle', true);
-    if (moving && time > this.nextBell) { this.nextBell = time + 900; Sfx.bell(); }
+    if (moving && time > this.nextBell) { this.nextBell = time + 900; Sfx.stick(); }
 
     if (time > this.nextAction) {
       const r = Math.random();
@@ -174,7 +174,7 @@ export class Mazapegul extends Phaser.Physics.Arcade.Sprite {
       if (!this.alive) return;
       Sfx.rewind();
       lvl.tweens.add({
-        targets: this, x: past.x, y: Math.min(past.y, this.groundY - 39), alpha: { from: 1, to: 0.35 }, duration: 900, ease: 'Sine.easeInOut', yoyo: false,
+        targets: this, x: past.x, y: Math.min(past.y, this.groundY - 40), alpha: { from: 1, to: 0.35 }, duration: 900, ease: 'Sine.easeInOut', yoyo: false,
         onUpdate: () => this.setFlipX(!this.flipX),
         onComplete: () => {
           this.setAlpha(1);

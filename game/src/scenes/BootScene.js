@@ -99,7 +99,8 @@ export class BootScene extends Phaser.Scene {
 
   logo() {
     this.step = 2;
-    const horse = this.add.image(W / 2, 78, 'bootHorse').setScale(2);
+    // lo stemma del Cesena in pixel art (se manca, il cavalluccio provvisorio)
+    const horse = this.textures.exists('crest') ? this.add.image(W / 2, 72, 'crest') : this.add.image(W / 2, 78, 'bootHorse').setScale(2);
     const a = center(this, 128, 'CESENA FC', { size: 16, color: C.white });
     const b = center(this, 150, t('credits'), { color: C.grey });
     [horse, a, b].forEach((o) => o.setAlpha(0));

@@ -99,7 +99,11 @@ La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` 
 
 - **Zombie**: dalle due pose di riferimento in `assets/sprites/enemies/` (laterale e frontale). Lo strumento scompone la figura (busto, braccio, gambe, scarpe), la rimonta in ogni posa ad alta risoluzione e solo alla fine la riduce a 44 px con una palette scelta a mano: esce dal terreno (3), cammina (4), scivolata, si sbriciola (2).
 - **Pipistrello e zucca**: disegnati direttamente in pixel di gioco seguendo il design dei riferimenti (a quella misura il riferimento ridotto diventerebbe una macchia). Pipistrello: volo (3), picchiata, caduta. Zucca: ferma (2), si carica, in volo di tre quarti, le stesse quattro pose crepate dopo il primo colpo, esplosione (2).
-- **Mazapegùl**: disegnato da zero, 12 pose (fermo, camminata, lancio dei ferri di cavallo, risata, salto, colpito, senza berretto) più ferri di cavallo, risata e berretto che vola.
+- **Mazapegùl**: dai riferimenti (cilindro rosso, bastone, stracci): 12 pose (fermo, camminata, lancio dei ferri di cavallo, risata di fronte, salto, colpito, senza cappello) più ferri di cavallo, risata e cilindro che vola.
+
+`python3 tools/build_story.py` fa fantasma (volo, attacco di profilo, dissolvenza), cavalluccio d'oro, vampiro (intro e boss finale), Petrosino e lo stemma del Cesena in pixel art.
+
+`python3 tools/build_klinsmann.py` fa Klinsmann da una posa laterale e una frontale: gli stessi 18 fotogrammi di Shpendi, ma da portiere (lancia con le mani; la parata è un tuffo), con maglia gialla e verde acqua per trasferta e terza, senza maglia, e il costume di Capitan Romagna (tuta bianconera, mantello rosso, scudo con il cavalluccio).
 
 ## Sfondi
 

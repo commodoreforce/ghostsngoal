@@ -548,198 +548,118 @@ def build_pumpkin():
 
 
 # ====================================================================== BOSS: IL MAZAPEGÙL
-# Il folletto della tradizione romagnola: piccolo, peloso, dispettoso, con il berretto rosso.
-# Chi gli ruba il berretto gli toglie i poteri: è così che si vince lo scontro.
-MAZ_COLORS = {
-    'ol': '#140a16',
-    'f0': '#1e1624', 'f1': '#3a2a36', 'f2': '#5c4650', 'f3': '#86686a',      # pelo scuro, quasi viola
-    'k0': '#7a6050', 'k1': '#bc9a76', 'k2': '#ead0a4',                      # pelle del viso e delle mani
-    'r0': '#5a0e1c', 'r1': '#a8182a', 'r2': '#e03a3a', 'r3': '#ff8a72',      # berretto rosso
-    'eye': '#ffd23a', 'eyer': '#e8501a', 'mouth': '#3a0a14', 'tongue': '#c8323a',
-    'tooth': '#f4e4b4', 'nail': '#e6d6b2', 'bell': '#ffc02e', 'bell2': '#a8681a',
-}
-
-MAZ_BASE = dict(
-    dx=0.0, dy=0.0,                          # tutto il corpo
-    head=(40.0, 30.0), cap='on',             # testa: centro; berretto 'on', 'off', 'flying'
-    cap_droop=0.0,
-    eyes='open', mouth='grin',
-    arm_f=((45, 45), (52, 54), (54, 64)),    # spalla, gomito, mano (braccio davanti): braccia lunghe da folletto
-    arm_b=((27, 45), (20, 54), (19, 64)),
-    leg_f=((41, 62), (46, 68), (47, 74)),    # anca, ginocchio, piede
-    leg_b=((31, 62), (27, 68), (27, 74)),
-    torso=(36.0, 52.0), squash=1.0,
-)
-
-
-def draw_maz(**pose):
-    from pixel_draw import Sketch
-    P = dict(MAZ_BASE); P.update(pose)
-    k = Sketch(76, 78, MAZ_COLORS)
-    ox, oy = P['dx'], P['dy']
-    o = lambda p: (p[0] + ox, p[1] + oy)
-
-    def limb(pts, w, col, hi=None):
-        k.line([o(p) for p in pts], col, w)
-        if hi:
-            k.line([o((p[0] - 0.6, p[1] - 0.6)) for p in pts], hi, w * 0.35)
-
-    def hand(p, toward, col='k1'):
-        x, y = o(p)
-        k.ellipse(x, y, 3.2, 2.8, col)
-        for i, a in enumerate((-0.8, 0.0, 0.8)):
-            dx, dy = toward
-            ex = x + dx * 4.0 + a * dy * 2.2
-            ey = y + dy * 4.0 - a * dx * 2.2
-            k.line([(x + dx * 2.0, y + dy * 2.0), (ex, ey)], col, 1.2)
-            k.dot(ex - 0.5, ey - 0.5, 'nail')
-
-    def foot(p, f=1):
-        x, y = o(p)
-        k.ellipse(x + 1.6 * f, y - 1.2, 4.6, 2.2, 'k0')
-        k.ellipse(x + 1.2 * f, y - 1.8, 3.6, 1.4, 'k1')
-        for i in range(3):
-            k.dot(x + (3.6 + i * 1.2) * f - 0.5, y - 1.0, 'nail')
-
-    # --- dietro: gamba e braccio lontani (più scuri)
-    lb = P['leg_b']
-    limb(lb, 4.2, 'f0')
-    foot(lb[2], f=1)
-    ab = P['arm_b']
-    limb(ab, 4.4, 'f0')
-    hand(ab[2], (0, 1) if ab[2][1] > ab[1][1] else (0, -1), col='k0')
-    # --- corpo peloso, ingobbito
-    tx, ty = o(P['torso'])
-    sq = P['squash']
-    k.ellipse(tx, ty, 12.0 / sq ** 0.5, 11.6 * sq, 'f1')
-    for i in range(9):          # ciuffi di pelo sul bordo
-        a = 3.14 * (0.15 + i * 0.09)
-        import math
-        px, py = tx - math.cos(a) * 13.0, ty + math.sin(a) * 12.0 * sq - 3
-        k.poly([(px - 1.6, py - 1.0), (px + 1.6, py - 1.0), (px - math.cos(a) * 2.2, py + 2.6)], 'f1')
-    k.ellipse(tx - 3.0, ty + 0.8, 8.4, 10.6 * sq, 'f0')
-    k.ellipse(tx + 3.6, ty + 2.0, 6.4, 8.0 * sq, 'f2')                 # pancia
-    k.ellipse(tx + 4.6, ty + 2.6, 4.0, 5.6 * sq, 'f3')
-    for i in range(5):
-        k.line([(tx + 1.6 + i * 1.4, ty - 2 + i * 2.2), (tx + 2.6 + i * 1.4, ty + 0.6 + i * 2.2)], 'f2', 0.5)
-    for fx_, fy_ in ((-6, -7), (-2, -9), (-9, -3), (-10, 2)):          # ciocche di pelo sulla schiena
-        k.line([(tx + fx_, ty + fy_), (tx + fx_ - 1.2, ty + fy_ + 2.6)], 'f2', 0.7)
-    # --- gamba davanti
-    lf = P['leg_f']
-    limb(lf, 4.6, 'f1', 'f2')
-    foot(lf[2], f=1)
-    # --- testa
-    hx, hy = o(P['head'])
-    # orecchie a punta con il ciuffo
-    k.poly([(hx - 8.0, hy - 2.0), (hx - 19.0, hy - 7.6), (hx - 17.6, hy - 4.4), (hx - 9.0, hy + 3.6)], 'k0')
-    k.poly([(hx - 9.0, hy - 0.8), (hx - 16.6, hy - 5.4), (hx - 9.6, hy + 2.0)], 'k1')
-    k.line([(hx - 18.8, hy - 7.6), (hx - 20.6, hy - 9.4)], 'f1', 0.8)       # ciuffo sulla punta
-    k.ellipse(hx - 0.6, hy + 0.4, 10.4, 9.6, 'f1')                       # testa pelosa
-    k.ellipse(hx + 2.4, hy + 2.2, 8.0, 7.4, 'k1')                        # faccia
-    k.ellipse(hx + 0.6, hy + 4.4, 6.4, 4.6, 'k0')
-    k.ellipse(hx + 3.2, hy + 1.2, 6.0, 5.0, 'k1')
-    k.ellipse(hx + 4.4, hy - 0.4, 3.2, 2.4, 'k2')                        # luce sulla fronte
-    for i, (sx_, sy_) in enumerate(((-9, 6), (-7, 8.4), (-4, 9.6), (-10, 2.6))):   # barba ispida
-        k.poly([(hx + sx_ - 1.4, hy + sy_ - 1), (hx + sx_ + 1.4, hy + sy_ - 1), (hx + sx_ - 0.4, hy + sy_ + 2.2)], 'f1')
-    # occhi
-    ex1, ex2, ey = hx + 0.4, hx + 6.6, hy + 0.2
-    if P['eyes'] == 'open':
-        for ex, r in ((ex1, 2.4), (ex2, 2.0)):
-            k.ellipse(ex, ey, r, r * 0.95, 'ol')
-            k.ellipse(ex, ey, r - 0.7, r * 0.95 - 0.7, 'eye')
-            k.rect(ex + 0.3, ey - 0.6, 1, 2, 'ol')
-            k.dot(ex - 1.2, ey - 1.4, 'tooth')
-        k.line([(ex1 - 3.2, ey - 4.2), (ex1 + 2.0, ey - 2.4), (ex2 + 1.6, ey - 2.6), (ex2 + 3.6, ey - 4.6)], 'f0', 1.2)   # sopracciglia
-    elif P['eyes'] == 'closed':      # risata: occhi a mezzaluna
-        for ex in (ex1, ex2):
-            k.line([(ex - 2.0, ey + 0.4), (ex, ey - 1.4), (ex + 2.0, ey + 0.4)], 'ol', 0.9)
-    elif P['eyes'] == 'hurt':
-        for ex in (ex1, ex2):
-            k.line([(ex - 1.8, ey - 1.6), (ex + 1.8, ey + 1.6)], 'ol', 0.9)
-            k.line([(ex + 1.8, ey - 1.6), (ex - 1.8, ey + 1.6)], 'ol', 0.9)
-    elif P['eyes'] == 'sad':
-        for ex in (ex1, ex2):
-            k.ellipse(ex, ey + 0.6, 1.8, 1.6, 'ol'); k.ellipse(ex, ey + 0.6, 1.1, 0.9, 'eye')
-        k.line([(ex1 - 2.6, ey - 1.6), (ex1 + 1.8, ey - 3.4)], 'f0', 1.0)
-        k.line([(ex2 - 1.4, ey - 3.4), (ex2 + 2.8, ey - 1.6)], 'f0', 1.0)
-    # naso adunco
-    k.poly([(hx + 7.4, hy + 1.4), (hx + 12.4, hy + 5.2), (hx + 11.4, hy + 6.8), (hx + 7.6, hy + 5.6)], 'k1')
-    k.line([(hx + 8.0, hy + 5.6), (hx + 11.2, hy + 6.6)], 'k0', 0.6)
-    k.dot(hx + 9.8, hy + 2.6, 'k2')
-    # bocca
-    m = P['mouth']
-    my = hy + 7.2
-    if m == 'grin':
-        k.poly([(hx - 4.6, my - 2.6), (hx - 2.0, my - 0.8), (hx + 9.6, my - 0.6), (hx + 10.6, my - 2.4), (hx + 8.4, my + 2.4), (hx - 1.0, my + 2.2)], 'mouth')
-        for i in range(5):
-            k.rect(hx - 1.8 + i * 2.2, my - 0.6, 1, 1.6 if i % 2 else 1, 'tooth')
-        k.rect(hx + 1.2, my + 1.2, 1, 1, 'tooth'); k.rect(hx + 5.6, my + 1.2, 1, 1, 'tooth')
-        k.line([(hx - 4.8, my - 2.8), (hx - 5.6, my - 4.2)], 'k0', 0.7)
-    elif m in ('open', 'laugh', 'o'):
-        h = {'open': 4.0, 'laugh': 5.6, 'o': 3.6}[m]
-        w0 = -1.6 if m == 'o' else -3.4
-        k.poly([(hx + w0, my - 1.0), (hx + 9.4, my - 0.8), (hx + 7.0, my + h), (hx + 0.6, my + h + 0.2)], 'mouth')
-        if m == 'laugh':
-            k.ellipse(hx + 3.6, my + h - 1.0, 2.6, 1.2, 'tongue')
-        for i in range(4):
-            k.rect(hx - 1.6 + i * 2.4, my - 0.8, 1, 1.4, 'tooth')
-        k.rect(hx + 1.0, my + h - 1.2, 1, 1, 'tooth'); k.rect(hx + 5.2, my + h - 1.2, 1, 1, 'tooth')
-    elif m == 'frown':
-        k.line([(hx - 1.4, my + 1.6), (hx + 3.0, my), (hx + 7.6, my + 1.8)], 'mouth', 1.0)
-    # berretto rosso a punta che ricade in avanti, con il sonaglio
-    cap = P['cap']
-    if cap == 'on':
-        d = P['cap_droop']
-        k.poly([(hx - 9.6, hy - 4.6), (hx - 8.4, hy - 13.0), (hx - 2.8, hy - 19.4), (hx + 5.4, hy - 21.6),
-                (hx + 12.6, hy - 19.0 + d), (hx + 16.2, hy - 13.6 + d * 1.5), (hx + 15.6, hy - 10.2 + d * 1.6),
-                (hx + 12.4, hy - 13.6 + d), (hx + 7.6, hy - 14.6), (hx + 9.8, hy - 5.6)], 'r1')
-        k.poly([(hx - 6.4, hy - 12.6), (hx - 1.6, hy - 18.0), (hx + 4.8, hy - 19.8), (hx + 0.6, hy - 15.4), (hx - 4.2, hy - 9.6)], 'r2')
-        k.line([(hx - 2.0, hy - 17.6), (hx + 4.0, hy - 19.6)], 'r3', 0.8)
-        k.poly([(hx + 7.6, hy - 14.6), (hx + 12.4, hy - 13.6 + d), (hx + 15.6, hy - 10.2 + d * 1.6), (hx + 11.0, hy - 11.6)], 'r0')
-        k.line([(hx - 10.4, hy - 4.0), (hx - 2.0, hy - 7.0), (hx + 6.0, hy - 7.2), (hx + 10.6, hy - 5.0)], 'r0', 2.2)   # risvolto
-        k.line([(hx - 9.6, hy - 5.2), (hx + 8.0, hy - 7.8)], 'r2', 0.6)
-        bx, by = hx + 15.8, hy - 8.6 + d * 1.6
-        k.ellipse(bx, by, 2.0, 2.0, 'bell'); k.dot(bx - 1.0, by - 1.2, 'tooth'); k.rect(bx - 0.6, by + 0.8, 1.6, 1, 'bell2')
-    else:
-        # senza berretto: testa pelata con quattro peli dritti, la vergogna del folletto
-        k.ellipse(hx - 0.8, hy - 6.6, 8.6, 4.4, 'k0')
-        k.ellipse(hx + 0.6, hy - 7.6, 5.0, 2.2, 'k1')
-        for i in range(4):
-            k.line([(hx - 3 + i * 2.2, hy - 10.4), (hx - 3.6 + i * 2.6, hy - 13.4)], 'f1', 0.5)
-    # --- braccio davanti, sopra a tutto
-    af = P['arm_f']
-    limb(af, 4.8, 'f1', 'f2')
-    toward = (af[2][0] - af[1][0], af[2][1] - af[1][1])
-    L = max(0.1, (toward[0] ** 2 + toward[1] ** 2) ** 0.5)
-    hand(af[2], (toward[0] / L, toward[1] / L))
-    return k.pixels()
+# Il folletto della tradizione romagnola, dai riferimenti di Gianluca: magro, grigio, cilindro rosso,
+# bastone nodoso e stracci rossi. Chi gli ruba il cappello gli toglie i poteri.
+MAZ_PAL = [
+    '#140a16',
+    '#34303e', '#5c5868', '#8e8a9c', '#bebaca', '#e6e4ee', '#ffffff',   # pelle grigia
+    '#560c18', '#9c121c', '#d8202a', '#ff5446',                         # cappello e stracci rossi
+    '#3a2012', '#663a1c', '#9c5e2c', '#cc8642',                         # bastone
+    '#ffb02a', '#e86a14',                                               # occhio
+]
+MAZ_F = 16
+MAZ_FW, MAZ_FH = 88, 80
 
 
 def build_mazapegul():
+    F = MAZ_F
+    side = load_keyed(os.path.join(SRC, 'mazapegul_side.png'))
+    front = load_keyed(os.path.join(SRC, 'mazapegul_front.png'))
+    shp = side.shape
+    yy, xx = np.mgrid[0:shp[0], 0:shp[1]]
+    hat_m = poly_mask(shp, [(250, 352), (258, 250), (290, 160), (325, 85), (560, 62), (660, 88), (660, 200), (640, 232), (560, 240), (520, 330), (420, 352)])
+    stick_m = ((xx < 300) & (yy > 280)) | poly_mask(shp, [(290, 560), (565, 535), (590, 600), (430, 690), (300, 712)])
+    claw_m = poly_mask(shp, [(395, 598), (690, 560), (735, 640), (710, 790), (395, 800)]) & (yy < 772)
+    legB_m = (yy >= 800) & (xx >= 805)
+    legF_m = (yy >= 772) & (xx > 420) & (xx < 805)
+    body_m = (side[..., 3] > 0) & ~hat_m & ~stick_m & ~claw_m & ~legB_m & ~legF_m
+    P = {k: part(side, m) for k, m in dict(hat=hat_m, stick=stick_m, claw=claw_m, legB=legB_m, legF=legF_m, body=body_m).items()}
+    # senza cappello: cranio pelato con quattro peli dritti (la vergogna del folletto)
+    bald = Image.fromarray(P['body'])
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(bald)
+    d.ellipse([318, 262, 560, 420], fill=(20, 10, 22, 255))
+    d.ellipse([330, 274, 548, 410], fill=(190, 186, 202, 255))
+    d.ellipse([370, 286, 470, 330], fill=(230, 228, 238, 255))
+    for i in range(4):
+        d.line([(390 + i * 34, 282), (380 + i * 40, 236)], fill=(142, 138, 156, 255), width=10)
+    bald = np.asarray(bald).copy()
+    HIP_F, HIP_B = (722, 790), (800, 812)
+    SHOULDER, CLAW_SH = (560, 560), (690, 600)
+    CW = CH = 2200
+    O = 400
+
+    def pose(legF=0.0, legB=0.0, stick=0.0, claw=0.0, dy=0, hat=True, squash=1.0, tilt=0.0, hat_dy=0):
+        cv = Canvas(CW, CH)
+        cv.paste(P['legB'], legB, HIP_B, at=(HIP_B[0] + O, HIP_B[1] + O))
+        cv.paste(P['legF'], -legF, HIP_F, at=(HIP_F[0] + O, HIP_F[1] + O))
+        cv.paste(P['body'] if hat else bald, 0, (0, 0), at=(O, O + dy))
+        cv.paste(P['claw'], -claw, CLAW_SH, at=(CLAW_SH[0] + O, CLAW_SH[1] + O + dy))
+        if hat:
+            cv.paste(P['hat'], 0, (0, 0), at=(O, O + dy + hat_dy))
+        cv.paste(P['stick'], -stick, SHOULDER, at=(SHOULDER[0] + O, SHOULDER[1] + O + dy))
+        arr = cv.array()
+        if tilt or squash != 1.0:
+            im = Image.fromarray(arr)
+            if squash != 1.0:
+                # schiacciato/allungato dai piedi in su, come i cartoni animati
+                h2 = int(im.height * squash)
+                w2 = int(im.width * (2 - squash) ** 0.5)
+                im2 = im.resize((w2, h2), Image.Resampling.NEAREST)
+                base = Image.new('RGBA', im.size, (0, 0, 0, 0))
+                base.alpha_composite(im2, ((im.width - w2) // 2, im.height - h2 - int((1 - squash) * 0) - (im.height - (1180 + O)) + int((im.height - (1180 + O)) * 1)))
+                im = base
+            if tilt:
+                im = im.rotate(tilt, resample=Image.Resampling.NEAREST, center=(760 + O, 1150 + O))
+            arr = np.asarray(im).copy()
+        return window(arr)
+
+    def window(arr, cx=700 + O):
+        arr = ground_align(arr, CH - 1)
+        w, h = MAZ_FW * F, MAZ_FH * F
+        out = np.zeros((h, w, 4), np.uint8)
+        x0 = cx - w // 2
+        src = arr[CH - h:CH, max(0, x0):x0 + w]
+        out[:, :src.shape[1]] = src
+        return out
+
+    def front_pose(dy=0):
+        cv = Canvas(CW, CH)
+        cv.paste(front, 0, (0, 0), at=(O + 60, O + dy))
+        return window(cv.array())
+
     poses = {
-        'maz0': dict(),
-        'maz1': dict(dy=1, head=(40, 31), arm_f=((45, 46), (50, 54), (52, 62)), arm_b=((27, 46), (22, 54), (22, 62)), squash=0.96, cap_droop=1.2),
-        'mazWalk0': dict(leg_f=((41, 62), (48, 66), (52, 73)), leg_b=((31, 62), (25, 68), (21, 74)), arm_f=((45, 45), (48, 53), (46, 60)), arm_b=((27, 45), (24, 53), (27, 60))),
-        'mazWalk1': dict(dy=-2, leg_f=((41, 62), (44, 69), (42, 76)), leg_b=((31, 62), (33, 66), (37, 71)), cap_droop=-1),
-        'mazWalk2': dict(leg_f=((41, 62), (40, 68), (36, 74)), leg_b=((31, 62), (35, 66), (39, 73)), arm_f=((45, 45), (52, 52), (56, 58)), arm_b=((27, 45), (19, 52), (16, 58))),
-        'mazWalk3': dict(dy=-2, leg_f=((41, 62), (47, 66), (50, 70)), leg_b=((31, 62), (28, 69), (29, 76)), cap_droop=-1),
-        # lancio del ferro di cavallo: braccio dietro la testa
-        'mazThrow': dict(head=(38, 31), arm_f=((44, 45), (47, 36), (44, 24)), mouth='open', cap_droop=2),
-        # risata: testa all'indietro, mani sulla pancia
-        'mazLaugh': dict(head=(37, 28), eyes='closed', mouth='laugh', arm_f=((45, 45), (48, 52), (42, 55)), arm_b=((27, 45), (24, 52), (30, 56)), cap_droop=-2),
-        # si carica per il salto: tutto giù, ginocchia larghe, mani a terra
-        'mazCrouch': dict(dy=6, head=(41, 31), squash=0.86, leg_f=((41, 56), (50, 62), (48, 68)), leg_b=((31, 56), (23, 62), (25, 68)),
-                          arm_f=((45, 45), (52, 54), (55, 62)), arm_b=((27, 45), (19, 54), (16, 62)), mouth='grin', cap_droop=3),
-        # in volo: si siede nell'aria, pronto a schiacciarti (come sul petto di chi dorme)
-        'mazJump': dict(dy=-4, leg_f=((41, 62), (50, 63), (54, 70)), leg_b=((31, 62), (40, 65), (44, 71)),
-                        arm_f=((45, 45), (50, 37), (54, 30)), arm_b=((27, 45), (21, 37), (18, 30)), mouth='open', cap_droop=-4),
-        'mazHurt': dict(head=(37, 31), eyes='hurt', mouth='o', arm_f=((45, 45), (52, 40), (57, 36)), arm_b=((27, 45), (20, 40), (16, 35)), cap_droop=4),
-        # sconfitto: niente berretto, niente poteri
-        'mazCapless': dict(dy=2, head=(40, 33), cap='off', eyes='sad', mouth='frown', squash=0.94,
-                           arm_f=((45, 46), (48, 55), (47, 63)), arm_b=((27, 46), (25, 55), (27, 63))),
+        'maz0': pose(),
+        'maz1': pose(dy=16, stick=3, claw=-4),
+        'mazWalk0': pose(legF=12, legB=-10, stick=6, claw=8),
+        'mazWalk1': pose(legF=2, legB=4, stick=2, claw=0, dy=-16),
+        'mazWalk2': pose(legF=-10, legB=12, stick=-4, claw=-8),
+        'mazWalk3': pose(legF=2, legB=4, stick=2, claw=0, dy=-16),
+        # lancio del ferro di cavallo: la mano ad artiglio va dietro la testa
+        'mazThrow': pose(claw=-95, stick=-8, dy=-10, hat_dy=-6),
+        # risata: si gira verso di te ghignando (la posa frontale)
+        'mazLaugh': front_pose(),
+        # si carica per il salto
+        'mazCrouch': pose(squash=0.84, legF=10, legB=-6),
+        # in aria, raccolto, pronto a schiacciarti
+        'mazJump': pose(legF=30, legB=26, claw=-70, stick=0, dy=-30),
+        'mazHurt': pose(tilt=-14, claw=-60, stick=-14, hat_dy=-40),
+        'mazCapless': pose(hat=False, dy=18, stick=-6, claw=10),
     }
-    frames = [draw_maz(**v) for v in poses.values()]
-    return 'mazapegul', list(poses.keys()), frames, 76, 78
+    frames = finish(list(poses.values()), F, MAZ_PAL, MAZ_FW, MAZ_FH, refs=[side], line_share=0.34)
+    # la posa frontale guarda già a destra: non va girata
+    lf = finish([poses['mazLaugh']], F, MAZ_PAL, MAZ_FW, MAZ_FH, refs=[front], line_share=0.34, flip=False)[0]
+    frames[list(poses).index('mazLaugh')] = lf
+    # il cilindro da solo, per quando vola via
+    global MAZ_HAT
+    hat = np.zeros((40 * F, 40 * F, 4), np.uint8)
+    hp = P['hat'][40:380, 230:690]
+    hat[100:100 + hp.shape[0], 50:50 + hp.shape[1]] = hp
+    MAZ_HAT = finish([hat], F, MAZ_PAL, 28, 24, refs=[side])[0]
+    return 'mazapegul', list(poses.keys()), frames, MAZ_FW, MAZ_FH
+
+
+MAZ_HAT = None
 
 
 def build_mazfx():
@@ -772,13 +692,11 @@ def build_mazfx():
             k.ellipse(x, 12, rr * 0.75, rr, c)
             k.erase_ellipse(x - 1.6, 12, rr * 0.7, rr - 1.2)
         out.append(k.pixels())
-    k = Sketch(18, 24, C)            # il berretto che vola via
-    k.poly([(2, 18), (3, 11), (8, 7), (13, 7), (16, 10), (15.4, 13), (12.6, 11), (10.2, 11.6), (12.4, 18)], 'r1')
-    k.poly([(4, 12), (8, 8.2), (11.4, 8.2), (7.6, 12.6)], 'r2')
-    k.line([(2, 18), (12.4, 18)], 'r0', 2)
-    k.ellipse(15.6, 13.6, 1.8, 1.8, 'bell')
-    out.append(k.pixels())
-    return 'mazfx', ['shoe', 'shoeGold', 'laugh0', 'laugh1', 'cap'], out, 18, 24
+    out = [np.pad(f, ((0, 0), (5, 5), (0, 0))) for f in out]      # riquadri da 28x24
+    if MAZ_HAT is None:
+        build_mazapegul()
+    out.append(MAZ_HAT)                # il cilindro rosso che vola via
+    return 'mazfx', ['shoe', 'shoeGold', 'laugh0', 'laugh1', 'cap'], out, 28, 24
 
 
 def small_pumpkin(gold=False):

@@ -21,6 +21,7 @@ export function buildAnims(scene) {
   mk('maz_walk', 'mazapegul', ['mazWalk0', 'mazWalk1', 'mazWalk2', 'mazWalk3'], 7);
   mk('maz_laugh', 'mazfx', ['laugh0', 'laugh1'], 10);
   mk('count_fly', 'count', ['count0', 'count1'], 6);
+  mk('pet_idle', 'petrosino', ['pet0', 'pet1'], 2);
 
   for (const c of CHARACTERS) {
     const vars = ['base', 'naked'];

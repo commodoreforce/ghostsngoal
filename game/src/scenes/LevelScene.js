@@ -911,12 +911,12 @@ export class LevelScene extends Phaser.Scene {
       this.cameras.main.shake(140, 0.01);
       if (i === booms.length - 1) {
         this.physics.world.timeScale = 1; this.time.timeScale = 1;
-        // il berretto vola via: senza, il folletto non ha più poteri e scappa via piccolo piccolo
+        // il cilindro vola via: senza, il folletto non ha più poteri e scappa via piccolo piccolo
         const dir = boss.flipX ? 1 : -1;
-        const cap = this.add.image(boss.x, boss.y - 30, 'mazfx', 'cap').setScale(2).setDepth(90).setFlipX(boss.flipX);
+        const cap = this.add.image(boss.x, boss.y - 28, 'mazfx', 'cap').setScale(1.5).setDepth(90).setFlipX(boss.flipX);
         this.tweens.add({ targets: cap, y: boss.y - 120, x: boss.x + dir * 30, angle: dir * 540, duration: 1100, ease: 'Quad.easeOut' });
         this.tweens.add({ targets: cap, alpha: 0, delay: 1300, duration: 300 });
-        Sfx.bell();
+        Sfx.stick();
         boss.setFrame('mazCapless');
         const txtE = center(this, 64, t('capStolen'), { color: C.gold, fixed: true, stroke: '#000', strokeThickness: 3, depth: 120 });
         this.tweens.add({ targets: boss, scale: 0.35, y: GROUND_Y - 14, x: boss.x - dir * 90, delay: 900, duration: 700, ease: 'Quad.easeIn' });

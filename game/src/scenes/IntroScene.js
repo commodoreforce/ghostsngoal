@@ -34,9 +34,11 @@ export class IntroScene extends Phaser.Scene {
     this.glow = this.add.circle(W / 2, 34, 60, 0xffe7a0, 0.08);
     this.dark = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0).setDepth(5);
 
-    this.pet = this.add.image(128, 154, 'petrosino').setDepth(6);
+    const realPet = this.textures.get('petrosino').has('pet0');
+    this.pet = this.add.sprite(128, realPet ? 146 : 154, 'petrosino', realPet ? 'pet0' : undefined).setDepth(6);
+    if (realPet && this.anims.exists('pet_idle')) this.pet.play('pet_idle');
     this.bag = this.add.image(104, 162, 'kitbag').setDepth(6);
-    this.tweens.add({ targets: this.pet, y: 152, yoyo: true, repeat: -1, duration: 420 });
+    if (!realPet) this.tweens.add({ targets: this.pet, y: 152, yoyo: true, repeat: -1, duration: 420 });
 
     this.caption = center(this, 180, '', { color: C.white, wrap: 240 }).setDepth(10);
     this.caption2 = center(this, 204, '', { color: C.grey, wrap: 240 }).setDepth(10);
@@ -78,14 +80,22 @@ export class IntroScene extends Phaser.Scene {
 
   countAppears() {
     this.cameras.main.flash(120, 255, 255, 255);
-    this.count = this.add.sprite(176, 136, 'count').play('count_fly').setDepth(8).setScale(1.5);
+    const realCount = this.textures.get('count').has('vampSide');
+    this.count = this.add.sprite(212, realCount ? 128 : 136, 'count').play('count_fly').setDepth(8).setScale(realCount ? 1 : 1.5);
     this.count.setAlpha(0);
-    this.tweens.add({ targets: this.count, alpha: 1, x: 146, duration: 400 });
+    this.tweens.add({ targets: this.count, alpha: 1, x: realCount ? 174 : 146, duration: 400 });
     this.time.delayedCall(700, () => {
       Sfx.hurt();
       this.tweens.killTweensOf(this.pet);
+      this.pet.anims.stop();
+      if (this.pet.texture.has('petScared')) this.pet.setFrame('petScared');
       this.pet.setFlipX(true).setTint(0x9fe8ff);
-      this.tweens.add({ targets: [this.count, this.pet], x: '+=200', y: '-=120', duration: 1200, ease: 'Cubic.easeIn' });
+      this.time.delayedCall(250, () => {
+        // il vampiro lo afferra: Petrosino finisce tra i suoi artigli, davanti al mantello
+        if (this.pet.texture.has('petCarried')) this.pet.setFrame('petCarried').setDepth(9).setPosition(this.count.x - 8, this.count.y + 4);
+        if (this.count.texture.has('vampGrab')) { this.count.anims.stop(); this.count.setFrame('vampGrab').setFlipX(false); }
+        this.tweens.add({ targets: [this.count, this.pet], x: '+=200', y: '-=120', duration: 1200, ease: 'Cubic.easeIn' });
+      });
     });
     this.say('AAAAAAAH!');
   }
