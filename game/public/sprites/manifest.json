@@ -57,18 +57,18 @@
       "slide"
     ],
     "sheets": [
-      "pl_klinsmann_base",
-      "pl_klinsmann_naked",
       "pl_klinsmann_hero",
       "pl_klinsmann_hero_naked",
-      "pl_klinsmann_away_base",
-      "pl_klinsmann_away_naked",
-      "pl_klinsmann_third_base",
-      "pl_klinsmann_third_naked",
       "pl_klinsmann_away_hero",
       "pl_klinsmann_away_hero_naked",
       "pl_klinsmann_third_hero",
-      "pl_klinsmann_third_hero_naked"
+      "pl_klinsmann_third_hero_naked",
+      "pl_klinsmann_base",
+      "pl_klinsmann_away_base",
+      "pl_klinsmann_third_base",
+      "pl_klinsmann_naked",
+      "pl_klinsmann_away_naked",
+      "pl_klinsmann_third_naked"
     ],
     "portrait": "portrait_klinsmann"
   }

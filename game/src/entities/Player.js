@@ -178,10 +178,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     let angle = 0; // gradi: 0 avanti, -45 su, 45 giù
     if (up) angle = -45;
     else if (airDown) angle = 45;
-    // il portiere lancia con le mani: il pallone parte dalla mano, non dal piede
+    // il portiere lancia con le mani: il pallone parte all'altezza del petto, così prende anche gli zombie
     const keeper = this.char.look && this.char.look.keeper;
     const ox = dir * (keeper ? 12 : 15);
-    const oy = keeper ? (up ? -34 : crouching ? 7 : airDown ? 2 : -16) : (up ? -27 : crouching ? 8 : airDown ? 6 : -2);
+    const oy = keeper ? (up ? -30 : crouching ? 8 : airDown ? 4 : -5) : (up ? -27 : crouching ? 8 : airDown ? 6 : -2);
     const base = { x: this.x + ox, y: this.y + oy, dir, angle, charged, owner: this };
     if (fire) sc.spawnBall({ ...base, kind: 'fire' });
     else if (boostKind === 'shpendi') sc.spawnBall({ ...base, kind: 'gold' });

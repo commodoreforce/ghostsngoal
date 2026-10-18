@@ -144,7 +144,7 @@ def skin_tone(im):
     for y in range(im.height):
         for x in range(im.width):
             r, g, b, a = px[x, y]
-            if a and r > g > b and r - b > 40 and r > 120:
+            if a and r > g > b and r - b > 40 and r > 120 and g > r * 0.55:   # la pelle, non la maglia rossa
                 c[(r, g, b)] += 1
     return c.most_common(1)[0][0] if c else (224, 164, 126)
 
@@ -157,6 +157,121 @@ def recolor_shirt(im, base, shade):
         lum = (r + g + b) / 3
         k = max(0.0, min(1.0, (lum - 150) / 105))   # 1 = luce piena, 0 = ombra
         px[x, y] = tuple(round(shade[i] + (base[i] - shade[i]) * k) for i in range(3)) + (a,)
+    return out
+
+
+# ------------------------------------------------------------------ portiere (Klinsmann)
+# Il portiere ha la divisa tutta rossa: le maglie si cambiano ricolorando il rosso,
+# senza maglia si toglie il pezzo rosso più grande (la maglia; pantaloncini e calzettoni restano).
+KEEPER_KITS = {
+    'away': [(122, 76, 14), (200, 138, 22), (255, 210, 58), (255, 236, 140)],     # giallo
+    'third': [(14, 74, 62), (22, 130, 106), (60, 196, 160), (150, 236, 206)],     # verde acqua
+}
+HERO_SUIT = [(96, 96, 116), (164, 164, 184), (220, 220, 232), (255, 255, 255)]     # tuta bianconera
+
+
+def is_red(p):
+    r, g, b, a = p
+    return a > 0 and r > 60 and r > g * 2.3 and r > b * 2.0
+
+
+def ramp_pixels(im, pts, ramp):
+    out = im.copy()
+    px = out.load()
+    if not pts:
+        return out
+    lums = [0.3 * px[x, y][0] + 0.59 * px[x, y][1] + 0.11 * px[x, y][2] for x, y in pts]
+    lo, hi = min(lums), max(lums)
+    for (x, y), l in zip(pts, lums):
+        t = (l - lo) / max(1.0, hi - lo)
+        c = ramp[min(len(ramp) - 1, int(t * len(ramp)))]
+        px[x, y] = c + (px[x, y][3],)
+    return out
+
+
+def red_pixels(im):
+    px = im.load()
+    return [(x, y) for y in range(im.height) for x in range(im.width) if is_red(px[x, y])]
+
+
+def keeper_shirt(im):
+    """La maglia sono le righe rosse subito sotto la testa (il busto è lungo circa 15 pixel);
+    sotto ci sono pantaloncini e calzettoni. Da sdraiati si ragiona per colonne, dal lato della testa."""
+    reds = red_pixels(im)
+    if not reds:
+        return []
+    xs = [x for x, _ in reds]; ys = [y for _, y in reds]
+    w, h = max(xs) - min(xs), max(ys) - min(ys)
+    if h > w * 0.75:
+        top = min(ys)
+        return [(x, y) for x, y in reds if y <= top + 15]
+    px = im.load()
+    skin = [x for y in range(im.height) for x in range(im.width)
+            if px[x, y][3] and px[x, y][0] > px[x, y][1] > px[x, y][2] and px[x, y][1] > px[x, y][0] * 0.55 and px[x, y][0] > 120]
+    head_left = (sum(skin) / len(skin) if skin else 0) < sum(xs) / len(xs)
+    return [(x, y) for x, y in reds if (x <= min(xs) + 15 if head_left else x >= max(xs) - 15)]
+
+
+def lime_punch(im):
+    """I guanti e le suole lime si scuriscono nella riduzione: si riportano al giallo fluo del riferimento."""
+    out = im.copy()
+    px = out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a and g > 55 and g >= r * 0.9 and g > b * 2.0 and g - b > 45:
+                k = 1.45
+                px[x, y] = (min(255, int(r * k)), min(255, int(g * k + 10)), min(255, int(b * 1.1)), a)
+    return out
+
+
+def keeper_naked(im, skin, skin_sh):
+    ramp = [tuple(round(c * k) for c in skin) for k in (0.62, 0.8, 1.0)] + [tuple(min(255, round(c * 1.12)) for c in skin)]
+    return ramp_pixels(im, keeper_shirt(im), ramp)
+
+
+def is_glove(p):
+    r, g, b, a = p
+    return a > 0 and g > 110 and g >= r * 0.95 and b < 90 and g > b * 1.8
+
+
+def capitan_romagna(im):
+    """Capitan Romagna: tuta bianconera, mantello rosso dietro le spalle e scudo al guanto davanti."""
+    from PIL import ImageDraw
+    suit = ramp_pixels(im, red_pixels(im), HERO_SUIT)
+    bbox = im.getbbox()
+    if not bbox:
+        return suit
+    x0, y0, x1, y1 = bbox
+    w, h = x1 - x0, y1 - y0
+    upright = h > w * 0.9
+    out = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    if upright:
+        # mantello: dalle spalle scende all'indietro (il personaggio guarda a destra)
+        cape = Image.new('RGBA', im.size, (0, 0, 0, 0))
+        d = ImageDraw.Draw(cape)
+        sx, sy = x0 + w * 0.45, y0 + h * 0.2
+        pts = [(sx + 3, sy), (sx - 2, sy - 1), (x0 - 4, y0 + h * 0.62), (x0 - 1, y0 + h * 0.72), (x0 + 3, y0 + h * 0.66),
+               (x0 + 5, y0 + h * 0.74), (sx - 1, y0 + h * 0.5)]
+        d.polygon(pts, fill=(160, 22, 36, 255))
+        d.line(pts[:3], fill=(208, 48, 56, 255), width=1)
+        out.alpha_composite(outline(cape, OUTLINE))
+    out.alpha_composite(suit)
+    # scudo: sul guanto più avanti
+    px = im.load()
+    # i guanti, non le suole: si cercano solo sopra i piedi
+    feet = y1 - (6 if upright else 0)
+    gl = [(x, y) for y in range(im.height) for x in range(im.width) if is_glove(px[x, y]) and (y < feet or not upright)]
+    if gl:
+        gx = max(x for x, y in gl)
+        near = [(x, y) for x, y in gl if x >= gx - 4]
+        cx = round(sum(x for x, _ in near) / len(near)); cy = round(sum(y for _, y in near) / len(near))
+        d = ImageDraw.Draw(out)
+        r = 6
+        for rr, c in ((r, (11, 11, 16)), (r - 1, (244, 244, 248)), (r - 2, (36, 34, 44)), (r - 3, (244, 244, 248)), (r - 4, (255, 210, 58))):
+            d.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], fill=c + (255,))
+        d.point([(cx, cy - 1), (cx - 1, cy)], fill=(200, 138, 22, 255))     # il cavalluccio, appena accennato
+        d.point([(cx - 2, cy - 3), (cx - 3, cy - 2)], fill=(255, 255, 255, 255))
     return out
 
 
@@ -196,7 +311,8 @@ def build(char_id, src_dir, out_dir):
         s = s_ref if k == 'idle' else math.sqrt(target_area / area(im))
         scaled[k] = to_scale(im, s)
     keys = list(scaled)
-    q = dict(zip(keys, quantize_all([scaled[k] for k in keys])))
+    # il portiere ha più colori da tenere distinti (rosso, pelle, guanti lime): palette un po' più ampia
+    q = dict(zip(keys, quantize_all([scaled[k] for k in keys], colors=36 if char_id == 'klinsmann' else 28)))
     for k, im in q.items():
         print(f'  {k:8s} {im.width}x{im.height}')
 
@@ -243,13 +359,29 @@ def build(char_id, src_dir, out_dir):
             strip.paste(finish(transform(frames[name])), (i * FW, 0))
         return strip
 
+    keeper = char_id == 'klinsmann'
+    if keeper:
+        frames = {k: lime_punch(v) for k, v in frames.items()}
     variants = {
         'base': lambda f: f,
-        'naked': lambda f: recolor_shirt(f, skin, skin_sh),
+        'naked': (lambda f: keeper_naked(f, skin, skin_sh)) if keeper else (lambda f: recolor_shirt(f, skin, skin_sh)),
     }
     if char_id == 'shpendi':
         variants['gold'] = gold
     written = []
+    if keeper:
+        # Capitan Romagna (uguale per tutte le maglie) e le maglie da portiere gialla e verde acqua
+        hero = sheet(capitan_romagna)
+        hero_naked = sheet(lambda f: capitan_romagna(keeper_naked(f, skin, skin_sh)))
+        for kit in ('', '_away', '_third'):
+            hero.save(os.path.join(out_dir, f'pl_{char_id}{kit}_hero.png')); written.append(f'pl_{char_id}{kit}_hero')
+            hero_naked.save(os.path.join(out_dir, f'pl_{char_id}{kit}_hero_naked.png')); written.append(f'pl_{char_id}{kit}_hero_naked')
+        for v, fn in variants.items():
+            sheet(fn).save(os.path.join(out_dir, f'pl_{char_id}_{v}.png')); written.append(f'pl_{char_id}_{v}')
+            for kit, ramp in KEEPER_KITS.items():
+                kfn = (lambda rp, f0: (lambda f: ramp_pixels(f0(f), red_pixels(f0(f)), rp)))(ramp, fn)
+                sheet(kfn).save(os.path.join(out_dir, f'pl_{char_id}_{kit}_{v}.png')); written.append(f'pl_{char_id}_{kit}_{v}')
+        variants = {}
     for v, fn in variants.items():
         sheet(fn).save(os.path.join(out_dir, f'pl_{char_id}_{v}.png'))
         written.append(f'pl_{char_id}_{v}')
