@@ -4,7 +4,8 @@ Uso:
     python3 tools/build_sprites.py shpendi assets/sprites/shpendi
 
 La cartella deve contenere i file <id>_<posa>.png (idle, run01..run04, jump, kick,
-crouch, hurt, ko, cheer, slide). Le pose mancanti vengono ricavate da quelle presenti.
+crouch, hurt, ko, cheer, slide; facoltative fall, crouchkick, up). Le pose mancanti vengono
+ricavate da quelle presenti.
 
 Produce in game/public/sprites/:
     pl_<id>_<variante>.png        una striscia orizzontale di fotogrammi FWxFH
@@ -219,11 +220,11 @@ def build(char_id, src_dir, out_dir):
         'idle1': place(pose('idle'), dy=1),
         'run0': place(run[0]), 'run1': place(run[1]), 'run2': place(run[2]), 'run3': place(run[3]),
         'jump': place(pose('jump')),
-        'fall': place(pose('jump')),
+        'fall': place(pose('fall', 'jump')),
         'kick': place(pose('kick')),
         'crouch': place(pose('crouch')),
-        'crouchkick': place(pose('crouch')),
-        'up': place(pose('idle')),
+        'crouchkick': place(pose('crouchkick', 'crouch')),
+        'up': place(pose('up', 'idle')),
         'hurt': place(hurt),
         'ko0': place(lying, dy=-4, upright=False) if lying else place(pose('crouch')),
         'ko1': place(lying, upright=False) if lying else place(pose('crouch')),
