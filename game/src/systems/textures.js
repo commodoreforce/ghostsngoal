@@ -209,6 +209,8 @@ export function buildPlayerTextures(scene) {
     const variants = ['base', 'naked'];
     if (c.id === 'shpendi') variants.push('gold');
     if (c.id === 'ciofi') variants.push('mane', 'mane_naked');
+    if (c.id === 'diamanti') variants.push('vibes', 'vibes_naked');
+    if (c.id === 'hubner') variants.push('bison');
     if (c.id === 'klinsmann') variants.push('hero', 'hero_naked');
     const kits = hasKits(c) ? KITS.map((k) => k.id) : ['home'];
     for (const kit of kits) {

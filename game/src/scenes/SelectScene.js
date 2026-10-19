@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Input } from '../systems/input.js';
 import { Sfx, playMusic, stopMusic } from '../systems/sfx.js';
 import { Api, Unlock } from '../systems/api.js';
-import { CHARACTERS, KITS, hasKits, texPrefix } from '../data/characters.js';
+import { CHARACTERS, KITS, hasKits, kitName, texPrefix } from '../data/characters.js';
 import { Run } from '../systems/state.js';
 import { t, getLang } from '../i18n.js';
 import { center, txt, C, W, H } from '../systems/ui.js';
@@ -26,8 +26,8 @@ export class SelectScene extends Phaser.Scene {
     center(this, 6, t('choose'), { color: C.orange });
 
     // ritratto grande e cornice
-    this.add.rectangle(42, 64, 74, 74, 0x000000).setStrokeStyle(2, 0xf4f4f0);
-    this.portrait = this.add.image(42, 64, 'portrait_shpendi').setScale(1.1);
+    this.add.rectangle(42, 64, 68, 68, 0x000000).setStrokeStyle(2, 0xf4f4f0);
+    this.portrait = this.add.image(42, 64, 'portrait_shpendi');
     this.numText = txt(this, 78, 100, '', { size: 16, color: C.white, ox: 1, oy: 1, stroke: '#000', strokeThickness: 3 });
 
     this.nameText = txt(this, 88, 24, '', { color: C.white });
@@ -92,7 +92,7 @@ export class SelectScene extends Phaser.Scene {
     this.numText.setText(c.number ? `#${c.number}` : '');
     this.passiveText.setText(c.passive[lang]);
     this.boostText.setText(`★ ${c.boost[lang]}`);
-    this.kitText.setText(hasKits(c) ? `${t('kit')}  ◀ ${KITS[this.kitIdx][lang]} ▶` : (c.look.coach ? t('kitFixedCoach') : t('kitFixedRetro')));
+    this.kitText.setText(hasKits(c) ? `${t('kit')}  ◀ ${kitName(c, KITS[this.kitIdx].id, lang)} ▶` : (c.look.coach ? t('kitFixedCoach') : t('kitFixedRetro')));
     this.kitText.setColor(hasKits(c) ? C.white : C.grey);
     // le barre si riempiono una alla volta con un suono crescente
     if (this.barTimer) this.barTimer.remove();

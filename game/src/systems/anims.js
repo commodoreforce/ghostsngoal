@@ -27,6 +27,8 @@ export function buildAnims(scene) {
     const vars = ['base', 'naked'];
     if (c.id === 'shpendi') vars.push('gold');
     if (c.id === 'ciofi') vars.push('mane', 'mane_naked');
+    if (c.id === 'diamanti') vars.push('vibes', 'vibes_naked');
+    if (c.id === 'hubner') vars.push('bison');
     if (c.id === 'klinsmann') vars.push('hero', 'hero_naked');
     const kits = hasKits(c) ? KITS.map((k) => k.id) : ['home'];
     for (const kit of kits) for (const v of vars) {

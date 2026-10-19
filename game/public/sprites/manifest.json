@@ -57,19 +57,125 @@
       "slide"
     ],
     "sheets": [
+      "pl_klinsmann_base",
+      "pl_klinsmann_naked",
+      "pl_klinsmann_away_base",
+      "pl_klinsmann_away_naked",
+      "pl_klinsmann_third_base",
+      "pl_klinsmann_third_naked",
       "pl_klinsmann_hero",
       "pl_klinsmann_hero_naked",
       "pl_klinsmann_away_hero",
       "pl_klinsmann_away_hero_naked",
       "pl_klinsmann_third_hero",
-      "pl_klinsmann_third_hero_naked",
-      "pl_klinsmann_base",
-      "pl_klinsmann_away_base",
-      "pl_klinsmann_third_base",
-      "pl_klinsmann_naked",
-      "pl_klinsmann_away_naked",
-      "pl_klinsmann_third_naked"
+      "pl_klinsmann_third_hero_naked"
     ],
     "portrait": "portrait_klinsmann"
+  },
+  "ciofi": {
+    "frameWidth": 56,
+    "frameHeight": 54,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "jump",
+      "fall",
+      "kick",
+      "crouch",
+      "crouchkick",
+      "up",
+      "hurt",
+      "ko0",
+      "ko1",
+      "cheer0",
+      "cheer1",
+      "slide"
+    ],
+    "sheets": [
+      "pl_ciofi_base",
+      "pl_ciofi_naked",
+      "pl_ciofi_mane",
+      "pl_ciofi_mane_naked",
+      "pl_ciofi_away_base",
+      "pl_ciofi_away_naked",
+      "pl_ciofi_away_mane",
+      "pl_ciofi_away_mane_naked",
+      "pl_ciofi_third_base",
+      "pl_ciofi_third_naked",
+      "pl_ciofi_third_mane",
+      "pl_ciofi_third_mane_naked"
+    ],
+    "portrait": "portrait_ciofi"
+  },
+  "diamanti": {
+    "frameWidth": 56,
+    "frameHeight": 54,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "jump",
+      "fall",
+      "kick",
+      "crouch",
+      "crouchkick",
+      "up",
+      "hurt",
+      "ko0",
+      "ko1",
+      "cheer0",
+      "cheer1",
+      "slide"
+    ],
+    "sheets": [
+      "pl_diamanti_base",
+      "pl_diamanti_naked",
+      "pl_diamanti_vibes",
+      "pl_diamanti_vibes_naked"
+    ],
+    "portrait": "portrait_diamanti"
+  },
+  "hubner": {
+    "frameWidth": 56,
+    "frameHeight": 54,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "jump",
+      "fall",
+      "kick",
+      "crouch",
+      "crouchkick",
+      "up",
+      "hurt",
+      "ko0",
+      "ko1",
+      "cheer0",
+      "cheer1",
+      "slide"
+    ],
+    "sheets": [
+      "pl_hubner_base",
+      "pl_hubner_naked",
+      "pl_hubner_away_base",
+      "pl_hubner_away_naked",
+      "pl_hubner_third_base",
+      "pl_hubner_third_naked",
+      "pl_hubner_bison",
+      "pl_hubner_away_bison",
+      "pl_hubner_third_bison"
+    ],
+    "portrait": "portrait_hubner"
   }
 }

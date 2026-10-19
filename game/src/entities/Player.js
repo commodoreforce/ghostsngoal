@@ -65,6 +65,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (b && id === 'shpendi') return 'gold';
     if (b && id === 'ciofi') return this.armored ? 'mane' : 'mane_naked';
     if (b && id === 'klinsmann') return this.armored ? 'hero' : 'hero_naked';
+    if (b && id === 'diamanti') return this.armored ? 'vibes' : 'vibes_naked';
+    if (b && id === 'hubner') return 'bison';
     return this.armored ? 'base' : 'naked';
   }
 
@@ -218,6 +220,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.invulnerable) return false;
     const t = this.scene.time.now;
     this.tookDamage = true;
+    // Tatanka bisonte: il colpo lo fa tornare uomo (senza perdere la maglia)
+    if (this.boosted && this.char.id === 'hubner') {
+      this.scene.endBoost();
+      this.invulnUntil = t + 900;
+      Sfx.shirtLost();
+      this.scene.cameras.main.shake(160, 0.008);
+      return false;
+    }
     if (this.shield > 0) {
       this.shield--;
       this.invulnUntil = t + 900;

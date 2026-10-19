@@ -534,6 +534,8 @@ export class LevelScene extends Phaser.Scene {
     if (!e.alive || !e.harmful || e === this.boss && !this.boss.alive) return;
     // contatti offensivi: aura di Diamanti, scivolata di Ciofi
     if (P.boosted && P.char.id === 'diamanti' && e !== this.boss) { e.kill(P.x); return; }
+    // il bisonte in corsa travolge i nemici (non il boss)
+    if (P.boosted && P.char.id === 'hubner' && e !== this.boss && Math.abs(P.body.velocity.x) > 40) { e.kill(P.x); this.cameras.main.shake(80, 0.004); return; }
     if (this.time.now < P.slideUntil && e !== this.boss && !(e instanceof Bat) && !(e instanceof Ghost)) { e.kill(P.x); return; }
     if (P.hurt(e.x, e === this.boss ? 'boss' : e.kind)) return;
   }

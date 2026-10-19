@@ -87,9 +87,18 @@ GNG_CONFIG=$PWD/scripts/test/config.php php -S localhost:8000 -t server
 
 ## Sprite veri e musica
 
-1. Metti le pose generate in `assets/sprites/<personaggio>/` con i nomi `<personaggio>_idle.png`, `_run01..04`, `_jump`, `_kick`, `_crouch`, `_ko`, `_cheer` (Ciofi anche `_slide`). Sfondo verde pieno.
-2. Lancia `python3 tools/build_sprites.py <personaggio> assets/sprites/<personaggio>`.
-3. Lo strumento toglie il verde e i pezzi staccati, porta tutte le pose alla stessa scala (posa ferma alta 46 px), crea le varianti senza maglia, oro (Shpendi), maglia trasferta e terza, e il ritratto. I fogli finiscono in `game/public/sprites/` e il gioco li usa da soli al posto di quelli provvisori.
+1. Metti le pose generate in `assets/sprites/<personaggio>/` con i nomi `<personaggio>_idle.png`, `_run.png` (le 4 fasi in un solo PNG), `_jump`, `_fall`, `_kick`, `_crouch`, `_crouchkick`, `_up`, `_slide`, `_hurt`, `_ko`, `_cheer`. Sfondo verde pieno.
+2. Dividi la corsa: `python3 tools/split_run.py assets/sprites/<personaggio>/<personaggio>_run.png` (crea `_run01..04`).
+3. Lancia `python3 tools/build_sprites.py <personaggio> assets/sprites/<personaggio>`.
+4. Lo strumento toglie il verde e i pezzi staccati, porta tutte le pose alla stessa scala (posa ferma alta 46 px) e crea le varianti:
+   - senza maglia (il Mister resta in maglietta bianca), oro (Shpendi), le tre maglie;
+   - Ciofi: fascia da capitano e chioma Super Saiyan (da `ciofi_super_idle.png`, appoggiata sulla testa in ogni posa);
+   - Diamanti: tuta col filo bianco e cappellino all'indietro (da `diamanti_goodvibes_idle.png`);
+   - Klinsmann: maglie rossa, gialla e viola, Capitan Romagna;
+   - Hubner: maglia classica, con le stelle e con le stelle blu; il bisonte da `hubner_bison_idle`, `_run`, `_slide` (le altre pose del bisonte le ricava lo strumento).
+5. Ritratti della selezione: le facce in `assets/portraits/<personaggio>.png`, poi `python3 tools/build_portraits.py`.
+
+I fogli finiscono in `game/public/sprites/` e il gioco li usa da soli al posto di quelli provvisori.
 
 La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` dentro `game/src/systems/sfx.js` (oggi: `intro.mp3` su titolo e selezione). I brani senza file usano ancora la musica sintetizzata.
 
