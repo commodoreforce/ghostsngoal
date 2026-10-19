@@ -577,6 +577,10 @@ def build(char_id, src_dir, out_dir):
         raw['run02'] = tilt(raw['idle'], -10, 1.0, 0.97)
         raw['run03'] = tilt(raw['idle'], -7)
         raw['run04'] = tilt(raw['idle'], -4, 1.0, 0.97)
+    if char_id == 'hubner' and 'run01' in raw:
+        # la firma di Tatanka: corre ingobbito, tutto il corpo spinto in avanti come un toro
+        for k in ('run01', 'run02', 'run03', 'run04'):
+            raw[k] = tilt(raw[k], -8)
     sk = scale_set(raw, STAND_H)
     scaled = {k: to_scale(im, sk[k]) for k, im in raw.items()}
     keys = list(scaled)
