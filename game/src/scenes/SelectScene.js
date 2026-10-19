@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Cheat } from '../systems/cheat.js';
 import { Input } from '../systems/input.js';
 import { Sfx, playMusic, stopMusic } from '../systems/sfx.js';
 import { Api, Unlock } from '../systems/api.js';
@@ -17,7 +18,8 @@ export class SelectScene extends Phaser.Scene {
     const g = this.add.graphics();
     for (let i = -H; i < W + H; i += 16) { g.fillStyle(0x15111f, 1); g.fillTriangle(i, 0, i + 8, 0, i - H + 8, H); g.fillTriangle(i, 0, i - H + 8, H, i - H, H); }
 
-    this.unlocked = Unlock.has();
+    // in modalità di prova (DAIBURDEL) Tatanka è giocabile per collaudarlo, senza sbloccarlo per sempre
+    this.unlocked = Unlock.has() || Cheat.on;
     this.idx = Math.max(0, CHARACTERS.findIndex((c) => c.id === (this.registry.get('lastChar') || 'shpendi')));
     this.locked = false;   // input bloccato durante animazioni
     this.magicOpen = false;
@@ -224,8 +226,8 @@ export class SelectScene extends Phaser.Scene {
     this.magicLayer = null;
   }
 
-  revealTatanka() {
-    Unlock.set();
+  revealTatanka(forever = true) {
+    if (forever) Unlock.set();
     this.unlocked = true;
     this.locked = true;
     const s = this.slots[this.idx];
@@ -247,6 +249,11 @@ export class SelectScene extends Phaser.Scene {
   update() {
     if (this.locked || this.magicOpen) {
       if (this.magicOpen && Input.pressed('b') && document.activeElement !== this.magicInput) this.closeMagic();
+      return;
+    }
+    if (Cheat.listen(this)) {
+      const h = this.slots.findIndex((sl) => sl.isLocked);
+      if (h >= 0) { this.idx = h; this.refresh(true); this.revealTatanka(false); }
       return;
     }
     if (Input.pressed('left')) this.move(-1);
