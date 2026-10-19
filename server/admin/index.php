@@ -223,7 +223,9 @@ if ($p === 'stats') {
     $sum = q("SELECT COALESCE(SUM(kills),0) kills, COALESCE(SUM(shots),0) shots, COALESCE(SUM(hits),0) hits, COALESCE(SUM(deaths),0) deaths,
         COALESCE(SUM(boosts),0) boosts, COALESCE(SUM(pumpkins),0) pumpkins, COALESCE(SUM(crates),0) crates,
         COALESCE(SUM(k_zombie),0) k_zombie, COALESCE(SUM(k_bat),0) k_bat, COALESCE(SUM(k_pumpkin),0) k_pumpkin,
-        COALESCE(SUM(k_ghost),0) k_ghost, COALESCE(SUM(k_boss),0) k_boss FROM runs WHERE $E")->fetch();
+        COALESCE(SUM(k_ghost),0) k_ghost, COALESCE(SUM(k_boss),0) k_boss,
+        COALESCE(SUM(k_fisher),0) k_fisher, COALESCE(SUM(k_owl),0) k_owl, COALESCE(SUM(k_eel),0) k_eel, COALESCE(SUM(k_washer),0) k_washer,
+        COALESCE(SUM(k_wolf),0) k_wolf, COALESCE(SUM(k_book),0) k_book, COALESCE(SUM(k_azdora),0) k_azdora FROM runs WHERE $E")->fetch();
 
     // distribuzioni
     $byHero = q("SELECT hero AS k, COUNT(*) AS n FROM runs WHERE $G GROUP BY hero ORDER BY n DESC")->fetchAll();
@@ -245,7 +247,9 @@ if ($p === 'stats') {
     $hDay = $series('SELECT ' . $dayExpr('started_at') . " AS d, COALESCE(SUM(duration_ms), 0) / 60000 AS n FROM runs WHERE $E AND started_at >= ? GROUP BY d", [$from]);
     $hourly = $series('SELECT ' . sql_idiv("(started_at + $off) % 86400", 3600) . " AS d, COUNT(*) AS n FROM runs WHERE $G GROUP BY d", []);
 
-    $causeNames = ['pit' => 'Caduto in una buca', 'time' => 'Tempo scaduto', 'zombie' => 'Zombie', 'bat' => 'Pipistrello', 'pumpkin' => 'Zucca', 'ghost' => 'Fantasma', 'boss' => 'Mazapegùl', 'enemy' => 'Nemico'];
+    $causeNames = ['pit' => 'Caduto in una buca', 'time' => 'Tempo scaduto', 'zombie' => 'Zombie', 'bat' => 'Pipistrello', 'pumpkin' => 'Zucca', 'ghost' => 'Fantasma', 'boss' => 'Mazapegùl', 'enemy' => 'Nemico',
+        'river' => 'Caduto nel Savio', 'fisher' => 'Pescatore scheletro', 'owl' => 'Civetta', 'eel' => 'Anguilla fantasma',
+        'washer' => 'Lavandaia spettro', 'wolf' => 'Lupo mannaro', 'book' => 'Libro volante', 'azdora' => 'Azdora indemoniata'];
     $kitNames = ['home' => 'Casa (bianca)', 'away' => 'Trasferta', 'third' => 'Terza maglia'];
     $deviceNames = ['mobile' => 'Telefono', 'tablet' => 'Tablet', 'desktop' => 'Computer', '' => 'Non rilevato'];
     $langNames = ['it' => 'Italiano', 'en' => 'Inglese', '' => 'Non rilevata'];
@@ -353,7 +357,11 @@ if ($p === 'stats') {
       <div class="card"><h2>Nemici sconfitti</h2><?php $bars(array_values(array_filter([
           ['k' => 'Zombie', 'n' => (int) $sum['k_zombie']], ['k' => 'Pipistrelli', 'n' => (int) $sum['k_bat']],
           ['k' => 'Zucche', 'n' => (int) $sum['k_pumpkin']], ['k' => 'Fantasmi', 'n' => (int) $sum['k_ghost']],
-          ['k' => 'Mazapegùl', 'n' => (int) $sum['k_boss']]], fn ($r) => $r['n'] > 0)), fn ($v) => $v, true); ?></div>
+          ['k' => 'Mazapegùl', 'n' => (int) $sum['k_boss']],
+          ['k' => 'Pescatori scheletro', 'n' => (int) $sum['k_fisher']], ['k' => 'Civette', 'n' => (int) $sum['k_owl']],
+          ['k' => 'Anguille fantasma', 'n' => (int) $sum['k_eel']], ['k' => 'Lavandaie spettro', 'n' => (int) $sum['k_washer']],
+          ['k' => 'Lupi mannari', 'n' => (int) $sum['k_wolf']], ['k' => 'Libri volanti', 'n' => (int) $sum['k_book']],
+          ['k' => 'Azdore liberate', 'n' => (int) $sum['k_azdora']]], fn ($r) => $r['n'] > 0)), fn ($v) => $v, true); ?></div>
       <div class="card"><h2>Livello raggiunto</h2><?php $bars($byLevel, fn ($v) => 'Livello ' . $v, true); ?></div>
       <div class="card"><h2>Come si muore</h2><?php $bars($byCause, fn ($v) => $causeNames[$v] ?? $v, true); ?></div>
       <div class="card"><h2>Dispositivo</h2><?php $bars($byDevice, fn ($v) => $deviceNames[$v] ?? $v, true); ?></div>

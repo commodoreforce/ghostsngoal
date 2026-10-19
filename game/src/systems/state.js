@@ -3,7 +3,7 @@ import { LocalBest } from './api.js';
 import { Cheat } from './cheat.js';
 
 const newStats = () => ({ shots: 0, hits: 0, kills: 0, deaths: 0, boosts: 0, pumpkins: 0, crates: 0,
-  killsBy: { zombie: 0, bat: 0, pumpkin: 0, ghost: 0, boss: 0 } });
+  killsBy: { zombie: 0, bat: 0, pumpkin: 0, ghost: 0, boss: 0, fisher: 0, owl: 0, eel: 0, washer: 0, wolf: 0, book: 0, azdora: 0 } });
 
 export const EXTRA_LIFE_AT = [20000, 60000];
 export const EXTRA_LIFE_EVERY = 100000;

@@ -26,6 +26,12 @@ export class BootScene extends Phaser.Scene {
     });
     // sfondi dipinti (tools/build_backgrounds.py): se mancano resta il parallasse provvisorio
     for (const k of ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso', 'l1_inside0', 'l1_inside1']) this.load.image(k, `./backgrounds/${k}.png`);
+    // livello 2 (tools/build_l2_backgrounds.py): fondali, terreni, fontana, cartolina della Malatestiana
+    this.load.json('bgManifest', './backgrounds/bg_manifest.json');
+    for (const k of ['l2_ponte_sky', 'l2_ponte', 'l2_piazza_sky', 'l2_piazza', 'l2_library', 'l2_library_card', 'l2_scalette_sky', 'l2_scalette',
+      'l2_belvedere_sky', 'l2_belvedere', 'l2_fountain', 'l2_steps',
+      'l2_ground_bank', 'l2_ground_bank_deep', 'l2_ground_cobble', 'l2_ground_cobble_deep', 'l2_ground_floor', 'l2_ground_floor_deep',
+      'l2_ground_belv', 'l2_ground_belv_deep']) this.load.image(k, `./backgrounds/${k}.png`);
     this.load.on('loaderror', () => { /* manca un file: resta lo sprite provvisorio */ });
   }
 

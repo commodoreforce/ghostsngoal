@@ -13,6 +13,8 @@ export class SelectScene extends Phaser.Scene {
   constructor() { super('Select'); }
 
   create() {
+    this.stage2 = false;
+    this.key2 = this.input.keyboard ? this.input.keyboard.addKey('TWO') : null;
     this.cameras.main.setBackgroundColor('#0b0812');
     // sfondo a righe diagonali bianconere che scorrono
     const g = this.add.graphics();
@@ -153,6 +155,8 @@ export class SelectScene extends Phaser.Scene {
     this.time.delayedCall(700, () => { b.setAlpha(1); this.cameras.main.shake(200, 0.006); Sfx.daiburdel(); });
     this.time.delayedCall(2200, () => {
       Run.reset(c.id, kit);
+      // modalità di prova: con il tasto 2 si parte direttamente dal livello 2
+      if (this.stage2 && Cheat.on) { Run.level = 2; this.scene.start('Level2', {}); return; }
       this.scene.start('Intro');
     });
     [box, a].forEach((o) => o.setAlpha(0));
@@ -247,6 +251,12 @@ export class SelectScene extends Phaser.Scene {
   }
 
   update() {
+    if (Cheat.on && !this.stage2 && this.key2 && this.key2.isDown) {
+      this.stage2 = true;
+      Sfx.cheat();
+      const tag = center(this, 150, getLang() === 'it' ? 'PROVA: SI PARTE DAL LIVELLO 2' : 'TEST: STARTING FROM STAGE 2', { color: C.gold });
+      this.tweens.add({ targets: tag, alpha: 0.3, yoyo: true, repeat: -1, duration: 300 });
+    }
     if (this.locked || this.magicOpen) {
       if (this.magicOpen && Input.pressed('b') && document.activeElement !== this.magicInput) this.closeMagic();
       return;

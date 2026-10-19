@@ -122,6 +122,24 @@ export const Sfx = {
     [523, 523, 659, 784, 659, 784, 1046].forEach((f, i) => tone({ f0: f, dur: 0.11, vol: 0.32, at: i * 0.11 }));
     noise({ dur: 1.2, vol: 0.25, f: 1500, q: 0.3, at: 0.2 });
   },
+  // ---- livello 2
+  // lancio dell'amo: frusta della canna e fischio della lenza
+  cast: () => { noise({ dur: 0.18, vol: 0.4, f: 3200, q: 0.7, sweep: -2400 }); tone({ type: 'sine', f0: 1800, f1: 600, dur: 0.25, vol: 0.12, at: 0.05 }); },
+  // la civetta: "u-uu" basso e tremolante
+  hoot: () => { tone({ type: 'sine', f0: 420, f1: 380, dur: 0.16, vol: 0.35 }); tone({ type: 'sine', f0: 400, f1: 330, dur: 0.38, vol: 0.35, at: 0.22 }); },
+  splash: () => { noise({ dur: 0.25, vol: 0.4, f: 1600, q: 0.5, sweep: -900 }); tone({ type: 'triangle', f0: 300, f1: 120, dur: 0.12, vol: 0.2 }); },
+  sheet: () => { noise({ dur: 0.3, vol: 0.35, f: 900, q: 0.4, sweep: 600 }); noise({ dur: 0.2, vol: 0.25, f: 1400, q: 0.4, at: 0.15 }); },
+  // ululato: sale, tiene e scende
+  howl: () => { tone({ type: 'sawtooth', f0: 300, f1: 620, dur: 0.35, vol: 0.18 }); tone({ type: 'sine', f0: 620, f1: 520, dur: 0.6, vol: 0.25, at: 0.33 }); tone({ type: 'sine', f0: 520, f1: 260, dur: 0.4, vol: 0.2, at: 0.9 }); },
+  growl: () => { noise({ dur: 0.3, vol: 0.45, f: 260, q: 1.2 }); tone({ type: 'sawtooth', f0: 110, f1: 80, dur: 0.3, vol: 0.25 }); },
+  // campana del Comune: rintocco con armoniche che si spengono piano
+  bell: () => { [1, 2.76, 5.4].forEach((k, i) => tone({ type: 'sine', f0: 196 * k, f1: 196 * k * 0.995, dur: 1.4 - i * 0.3, vol: [0.5, 0.25, 0.12][i], attack: 0.003 })); noise({ dur: 0.05, vol: 0.3, f: 2500 }); },
+  door: () => { tone({ type: 'sawtooth', f0: 90, f1: 140, dur: 0.6, vol: 0.18 }); noise({ dur: 0.5, vol: 0.2, f: 500, q: 2, sweep: 300 }); },
+  azdoraYell: () => { tone({ type: 'square', f0: 520, f1: 380, dur: 0.22, vol: 0.28 }); tone({ type: 'square', f0: 640, f1: 300, dur: 0.3, vol: 0.22, at: 0.2 }); },
+  azdoraLaugh: () => { [700, 660, 620, 580, 520].forEach((f, i) => tone({ type: 'square', f0: f, f1: f * 0.85, dur: 0.1, vol: 0.22, at: i * 0.13 })); },
+  piadina: () => tone({ type: 'triangle', f0: 900, f1: 1300, dur: 0.12, vol: 0.12 }),
+  // guarigione: arpeggio maggiore luminoso, come un incantesimo che si scioglie
+  cure: () => { [523, 659, 784, 1046, 1318, 1568, 2093].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: 0.3, vol: 0.28, at: i * 0.08 })); tone({ type: 'sine', f0: 262, dur: 1.4, vol: 0.3, at: 0.1 }); },
   gameOver: () => [392, 370, 349, 330, 262].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: i === 4 ? 0.8 : 0.22, vol: 0.45, at: i * 0.24 })),
 };
 
@@ -170,6 +188,19 @@ const TRACKS = {
     lead: [57, 57, 0, 60, 0, 57, 63, 0, 62, 0, 60, 0, 57, 0, 55, 56, 57, 57, 0, 60, 0, 57, 63, 0, 64, 63, 62, 61, 60, 0, 0, 0],
     bass: [33, 33, 45, 33, 33, 45, 33, 45, 33, 33, 45, 33, 36, 48, 35, 47, 33, 33, 45, 33, 33, 45, 33, 45, 39, 51, 38, 50, 37, 49, 36, 48],
     drum: 'kkhskkhskkhsksss',
+  },
+  // livello 2: un liscio romagnolo in re minore, a tre tempi, suonato da un'orchestrina stregata
+  level2: {
+    bpm: 152,
+    lead: [69, 0, 0, 74, 0, 72, 70, 0, 69, 0, 67, 0, 65, 0, 67, 69, 0, 0, 70, 69, 67, 0, 65, 64,
+      62, 0, 0, 65, 0, 69, 74, 0, 73, 0, 74, 0, 76, 0, 74, 73, 0, 70, 69, 0, 0, 0, 0, 0,
+      69, 0, 0, 74, 0, 76, 77, 0, 76, 0, 74, 0, 73, 0, 74, 76, 0, 0, 74, 73, 70, 0, 69, 67,
+      65, 0, 67, 69, 0, 70, 72, 0, 70, 0, 69, 0, 67, 0, 65, 64, 0, 61, 62, 0, 0, 0, 0, 0],
+    bass: [38, 0, 0, 0, 57, 0, 0, 0, 57, 0, 0, 0, 43, 0, 0, 0, 58, 0, 0, 0, 58, 0, 0, 0,
+      38, 0, 0, 0, 57, 0, 0, 0, 57, 0, 0, 0, 45, 0, 0, 0, 57, 0, 0, 0, 55, 0, 0, 0,
+      38, 0, 0, 0, 57, 0, 0, 0, 57, 0, 0, 0, 45, 0, 0, 0, 55, 0, 0, 0, 55, 0, 0, 0,
+      46, 0, 0, 0, 58, 0, 0, 0, 58, 0, 0, 0, 45, 0, 0, 0, 57, 0, 0, 0, 38, 0, 0, 0],
+    drum: 'k...s...s...',
   },
   boost: {
     bpm: 190,

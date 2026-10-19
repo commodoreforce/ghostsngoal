@@ -6,7 +6,7 @@ const GNG_HEROES = ['shpendi', 'ciofi', 'klinsmann', 'diamanti', 'hubner'];
 const GNG_NAME_MAX = 10;
 const GNG_SCHEMA = 2;   // si alza quando cambia la struttura del database
 const GNG_KITS = ['home', 'away', 'third'];
-const GNG_KILL_KINDS = ['zombie', 'bat', 'pumpkin', 'ghost', 'boss'];
+const GNG_KILL_KINDS = ['zombie', 'bat', 'pumpkin', 'ghost', 'boss', 'fisher', 'owl', 'eel', 'washer', 'wolf', 'book', 'azdora'];
 
 function gng_config(): array {
     static $cfg = null;

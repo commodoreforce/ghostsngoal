@@ -46,7 +46,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   // fuori dallo schermo da troppo tempo: sparisce senza punti
   cull(cam) {
-    if (this.x < cam.scrollX - 120 || this.x > cam.scrollX + 440 || this.y > 300) { this.eyes.destroy(); this.alive = false; this.destroy(); return true; }
+    // i nemici messi al loro posto nel livello aspettano finché non arrivi
+    if (this.placed && this.x > cam.scrollX) return false;
+    if (this.x < cam.scrollX - 120 || this.x > cam.scrollX + 440 || this.y > cam.scrollY + 300) { this.eyes.destroy(); this.alive = false; this.destroy(); return true; }
     return false;
   }
 }
@@ -127,7 +129,7 @@ export class Bat extends Enemy {
       if (time > this.diving) { this.diving = 0; this.diveAt = time + 4200; this.play('bat_fly'); }
       return;
     }
-    this.baseY = Phaser.Math.Linear(this.baseY, Math.min(player.y - 26, 170), 0.01);
+    this.baseY = Phaser.Math.Linear(this.baseY, Math.min(player.y - 26, this.level.groundY - 38), 0.01);
     const y = this.baseY + Math.sin((time + this.t0) / 260) * 14;
     this.body.setVelocity(dir * 40, (y - this.y) * 5);
     if (time > this.diveAt && Math.abs(dx) < 110) {

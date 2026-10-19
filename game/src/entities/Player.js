@@ -105,6 +105,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (right) { target = this.tune.runSpeed; this.facing = 1; }
     }
     if (sliding) target = this.facing * 190;
+    // avvolto nel lenzuolo della lavandaia: lento, niente tiri; saltando ci si libera prima
+    const wrapped = time < (this.wrappedUntil || 0);
+    if (wrapped) {
+      target *= 0.4;
+      if (Input.pressed('a')) { this.wrappedUntil -= 320; this.scene.wrapShake && this.scene.wrapShake(this); }
+    }
     const accel = onGround ? 2200 : 1300;
     const vx = this.body.velocity.x;
     const dv = Phaser.Math.Clamp(target - vx, -accel * delta / 1000, accel * delta / 1000);
@@ -128,7 +134,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.slideUntil = time + 420; this.jumpPressedAt = -9999;
       Sfx.kick();
       this.scene.dust(this.x, this.body.bottom);
-    } else if (wantsJump && canCoyote && !sliding) {
+    } else if (wantsJump && canCoyote && !sliding && !wrapped) {
       let v = this.tune.jumpVel;
       if (this.boosted && this.char.id === 'klinsmann') v *= 1.38;
       this.body.setVelocityY(v);
@@ -146,7 +152,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     // tiro
-    if (Input.pressed('b')) {
+    if (Input.pressed('b') && !wrapped) {
       if (this.char.id === 'klinsmann' && this.scene.tryParry(this)) {
         this.kickUntil = time + KICK_ANIM_MS;
         this.diveUntil = time + 260;          // tuffo in parata

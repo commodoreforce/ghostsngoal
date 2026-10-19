@@ -142,5 +142,150 @@
     "frames": [
       "__solo"
     ]
+  },
+  "fisher": {
+    "sheet": "en_fisher",
+    "frameWidth": 64,
+    "frameHeight": 54,
+    "frames": [
+      "fish0",
+      "fishWind",
+      "fishCast",
+      "fishF",
+      "die0",
+      "die1"
+    ],
+    "anchors": {
+      "fish0": [
+        14,
+        3
+      ],
+      "fishWind": [
+        18,
+        0
+      ],
+      "fishCast": [
+        31,
+        6
+      ]
+    }
+  },
+  "owl": {
+    "sheet": "en_owl",
+    "frameWidth": 28,
+    "frameHeight": 26,
+    "frames": [
+      "owl0",
+      "owlBlink",
+      "owlHoot",
+      "owlSide",
+      "owlFly0",
+      "owlFly1",
+      "die0"
+    ]
+  },
+  "eel": {
+    "sheet": "en_eel",
+    "frameWidth": 34,
+    "frameHeight": 34,
+    "frames": [
+      "eel0",
+      "eel45",
+      "eel90",
+      "eel135",
+      "eel180",
+      "eelF",
+      "die0"
+    ]
+  },
+  "washer": {
+    "sheet": "en_washer",
+    "frameWidth": 50,
+    "frameHeight": 46,
+    "frames": [
+      "wash0",
+      "wash1",
+      "washThrow",
+      "washWind",
+      "die0",
+      "die1"
+    ]
+  },
+  "sheet": {
+    "sheet": "en_sheet",
+    "frameWidth": 30,
+    "frameHeight": 22,
+    "frames": [
+      "sheet0",
+      "sheet1",
+      "sheet2"
+    ]
+  },
+  "wolf": {
+    "sheet": "en_wolf",
+    "frameWidth": 64,
+    "frameHeight": 58,
+    "frames": [
+      "wolfF",
+      "wolfHowl",
+      "run0",
+      "run1",
+      "run2",
+      "wolfJump",
+      "die0",
+      "die1"
+    ]
+  },
+  "azdora": {
+    "sheet": "en_azdora",
+    "frameWidth": 104,
+    "frameHeight": 84,
+    "frames": [
+      "az0",
+      "az1",
+      "azWalk0",
+      "azWalk1",
+      "azWind",
+      "azThrow",
+      "azSlam",
+      "azJump",
+      "azCured",
+      "azCured1"
+    ]
+  },
+  "book": {
+    "sheet": "en_book",
+    "frameWidth": 20,
+    "frameHeight": 16,
+    "frames": [
+      "book0",
+      "book1",
+      "book2",
+      "die0"
+    ]
+  },
+  "l2fx": {
+    "sheet": "en_l2fx",
+    "frameWidth": 20,
+    "frameHeight": 14,
+    "frames": [
+      "pia0",
+      "pia1",
+      "pia2",
+      "capp",
+      "hook",
+      "chain",
+      "flour",
+      "smoke",
+      "barrel"
+    ]
+  },
+  "clockface": {
+    "sheet": "en_clockface",
+    "frameWidth": 27,
+    "frameHeight": 27,
+    "frames": [
+      "__solo"
+    ]
   }
 }

@@ -12,25 +12,30 @@ import { t } from '../i18n.js';
 import { txt, center, pad, floatText, C, W, H } from '../systems/ui.js';
 
 const T = 16;
-const L = LEVEL1;
-const GROUND_Y = L.groundRow * T; // 208
 const CITY_F = 0.15;      // velocità della città (rispetto alla telecamera)
 const STADIUM_F = 0.35;   // velocità dello stadio
 const SIGN_X = 262;       // centro dell'insegna OROGEL STADIUM nel piano dell'ingresso
 const INSIDE_F = 0.3;     // velocità della tavola dell'interno dello stadio
 
 export class LevelScene extends Phaser.Scene {
-  constructor() { super('Level'); }
+  constructor(key = 'Level') { super(key); }
 
   init(data) {
     this.fromCheckpoint = !!(data && data.checkpoint);
   }
 
+  // dati del livello (il livello 2 li sostituisce)
+  levelData() { return LEVEL1; }
+
   create() {
-    this.worldW = L.tilesW * T;
-    this.arenaX = L.arena * T;
-    this.physics.world.setBounds(0, 0, this.worldW, 300, true, true, false, false);
-    this.cameras.main.setBounds(0, 0, this.worldW, H);
+    this.L = this.levelData();
+    this.groundY = this.L.groundRow * T;   // 208 nel livello 1
+    this.worldH = this.L.worldH || H;      // il livello 2 è più alto: si sale sul Monte
+    this.musicKey = this.L.music || 'level1';
+    this.worldW = this.L.tilesW * T;
+    this.arenaX = this.L.arena * T;
+    this.physics.world.setBounds(0, 0, this.worldW, this.worldH + 76, true, true, false, false);
+    this.cameras.main.setBounds(0, 0, this.worldW, this.worldH);
     this.cameras.main.setBackgroundColor('#07050f');
 
     this.solids = [];
@@ -59,39 +64,53 @@ export class LevelScene extends Phaser.Scene {
     this.buildBackground();
     this.buildWorld();
     this.buildFx();
-    this.weather = new Weather(this, { groundY: GROUND_Y, isGround: (x) => L.ground.some(([a, b]) => x >= a * T && x < b * T) });
+    this.buildWeather();
 
-    const startX = this.fromCheckpoint ? (L.checkpoint + 2) * T : 2.5 * T;
-    this.player = new Player(this, startX, GROUND_Y - 30, Run.character, Run.kit);
+    const startX = this.fromCheckpoint ? (this.L.checkpoint + 2) * T : (this.L.startX || 2.5) * T;
+    this.player = new Player(this, startX, this.groundY - 30, Run.character, Run.kit);
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setDeadzone(24, 60);
     this.cameras.main.setFollowOffset(-30, 0);
+
+    // ripartendo dal checkpoint le ondate già superate non tornano tutte insieme
+    if (this.fromCheckpoint) this.L.waves.forEach((w, i) => { if (w.at < this.L.checkpoint + W / T) this.wavesDone.add(i); });
 
     this.buildColliders();
     this.buildHud();
     this.buildDarkness();
 
-    this.timeLeft = this.fromCheckpoint ? L.timeB : L.timeA;
+    this.timeLeft = this.fromCheckpoint ? this.L.timeB : this.L.timeA;
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickTimer() });
     this.lightTimer = 0;
 
-    // inizio: "PRONTI? VIA!"
+    this.startIntro();
+    stopMusic();
+    if (this.fromCheckpoint) this.placeCheckpointFlag(true);
+  }
+
+  // inizio: "PRONTI? VIA!"
+  startIntro() {
     this.player.state = 'intro';
-    const a = center(this, 92, `${t('level1')}`, { color: C.orange, fixed: true, depth: 120 });
-    const b = center(this, 108, t('level1Name'), { color: C.white, fixed: true, depth: 120 });
+    const [ta, tb] = this.introTexts();
+    const a = center(this, 92, ta, { color: C.orange, fixed: true, depth: 120 });
+    const b = center(this, 108, tb, { color: C.white, fixed: true, depth: 120 });
     this.time.delayedCall(1300, () => { a.setText(t('ready')); b.setText(''); });
     this.time.delayedCall(2100, () => {
       a.setText(t('go')); Sfx.whistle();
       this.player.state = 'play';
-      playMusic('level1');
+      playMusic(this.musicKey);
     });
     this.time.delayedCall(2700, () => { a.destroy(); b.destroy(); });
     if (window.matchMedia && window.matchMedia('(pointer: fine)').matches && !this.fromCheckpoint) {
       const legend = center(this, H - 30, t('legend'), { fixed: true, depth: 120, color: C.grey });
       this.time.delayedCall(3600, () => this.tweens.add({ targets: legend, alpha: 0, duration: 400, onComplete: () => legend.destroy() }));
     }
-    stopMusic();
-    if (this.fromCheckpoint) this.placeCheckpointFlag(true);
+  }
+
+  introTexts() { return [t('level1'), t('level1Name')]; }
+
+  buildWeather() {
+    this.weather = new Weather(this, { groundY: this.groundY, isGround: (x) => this.L.ground.some(([a, b]) => x >= a * T && x < b * T) });
   }
 
   // ------------------------------------------------------------------ mondo
@@ -163,7 +182,7 @@ export class LevelScene extends Phaser.Scene {
     R.sky.x = -Math.round(Phaser.Math.Clamp(sx, 0, maxScroll) * (R.sky.width - W) / maxScroll);
     R.city.x = -Math.round(Phaser.Math.Clamp(sx * CITY_F, 0, R.city.width - W));
     // lo stadio entra da destra e si ferma con l'insegna al centro dello schermo al checkpoint
-    const signScroll = L.checkpoint * T - W / 2;
+    const signScroll = this.L.checkpoint * T - W / 2;
     const from = signScroll - (W - (W / 2 - SIGN_X)) / STADIUM_F;
     const x = Math.round(Phaser.Math.Clamp(W - (sx - from) * STADIUM_F, W - R.back.width, W));
     R.back.x = x; R.front.x = x;
@@ -173,7 +192,7 @@ export class LevelScene extends Phaser.Scene {
     R.front.setAlpha(c * (1 - k));
     R.city.setAlpha(1 - k);
     if (R.inside) {
-      const sxB = (L.checkpoint - 8) * T;
+      const sxB = (this.L.checkpoint - 8) * T;
       const d = Math.max(0, sx - sxB);
       R.inside.x = -Math.round(Phaser.Math.Clamp(d * INSIDE_F, 0, R.inside.width - W));
       R.city2.x = Math.round(20 - d * 0.15);
@@ -196,15 +215,15 @@ export class LevelScene extends Phaser.Scene {
 
   buildWorld() {
     // terreno
-    for (const [a, b] of L.ground) {
+    for (const [a, b] of this.L.ground) {
       const x = a * T, w = (b - a) * T;
-      this.add.tileSprite(x, GROUND_Y, w, T, 'tiles', 'grass').setOrigin(0).setDepth(10);
-      this.add.tileSprite(x, GROUND_Y + T, w, H - GROUND_Y - T + 16, 'tiles', 'dirt').setOrigin(0).setDepth(10);
-      this.addSolid(x, GROUND_Y, w, 64);
+      this.add.tileSprite(x, this.groundY, w, T, 'tiles', 'grass').setOrigin(0).setDepth(10);
+      this.add.tileSprite(x, this.groundY + T, w, H - this.groundY - T + 16, 'tiles', 'dirt').setOrigin(0).setDepth(10);
+      this.addSolid(x, this.groundY, w, 64);
     }
     // gradoni di pietra
-    for (const bl of L.blocks) {
-      const x = bl.x * T, y = bl.row * T, w = bl.w * T, h = GROUND_Y - y;
+    for (const bl of this.L.blocks) {
+      const x = bl.x * T, y = bl.row * T, w = bl.w * T, h = this.groundY - y;
       // muretto di pietre squadrate (sprite disegnati), con la fila di copertura in cima
       if (this.textures.exists('stoneTile')) {
         this.add.tileSprite(x, y, w, h, 'stoneTile').setOrigin(0).setDepth(12);
@@ -213,50 +232,50 @@ export class LevelScene extends Phaser.Scene {
       this.addSolid(x, y, w, h);
     }
     // assi
-    for (const p of L.planks) {
+    for (const p of this.L.planks) {
       const x = p.x * T, y = p.row * T, w = p.w * T;
       this.add.tileSprite(x, y, w, 6, 'tiles', 'plank').setOrigin(0).setDepth(12);
       // supporti
-      this.add.rectangle(x + 3, y + 6, 2, GROUND_Y - y - 6, 0x2a1a0e).setOrigin(0, 0).setDepth(9);
-      this.add.rectangle(x + w - 5, y + 6, 2, GROUND_Y - y - 6, 0x2a1a0e).setOrigin(0, 0).setDepth(9);
+      this.add.rectangle(x + 3, y + 6, 2, this.groundY - y - 6, 0x2a1a0e).setOrigin(0, 0).setDepth(9);
+      this.add.rectangle(x + w - 5, y + 6, 2, this.groundY - y - 6, 0x2a1a0e).setOrigin(0, 0).setDepth(9);
       const z = this.add.zone(x + w / 2, y + 3, w, 6);
       this.physics.add.existing(z, true);
       z.body.checkCollision.down = false; z.body.checkCollision.left = false; z.body.checkCollision.right = false;
       this.planks.push(z);
     }
     // lapidi (solide: ci si sale sopra e fermano i palloni)
-    for (const gx of L.graves) {
-      const g = this.physics.add.staticImage(gx * T + 8, GROUND_Y - this.textures.getFrame('grave').height / 2, 'grave').setDepth(20);
+    for (const gx of this.L.graves) {
+      const g = this.physics.add.staticImage(gx * T + 8, this.groundY - this.textures.getFrame('grave').height / 2, 'grave').setDepth(20);
       g.body.setSize(12, 16).setOffset(Math.round(g.width / 2 - 6), g.height - 16);
       this.graves.push(g);
     }
-    for (const gx of L.bigGraves) this.add.image(gx * T + 8, GROUND_Y - this.textures.getFrame('graveBig').height / 2, 'graveBig').setDepth(8).setTint(0xb0b0c0);
-    for (const lx of L.lamps) {
-      this.add.image(lx * T, GROUND_Y - 32, 'lamp').setDepth(5);
-      const glow = this.add.circle(lx * T, GROUND_Y - 58, 22, 0xffe7a0, 0.12).setDepth(4);
+    for (const gx of this.L.bigGraves) this.add.image(gx * T + 8, this.groundY - this.textures.getFrame('graveBig').height / 2, 'graveBig').setDepth(8).setTint(0xb0b0c0);
+    for (const lx of this.L.lamps) {
+      this.add.image(lx * T, this.groundY - 32, 'lamp').setDepth(5);
+      const glow = this.add.circle(lx * T, this.groundY - 58, 22, 0xffe7a0, 0.12).setDepth(4);
       this.tweens.add({ targets: glow, alpha: 0.05, duration: 90, yoyo: true, repeat: -1, repeatDelay: Phaser.Math.Between(1500, 5000) });
     }
     // porte del campo e cartelloni LED
-    L.goals.forEach((gx, i) => this.add.image(gx * T, GROUND_Y - 20, 'goal').setDepth(6).setFlipX(i === 1));
+    this.L.goals.forEach((gx, i) => this.add.image(gx * T, this.groundY - 20, 'goal').setDepth(6).setFlipX(i === 1));
     let n = 0;
-    for (let lx = L.ledFrom; lx < L.ledTo; lx += L.ledStep) {
+    for (let lx = this.L.ledFrom; lx < this.L.ledTo; lx += this.L.ledStep) {
       const key = `led${n % 4}`;
-      const led = this.add.image(lx * T, GROUND_Y - 30, key).setDepth(7);
+      const led = this.add.image(lx * T, this.groundY - 30, key).setDepth(7);
       led.baseKey = key;
       this.leds.push(led);
       n++;
     }
     // bandierina del checkpoint
-    this.cpFlag = this.add.image(L.checkpoint * T, GROUND_Y - 16, 'checkpointFlag').setDepth(8).setTint(0x666677);
+    this.cpFlag = this.add.image(this.L.checkpoint * T, this.groundY - 16, 'checkpointFlag').setDepth(8).setTint(0x666677);
     // casse
-    for (const c of L.crates) {
+    for (const c of this.L.crates) {
       const real = this.textures.exists('crate');
       const cr = this.physics.add.staticImage(c.x * T + 8, c.row * T + 8, real ? 'crate' : 'tiles', real ? 'crate0' : 'crate').setDepth(21);
       cr.hp = 3; cr.item = c.item;
       this.crates.push(cr);
     }
     // zucche da raccogliere
-    for (const [px, row] of L.pumpkins) this.addPickup('pumpkin', px * T + 8, row * T + 8, true);
+    for (const [px, row] of this.L.pumpkins) this.addPickup('pumpkin', px * T + 8, row * T + 8, true);
   }
 
   buildFx() {
@@ -292,7 +311,7 @@ export class LevelScene extends Phaser.Scene {
     this.physics.add.collider(this.pickups, this.solids);
     this.physics.add.collider(this.pickups, this.planks);
     this.physics.add.overlap(P, this.pickups, (p, it) => this.collect(it));
-    this.physics.add.overlap(P, this.hazards, (p, hz) => { if (!hz.friendly) P.hurt(hz.x, 'boss'); });
+    this.physics.add.overlap(P, this.hazards, (p, hz) => { if (hz.onHit) hz.onHit(P); else if (!hz.friendly) P.hurt(hz.x, hz.cause || this.bossCause || 'boss'); });
     this.physics.add.collider(this.hazards, this.solids, (hz) => { if (hz.kind === 'shoe') this.fadeHazard(hz); }, (hz) => hz.kind === 'shoe');
   }
 
@@ -355,27 +374,14 @@ export class LevelScene extends Phaser.Scene {
 
     // parallasse: scrolling a pixel interi, come l'hardware dell'epoca
     const sx = cam.scrollX;
-    for (const l of this.parallax) l.tilePositionX = Math.round(sx * l.factor + (l.drift ? time * l.drift : 0));
-    // passaggio dall'esterno dello stadio al campo
-    const inB = sx > (L.checkpoint - 8) * T;
-    const k = this.inside = Phaser.Math.Linear(this.inside || 0, inB ? 1 : 0, 0.08);
-    this.bgStands.setAlpha(k);
-    this.pitchRows.forEach((r) => r.setAlpha(k));
-    this.fgPitch.setAlpha(k);
-    this.fgCemetery.setAlpha(1 - k);
-    this.weather.update(time, sx);
-    if (this.realBg) this.placePaintedBg(sx, k);
-    else {
-      this.bgNear.setAlpha(1 - k);
-      this.bgStadium.setAlpha(1 - k * 0.7);
-    }
+    this.updateScenery(time, sx);
 
     if (P.state === 'play' || P.state === 'hurt') {
       // buche
-      if (P.y > 262) P.die('pit');
-      if (P.body.blocked.down && P.y < GROUND_Y) this.safeX = P.x;
+      if (P.y > this.worldH + 38) P.die(this.L.pitCause || 'pit');
+      if (P.body.blocked.down && P.y < this.groundY) this.safeX = P.x;
       // checkpoint
-      if (!this.reachedCheckpoint && P.x > L.checkpoint * T) this.reachCheckpoint();
+      if (!this.reachedCheckpoint && P.x > this.L.checkpoint * T) this.reachCheckpoint();
       // fine del boost
       if (P.boostUntil && time > P.boostUntil) this.endBoost();
       else if (P.boostUntil) {
@@ -401,6 +407,8 @@ export class LevelScene extends Phaser.Scene {
       const hz = this.hazards[i];
       if (!hz.active) { this.hazards.splice(i, 1); continue; }
       if (hz.kind === 'shoe') hz.angle += 24 * Math.sign(hz.body.velocity.x || 1);
+      if (hz.step && !hz.friendly) hz.step(time, delta);
+      if (!hz.active) { this.hazards.splice(i, 1); continue; }
       if (time > hz.dieAt || hz.x < cam.scrollX - 40 || hz.x > cam.scrollX + W + 40) { hz.destroy(); this.hazards.splice(i, 1); continue; }
       if (hz.friendly && this.boss && this.boss.alive && Phaser.Geom.Intersects.RectangleToRectangle(hz.getBounds(), this.boss.getBounds())) {
         this.boss.damage(3, hz.x, hz.y); this.spark(hz.x, hz.y); hz.destroy(); this.hazards.splice(i, 1);
@@ -419,6 +427,23 @@ export class LevelScene extends Phaser.Scene {
     this.refreshHud();
   }
 
+  updateScenery(time, sx) {
+    for (const l of this.parallax) l.tilePositionX = Math.round(sx * l.factor + (l.drift ? time * l.drift : 0));
+    // passaggio dall'esterno dello stadio al campo
+    const inB = sx > (this.L.checkpoint - 8) * T;
+    const k = this.inside = Phaser.Math.Linear(this.inside || 0, inB ? 1 : 0, 0.08);
+    this.bgStands.setAlpha(k);
+    this.pitchRows.forEach((r) => r.setAlpha(k));
+    this.fgPitch.setAlpha(k);
+    this.fgCemetery.setAlpha(1 - k);
+    this.weather.update(time, sx);
+    if (this.realBg) this.placePaintedBg(sx, k);
+    else {
+      this.bgNear.setAlpha(1 - k);
+      this.bgStadium.setAlpha(1 - k * 0.7);
+    }
+  }
+
   togglePause() {
     this.paused = !this.paused;
     if (this.paused) {
@@ -428,7 +453,7 @@ export class LevelScene extends Phaser.Scene {
       this.pauseBox.add(center(this, H / 2 - 4, t('paused'), { color: C.gold }));
     } else {
       this.physics.world.resume(); this.tweens.resumeAll(); this.anims.resumeAll(); this.time.paused = false;
-      playMusic(this.bossActive ? 'boss' : (this.player.boosted && this.player.char.id === 'diamanti') ? 'boost' : 'level1');
+      playMusic(this.bossActive ? this.bossMusic() : (this.player.boosted && this.player.char.id === 'diamanti') ? 'boost' : this.musicKey);
       this.pauseBox.destroy();
     }
   }
@@ -436,8 +461,8 @@ export class LevelScene extends Phaser.Scene {
   // modalità prova: dalle buche si torna sull'ultimo punto sicuro, il tempo riparte
   cheatRescue(cause) {
     const P = this.player;
-    if (cause === 'pit') {
-      P.setPosition(this.safeX ?? P.x - 48, GROUND_Y - 60);
+    if (cause === 'pit' || cause === 'river') {
+      P.setPosition(this.safeX ?? P.x - 48, this.groundY - 60);
       P.body.setVelocity(0, 0);
       P.invulnUntil = this.time.now + 900;
       Sfx.parry();
@@ -462,31 +487,31 @@ export class LevelScene extends Phaser.Scene {
   spawnLogic(time) {
     const cam = this.cameras.main;
     const right = cam.scrollX + W;
-    for (let i = 0; i < L.waves.length; i++) {
-      const w = L.waves[i];
+    for (let i = 0; i < this.L.waves.length; i++) {
+      const w = this.L.waves[i];
       if (this.wavesDone.has(i) || right < w.at * T) continue;
       this.wavesDone.add(i);
       for (let k = 0; k < w.n; k++) this.spawnEnemy(w.type, k, cam);
     }
     if (this.bossActive) return;
     const ptile = this.player.x / T;
-    const zone = L.zombieZones.find((z) => ptile >= z.from && ptile <= z.to);
+    const zone = this.L.zombieZones.find((z) => ptile >= z.from && ptile <= z.to);
     if (!zone) return;
     const zombies = this.enemies.filter((e) => e instanceof Zombie).length;
     if (time - this.lastZombie > zone.every && zombies < zone.max) {
       const x = this.findZombieSpot();
       if (x !== null) {
         this.lastZombie = time;
-        this.addEnemy(new Zombie(this, x, GROUND_Y, Math.random() < zone.sliders));
+        this.addEnemy(new Zombie(this, x, this.groundY, Math.random() < zone.sliders));
       }
     }
   }
 
   isGround(x) {
     const tx = Math.floor(x / T);
-    const onGround = L.ground.some(([a, b]) => tx >= a + 1 && tx < b - 1);
-    const inBlock = L.blocks.some((bl) => tx >= bl.x - 1 && tx <= bl.x + bl.w);
-    const inGrave = L.graves.some((g) => Math.abs(g - tx) <= 1);
+    const onGround = this.L.ground.some(([a, b]) => tx >= a + 1 && tx < b - 1);
+    const inBlock = this.L.blocks.some((bl) => tx >= bl.x - 1 && tx <= bl.x + bl.w);
+    const inGrave = this.L.graves.some((g) => Math.abs(g - tx) <= 1);
     return onGround && !inBlock && !inGrave;
   }
 
@@ -505,7 +530,7 @@ export class LevelScene extends Phaser.Scene {
 
   // per i collaudi: un nemico in un punto preciso
   spawnAt(type, x, y = 120) {
-    const C = { zombie: () => new Zombie(this, x, GROUND_Y), bat: () => new Bat(this, x, y), pumpkin: () => new Pumpkin(this, x, y), ghost: () => new Ghost(this, x, y) };
+    const C = { zombie: () => new Zombie(this, x, this.groundY), bat: () => new Bat(this, x, y), pumpkin: () => new Pumpkin(this, x, y), ghost: () => new Ghost(this, x, y) };
     const e = C[type] && C[type]();
     if (e) this.addEnemy(e);
     return e;
@@ -537,7 +562,7 @@ export class LevelScene extends Phaser.Scene {
     // il bisonte in corsa travolge i nemici (non il boss)
     if (P.boosted && P.char.id === 'hubner' && e !== this.boss && Math.abs(P.body.velocity.x) > 40) { e.kill(P.x); this.cameras.main.shake(80, 0.004); return; }
     if (this.time.now < P.slideUntil && e !== this.boss && !(e instanceof Bat) && !(e instanceof Ghost)) { e.kill(P.x); return; }
-    if (P.hurt(e.x, e === this.boss ? 'boss' : e.kind)) return;
+    if (P.hurt(e.x, e === this.boss ? (this.bossCause || 'boss') : e.kind)) return;
   }
 
   // la fine di ogni nemico ha la sua animazione: lo zombie si sbriciola, la zucca esplode,
@@ -675,11 +700,12 @@ export class LevelScene extends Phaser.Scene {
   tryParry(P) {
     const range = 30;
     for (const hz of this.hazards) {
-      if (!hz.active || hz.friendly || hz.kind !== 'shoe') continue;
+      if (!hz.active || hz.friendly || !(hz.kind === 'shoe' || hz.kind === 'piadina')) continue;
       const dx = (hz.x - P.x) * P.facing;
       if (dx > -6 && dx < range && Math.abs(hz.y - (P.y - 4)) < 26) {
         hz.friendly = true;
-        hz.setTexture('mazfx', 'shoeGold');
+        if (hz.kind === 'shoe') hz.setTexture('mazfx', 'shoeGold'); else hz.setTint(0xffd23f);
+        hz.step = null;
         const target = this.boss && this.boss.alive ? this.boss : null;
         const a = target ? Phaser.Math.Angle.Between(hz.x, hz.y, target.x, target.y - 10) : (P.facing > 0 ? 0 : Math.PI);
         hz.body.setAllowGravity(false);
@@ -753,7 +779,7 @@ export class LevelScene extends Phaser.Scene {
     P.endBoost();
     [this.hudBoostBg, this.hudBoost, this.hudBoostIcon].forEach((o) => o.setVisible(false));
     setMusicTempo(1);
-    if (P.char.id === 'diamanti') playMusic(this.bossActive ? 'boss' : 'level1');
+    if (P.char.id === 'diamanti') playMusic(this.bossActive ? this.bossMusic() : this.musicKey);
   }
 
   boostAura(P) {
@@ -796,12 +822,12 @@ export class LevelScene extends Phaser.Scene {
     this.time.delayedCall(700, () => {
       Sfx.thunder();
       Sfx.laugh();
-      const ref = new Mazapegul(this, this.arenaX + W - 50, GROUND_Y, { left: this.arenaX, right: this.arenaX + W });
+      const ref = new Mazapegul(this, this.arenaX + W - 50, this.groundY, { left: this.arenaX, right: this.arenaX + W });
       ref.y = -40;
       this.boss = ref;
       this.enemies.push(ref);
       this.time.delayedCall(900, () => {
-        Sfx.slam(); this.cameras.main.shake(300, 0.015); this.dust(ref.x, GROUND_Y);
+        Sfx.slam(); this.cameras.main.shake(300, 0.015); this.dust(ref.x, this.groundY);
         this.bossName.setText(t('bossName'));
         [this.bossBarBg, this.bossBar].forEach((o) => o.setVisible(true));
         this.updateBossBar(1);
@@ -811,6 +837,8 @@ export class LevelScene extends Phaser.Scene {
       });
     });
   }
+
+  bossMusic() { return 'boss'; }
 
   updateBossBar(f) { this.bossBar.width = 158 * Phaser.Math.Clamp(f, 0, 1); }
 
@@ -927,7 +955,7 @@ export class LevelScene extends Phaser.Scene {
         Sfx.stick();
         boss.setFrame('mazCapless');
         const txtE = center(this, 64, t('capStolen'), { color: C.gold, fixed: true, stroke: '#000', strokeThickness: 3, depth: 120 });
-        this.tweens.add({ targets: boss, scale: 0.35, y: GROUND_Y - 14, x: boss.x - dir * 90, delay: 900, duration: 700, ease: 'Quad.easeIn' });
+        this.tweens.add({ targets: boss, scale: 0.35, y: this.groundY - 14, x: boss.x - dir * 90, delay: 900, duration: 700, ease: 'Quad.easeIn' });
         this.tweens.add({ targets: boss, alpha: 0, delay: 1400, duration: 300 });
         this.tweens.add({ targets: txtE, alpha: 0, delay: 1400, duration: 400 });
         [this.bossBarBg, this.bossBar].forEach((o) => o.setVisible(false));
@@ -981,16 +1009,27 @@ export class LevelScene extends Phaser.Scene {
       txt(this, W - 22, y + 6, pad(Run.score), { fixed: true, depth: 120, ox: 1, color: C.gold });
       LocalBest.set(Run.score);
     });
+    this.afterClear(delay);
+  }
+
+  // livello 1 superato: si va al livello 2
+  afterClear(delay) {
     this.time.delayedCall(delay + 2400, () => {
-      center(this, 184, t('demoEnd'), { fixed: true, depth: 120, color: C.orange, wrap: 230 });
+      center(this, 184, t('nextStage'), { fixed: true, depth: 120, color: C.orange, wrap: 230 });
     });
-    this.time.delayedCall(delay + 5200, () => this.scene.start('NameEntry', { cleared: true }));
+    this.time.delayedCall(delay + 4600, () => {
+      this.cameras.main.fadeOut(500, 0, 0, 0);
+      this.time.delayedCall(520, () => {
+        Run.level = 2; Run.levelReached = Math.max(Run.levelReached, 2);
+        this.scene.start('Level2', { fromLevel1: true });
+      });
+    });
   }
 
   // ------------------------------------------------------------------ vita e morte
   reachCheckpoint() {
     this.reachedCheckpoint = true;
-    this.timeLeft = L.timeB;
+    this.timeLeft = this.L.timeB;
     this.placeCheckpointFlag(false);
   }
 
@@ -1021,7 +1060,7 @@ export class LevelScene extends Phaser.Scene {
   // ------------------------------------------------------------------ luci
   updateLights(time, delta) {
     const P = this.player;
-    const inDark = P.x > L.darkFrom * T && P.x < L.darkTo * T && !this.ending;
+    const inDark = P.x > this.L.darkFrom * T && P.x < this.L.darkTo * T && !this.ending;
     if (!inDark) { this.lightsOn = true; this.lightTimer = 0; }
     else {
       // ciclo: accese 4,5 s, preavviso con sfarfallio, spente 3 s

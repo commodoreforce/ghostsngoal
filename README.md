@@ -4,7 +4,7 @@ L'arcade di Halloween del **Cesena FC**: un platform anni '80 nel browser, dentr
 
 Il documento di game design completo è su claude.ai (link condiviso in chat).
 
-## Stato: v0.5
+## Stato: v1.0
 
 | Fatto | Note |
 | --- | --- |
@@ -20,7 +20,8 @@ Il documento di game design completo è su claude.ai (link condiviso in chat).
 | Temporale: pioggia su due piani, schizzi, lampi, tuoni in ritardo | si attenua con "riduci movimento" del sistema |
 | Modalità prova (invincibile) | vedi sotto |
 | Statistiche: accessi, partite, ore di gioco, nemici, provenienza | pannello admin |
-| Livelli 2 e 3, secondo giro NOTTE FONDA, card social, landing con conto alla rovescia | prossime versioni |
+| Livello 2 completo: LA NEBBIA DEL SAVIO (Ponte Vecchio, Piazza del Popolo e Comune, Biblioteca Malatestiana, Via delle Scalette, boss l'Azdora indemoniata) | vedi sotto |
+| Livello 3, secondo giro NOTTE FONDA, card social, landing con conto alla rovescia | prossime versioni |
 
 ## Struttura
 
@@ -54,6 +55,7 @@ Nella schermata del titolo scrivi **DAIBURDEL** sulla tastiera, oppure fai **↑
 - Il personaggio non perde la maglia e non muore; se cade in una buca torna sull'ultimo punto sicuro, il tempo non scade.
 - Sull'HUD lampeggia **TEST**. Le partite di prova non entrano mai in classifica (controllo anche sul server) e sono escluse dalle statistiche.
 - Dura finché non si ricarica la pagina.
+- Nella selezione, in modalità prova, premendo **2** sulla tastiera si parte direttamente dal livello 2 (e Hubner è giocabile).
 
 ## Sviluppo in locale
 
@@ -113,6 +115,18 @@ La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` 
 `python3 tools/build_story.py` fa fantasma (volo, attacco di profilo, dissolvenza), cavalluccio d'oro, vampiro (intro e boss finale), Petrosino e lo stemma del Cesena in pixel art.
 
 `python3 tools/build_klinsmann.py` fa Klinsmann da una posa laterale e una frontale: gli stessi 18 fotogrammi di Shpendi, ma da portiere (lancia con le mani; la parata è un tuffo), con maglia gialla e verde acqua per trasferta e terza, senza maglia, e il costume di Capitan Romagna (tuta bianconera, mantello rosso, scudo con il cavalluccio).
+
+## Livello 2 · LA NEBBIA DEL SAVIO
+
+Dati in `game/src/levels/level2.js`, scena in `game/src/scenes/Level2Scene.js` (estende quella del livello 1), nemici in `game/src/entities/Level2Enemies.js`, boss in `game/src/entities/Azdora.js`. Il mondo è alto 26 righe: si parte in basso lungo il Savio e si finisce in cima alla Via delle Scalette.
+
+- **Ponte Vecchio**: argine con buchi d'acqua e botti che affondano se ci resti sopra; pescatori scheletro (l'amo ti tira verso il fiume), civette sui lampioni (se ti vedono chiamano i pipistrelli), anguille che saltano dal Savio.
+- **Piazza del Popolo**: la fontana Masini vera, su cui si sale (gradini, vasca, coppa con il cavalluccio d'oro); anguille dalla vasca, lavandaie spettro (il lenzuolo ti avvolge: lento e senza tiri, saltando ti liberi). Davanti al Comune le lancette corrono a mezzanotte: 12 rintocchi e 20 secondi di MEZZANOTTE, piazza piena di spettri e punti doppi.
+- **Biblioteca Malatestiana**: cartolina d'ingresso con la vista iconica, poi la sala al lume di candela con i libri volanti incatenati. Checkpoint.
+- **Via delle Scalette**: salita a gradoni, la telecamera sale con te, lupi mannari che scendono di corsa.
+- **Belvedere del Monte**: l'Azdora indemoniata (piadina stregata a boomerang, mattarellata con onda di farina, pioggia di cappelletti). Sconfiggerla vuol dire liberarla: ti ringrazia e ti regala la piadina buona.
+
+Sfondi: `python3 tools/build_l2_backgrounds.py` (separa cielo e scenario con GrabCut, toglie la fontana dipinta dalla piazza, prepara terreni, fontana e cartolina). Sprite: `python3 tools/build_l2_sprites.py`. Musica: un liscio romagnolo in re minore (traccia `level2` in `sfx.js`).
 
 ## Sfondi
 
