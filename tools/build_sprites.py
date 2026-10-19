@@ -370,6 +370,45 @@ def gold_hair(A, box):
     return acc
 
 
+def ssj_hair(A, box):
+    """La chioma Super Saiyan di Ciofi, disegnata a mano come un pixel artist: punte nette verso l'alto
+    e all'indietro, ciuffo sulla fronte, tre toni d'oro. (Ridotta dall'immagine generata diventava un
+    cespuglio: le punte sono larghe un pixel e si perdono.) Coordinate in pixel di gioco, riferite
+    alla posa ferma (la testa parte da x 22, y 6)."""
+    import numpy as np
+    from PIL import ImageDraw
+    x0, y0 = box[0], box[1]
+    K = 4
+    T = lambda X, Y: ((X - 22) * K + x0, (Y - 6) * K + y0)  # noqa: E731
+    im = Image.new('RGBA', (A.shape[1], A.shape[0]), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    DK, MID, LT, HI = (176, 104, 12, 255), (236, 172, 28, 255), (255, 218, 72, 255), (255, 246, 176, 255)
+    spikes = [((23, 0.5), (21.5, 7), (26.5, 4.5)), ((28.5, 0), (25.5, 5), (31, 5)), ((33.5, 1.5), (29.5, 5), (34, 7.5)),
+              ((16.5, 3.5), (22.5, 5), (22, 10)), ((15.5, 9), (21.5, 8), (22, 12.5)), ((18.5, 14.5), (22, 11), (24.5, 13.5)),
+              ((36.5, 10.5), (32.5, 7), (34, 10)), ((31, 12.5), (29, 9), (33.5, 9))]
+    cx, cy, rx, ry = 27.5, 8.0, 6.0, 3.8
+    ell = lambda col: d.ellipse([*T(cx - rx, cy - ry), *T(cx + rx, cy + ry)], fill=col)  # noqa: E731
+    # base scura (dà lo spessore), poi la massa, poi le luci sulle punte
+    for tip, b1, b2 in spikes:
+        d.polygon([T(*tip), T(*b1), T(*b2)], fill=DK)
+    ell(DK)
+    for tip, b1, b2 in spikes:
+        # la punta un po' più stretta, così resta un filo scuro tra una e l'altra
+        mx, my = (b1[0] + b2[0]) / 2, (b1[1] + b2[1]) / 2
+        sh = lambda p: (p[0] + (mx - p[0]) * 0.22, p[1] + (my - p[1]) * 0.22)  # noqa: E731
+        d.polygon([T(*tip), T(*sh(b1)), T(*sh(b2))], fill=MID)
+    d.ellipse([*T(cx - rx + 0.8, cy - ry + 0.3), *T(cx + rx - 0.8, cy + ry - 1.2)], fill=MID)
+    for tip, b1, b2 in spikes[:3] + spikes[6:7]:
+        mx, my = (b1[0] + b2[0]) / 2, (b1[1] + b2[1]) / 2
+        p1 = (tip[0] + (b1[0] - tip[0]) * 0.55, tip[1] + (b1[1] - tip[1]) * 0.55)
+        p2 = (tip[0] + (mx - tip[0]) * 0.55, tip[1] + (my - tip[1]) * 0.55)
+        d.polygon([T(*tip), T(*p1), T(*p2)], fill=LT)
+    d.polygon([T(24.5, 5), T(28, 3.6), T(27, 5.2)], fill=HI)
+    acc = np.asarray(im).copy()
+    acc[..., 3] = np.where(acc[..., 3] > 0, 255, 0)
+    return acc
+
+
 def black_cap(A, box):
     """Il cappellino nero all'indietro di Diamanti: i pixel scuri e neutri della testa, tolte le linee
     sottili (il contorno del viso); la calotta e la visiera sono spesse e restano. Il nero si schiarisce
@@ -410,8 +449,13 @@ def accessory_set(raw, sk, boost_img, extract):
     pad = 200
     idle_raw = np.pad(np.asarray(raw['idle']), ((pad, pad), (pad, pad), (0, 0)))
     boost = np.pad(np.asarray(boost_img), ((pad, pad), (pad, pad), (0, 0)))
-    al = Image.fromarray(H.align(idle_raw, boost)).crop((pad, pad, pad + raw['idle'].width, pad + raw['idle'].height))
-    A = H.to_k(al, sk['idle'])
+    # si ritaglia con un margine: le punte dei capelli e la visiera escono dalla sagoma della posa ferma
+    m = 180
+    al = Image.fromarray(H.align(idle_raw, boost)).crop((pad - m, pad - m, pad + raw['idle'].width + m, pad + raw['idle'].height + m))
+    A_ext = H.to_k(al, sk['idle'])
+    e = round(m * sk['idle'] * H.K)
+    hR, wR = R['idle'].shape[:2]
+    A = A_ext[e:e + hR, e:e + wR]
     box = H.head_box(R['idle'])
     acc = extract(A, box)
     out, heads = {}, {}
@@ -629,7 +673,7 @@ def build(char_id, src_dir, out_dir):
 
     # varianti con un accessorio in testa
     acc_frames = None
-    boost_file = {'ciofi': ('super_', 'mane', gold_hair), 'diamanti': ('goodvibes_', 'vibes', black_cap)}.get(char_id)
+    boost_file = {'ciofi': ('super_', 'mane', ssj_hair), 'diamanti': ('goodvibes_', 'vibes', black_cap)}.get(char_id)
     if boost_file:
         pre, vname, extract = boost_file
         bimg = clean(os.path.join(src_dir, f'{char_id}_{pre}idle.png'))
