@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 $maint = false;
 $cfg = getenv('GNG_CONFIG') ?: __DIR__ . '/config.php';
+// sito appena caricato e non ancora installato: si parte con l'installazione guidata
+if (!is_file($cfg) && is_file(__DIR__ . '/install.php')) { header('Location: install.php', true, 302); exit; }
 if (is_file($cfg)) {
     require __DIR__ . '/lib/bootstrap.php';
     $maint = meta_get('maint_on', '0') === '1';

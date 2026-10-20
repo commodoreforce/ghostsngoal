@@ -72,9 +72,13 @@ GNG_CONFIG=$PWD/scripts/test/config.php php -S localhost:8000 -t server
 
 Il gioco vive sul suo dominio, **ghostsngoals.com** (hosting PHP/MySQL Serverplan), nella radice del sito: il gioco su `https://ghostsngoals.com/`, l'admin su `/admin/`, le cartoline condivise su `/share.php?id=…`. Attiva il certificato SSL (Let's Encrypt, gratuito dal pannello) e il redirect da `www.` e da `http` alla versione `https://ghostsngoals.com`, così le anteprime dei link sui social usano sempre lo stesso indirizzo.
 
-1. **Database**: crea un database MySQL dal pannello Serverplan.
-2. **Configurazione**: sul server, nella cartella del sito, copia `config.sample.php` come `config.php` e compila i dati. Il file non è mai nel repository.
-3. **Installazione**: apri `https://ghostsngoals.com/admin/setup.php`, inserisci la `setup_key` e crea l'account admin. Le tabelle si creano da sole.
+1. **Database**: crea un database MySQL vuoto dal pannello Serverplan (annota nome, utente e password).
+2. **Caricamento**: carica via FTP tutto il contenuto della cartella `dist/` (o dello zip pronto) nella radice del sito.
+3. **Installazione guidata**: apri `https://ghostsngoals.com/` — la prima volta si apre da sola `install.php`, come WordPress:
+   controllo del server → dati del database (li prova subito e ti dice cosa non va) → utente e password dell'admin → fatto.
+   Scrive `config.php` (con chiavi segrete casuali), crea le tabelle e l'account, ti lascia già collegato e si cancella da sola.
+   Se il server non permette di scrivere `config.php`, ti mostra il testo da caricare a mano. Puoi già scegliere di tenere il sito in manutenzione (volantino MISSING).
+   Con `config.php` presente l'installazione è bloccata: nessuno può reinstallare sopra il sito.
 4. **Pubblicazione automatica**: in GitHub → Settings → Secrets and variables → Actions aggiungi:
    - `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`
    - `FTP_STAGING_DIR` (es. `/staging.ghostsngoals.com/`) e `FTP_PROD_DIR` (es. `/public_html/`)
