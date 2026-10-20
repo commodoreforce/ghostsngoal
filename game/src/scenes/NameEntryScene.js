@@ -7,6 +7,7 @@ import { charById } from '../data/characters.js';
 import { t, getLang } from '../i18n.js';
 import { center, txt, pad, C, W, H } from '../systems/ui.js';
 import { surface } from '../systems/layout.js';
+import { shareRecord, cardBlob } from '../systems/shareCard.js';
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-!'.split('');
 const MAX = 10;
@@ -55,6 +56,7 @@ export class NameEntryScene extends Phaser.Scene {
 
   startEntry(rank) {
     this.phase = 'entry';
+    this.rank = rank;
     this.status.setText(`${t('newRecord')}  ${t('rank')} ${rank}`).setColor(C.gold);
     center(this, 120, t('enterName'), { color: C.orange });
     let saved = '';
@@ -105,6 +107,8 @@ export class NameEntryScene extends Phaser.Scene {
     if (r.ok) {
       try { localStorage.setItem('gng_name', nick); } catch (e) { /* ignora */ }
       Sfx.confirm();
+      this.rank = r.rank || this.rank;
+      this.nick = nick;
       this.showBoard(r.id);
     } else if (r.error === 'name') {
       Sfx.unlockFail();
@@ -137,8 +141,52 @@ export class NameEntryScene extends Phaser.Scene {
         if (me) { const bar = this.add.rectangle(W / 2, y + 3, W - 12, 13).setStrokeStyle(1, 0xffd23f); this.tweens.add({ targets: bar, alpha: 0.2, yoyo: true, repeat: -1, duration: 220 }); }
       });
     }
-    this.backAt = this.time.now + 9000;
+    this.backAt = this.time.now + (Run.cheat ? 9000 : 30000);
     this.time.delayedCall(800, () => { this.canLeave = true; });
+    if (!Run.cheat && Run.score > 0) this.shareButtons(highlightId);
+  }
+
+  // condividi il record: storia (Instagram, WhatsApp...) o post; da computer si scarica l'immagine
+  shareButtons(scoreId) {
+    const screen = document.getElementById('screen');
+    if (!screen) return;
+    const it = getLang() === 'it';
+    const dir = location.pathname.replace(/[^/]*$/, '');
+    const base = `${location.origin}${dir}`;
+    const data = {
+      character: Run.character, score: Run.score, level: Run.levelReached, cleared: this.cleared,
+      rank: scoreId ? this.rank : null, nickname: scoreId ? this.nick : null,
+      host: location.host.toUpperCase(), url: scoreId ? `${base}share.php?id=${scoreId}${it ? '' : '&lang=en'}` : base,
+    };
+    const wrap = document.createElement('div');
+    Object.assign(wrap.style, { position: 'absolute', left: '0', right: '0', bottom: '3%', display: 'flex', justifyContent: 'center', gap: '3%', zIndex: 3 });
+    const ready = {};
+    ['story', 'post'].forEach((k) => cardBlob(this, k, data).then((b) => { ready[k] = b; }));
+    const mk = (label, kind) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      Object.assign(b.style, {
+        font: 'inherit', fontFamily: '"Press Start 2P", monospace', fontSize: 'clamp(8px, 2.6vw, 13px)', padding: '2.2% 3.5%',
+        color: '#ffd23f', background: '#0a0a0c', border: '2px solid #ff7a1a', borderRadius: '0', cursor: 'pointer',
+      });
+      b.addEventListener('pointerdown', (e) => e.stopPropagation());
+      b.addEventListener('click', async (e) => {
+        e.preventDefault(); e.stopPropagation();
+        this.backAt = this.time.now + 30000;
+        Sfx.select();
+        const res = await shareRecord(this, data, kind, ready[kind]);
+        if (res === 'downloaded' && this.scene.isActive()) {
+          const m = center(this, 212, it ? 'IMMAGINE SCARICATA · LINK COPIATO' : 'IMAGE SAVED · LINK COPIED', { color: C.green });
+          this.time.delayedCall(2500, () => m.destroy());
+        }
+      });
+      wrap.appendChild(b);
+    };
+    mk(it ? 'CONDIVIDI STORIA' : 'SHARE STORY', 'story');
+    mk(it ? 'POST' : 'POST', 'post');
+    screen.appendChild(wrap);
+    this.shareWrap = wrap;
+    this.events.once('shutdown', () => { if (this.shareWrap) { this.shareWrap.remove(); this.shareWrap = null; } });
   }
 
   update(time) {

@@ -16,6 +16,7 @@ import { NameEntryScene } from './scenes/NameEntryScene.js';
 import { W, H } from './systems/ui.js';
 import { CrtScreen } from './systems/crt.js';
 import { Run } from './systems/state.js';
+import * as ShareCard from './systems/shareCard.js';
 
 // i cabinati aggiornavano animazioni e movimento a scatti: il gioco disegna 20 fotogrammi al secondo
 // (la fisica resta calcolata a 60 passi al secondo, quindi i salti non cambiano)
@@ -116,5 +117,6 @@ async function start() {
   window.__crt = crt;
   window.__gng = game; // utile per i test
   window.__run = Run;
+  window.__share = ShareCard;
 }
 start();
