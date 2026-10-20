@@ -13,10 +13,22 @@ try { muted = localStorage.getItem('gng_mute') === '1'; } catch (e) { /* storage
 export function audioReady() { return !!ctx; }
 
 export function unlockAudio() {
-  if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+  // iPhone: con l'interruttore del silenzioso il Web Audio tace, a meno di dichiarare "riproduzione"
+  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* non supportato */ }
+  if (ctx) {
+    // sospeso (primo tocco non valido per il browser) o interrotto (telefonata, app in secondo piano)
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    return;
+  }
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   ctx = new AC();
+  if (ctx.state !== 'running') ctx.resume().catch(() => {});
+  // il vecchio trucco di iOS: un suono muto suonato dentro il gesto sblocca l'audio per sempre
+  try {
+    const b = ctx.createBuffer(1, 1, 22050); const src = ctx.createBufferSource();
+    src.buffer = b; src.connect(ctx.destination); src.start(0);
+  } catch (e) { /* ignora */ }
   master = ctx.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(ctx.destination);
   musicGain = ctx.createGain(); musicGain.gain.value = 0.32; musicGain.connect(master);
   sfxGain = ctx.createGain(); sfxGain.gain.value = 0.55; sfxGain.connect(master);
@@ -280,8 +292,11 @@ let tempoMul = 1;
 
 export function setMusicTempo(m) { tempoMul = m; }
 
+let pending = null;      // brano chiesto quando l'audio non era ancora sbloccato
+
 export function playMusic(name) {
   if (FILE_TRACKS[name]) { playFile(name); return; }
+  if (!ctx || ctx.state !== 'running') pending = name;
   if (!ctx) { current = name; return; }
   if (current === name && timer) return;
   stopMusic();
@@ -307,14 +322,20 @@ export function playMusic(name) {
 }
 
 export function stopMusic() {
+  pending = null;
   if (timer) clearInterval(timer);
   timer = null;
   if (fileSrc) { try { fileSrc.stop(); } catch (e) { /* già ferma */ } fileSrc = null; }
   fileName = null;
 }
 
+// al primo tocco valido: riparte solo il brano rimasto in attesa, mai uno fermato apposta
 export function resumePendingMusic() {
-  if (current && !timer && !fileSrc) { const c = current; current = null; playMusic(c); }
+  if (!ctx || !pending) return;
+  const c = pending;
+  if (ctx.state === 'running' && (timer || fileSrc) && current === c) { pending = null; return; }
+  if (!timer && !fileSrc) { current = null; playMusic(c); }
+  if (ctx.state === 'running' && (timer || fileSrc)) pending = null;
 }
 
 // ---------------- brani registrati (file audio)
@@ -342,7 +363,7 @@ function decodeFiles() {
       return ctx.decodeAudioData(ab.slice(0)).then((buf) => {
         fileBuf[name] = buf;
         // se il brano era stato chiesto prima che fosse pronto, parte adesso
-        if (current === name && !fileSrc) { current = null; playFile(name); }
+        if (pending === name && current === name && !fileSrc) { current = null; playFile(name); }
       });
     }).catch(() => { /* senza file si resta con la musica sintetizzata */ });
   }
@@ -352,6 +373,7 @@ function playFile(name) {
   if (fileName === name && fileSrc) return;
   stopMusic();
   current = name;
+  pending = name;
   if (!ctx || !fileBuf[name]) return; // partirà appena pronto
   const src = ctx.createBufferSource();
   src.buffer = fileBuf[name];

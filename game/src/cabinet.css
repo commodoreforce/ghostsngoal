@@ -291,3 +291,14 @@ body.crt-gl .crt { display: none; }
 @media (prefers-reduced-motion: reduce) {
   #cabinet.diving, #cabinet.surfacing { transition: none; }
 }
+
+/* cookie policy: finestra sopra il cabinato */
+.legal { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.78); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.legal[hidden] { display: none; }
+.legal-box { position: relative; width: min(760px, 100%); max-height: min(88dvh, 900px); overflow: auto; background: #0e0e12; color: #ecece6;
+  border: 2px solid #ff7a1a; border-radius: 10px; padding: 22px 20px 26px; font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.legal-box h1 { font-size: 22px; margin: 0 0 4px; } .legal-box h2 { font-size: 16px; margin: 22px 0 6px; color: #ff7a1a; }
+.legal-box .upd { color: #9a9aa8; margin: 0 0 14px; font-size: 13px; }
+.legal-box a { color: #ffb070; } .legal-box code { color: #ffd23f; }
+.legal-box table { width: 100%; border-collapse: collapse; font-size: 13px; } .legal-box th, .legal-box td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #2a2a36; vertical-align: top; }
+.legal-x { position: sticky; top: 0; float: right; width: 36px; height: 36px; font-size: 16px; color: #fff; background: #1c1c24; border: 1px solid #3a3a46; border-radius: 6px; cursor: pointer; }

@@ -2,6 +2,7 @@
 // Pannello admin: moderazione della classifica, parola magica, filtro, statistiche.
 declare(strict_types=1);
 require __DIR__ . '/_layout.php';
+require __DIR__ . '/../lib/cookie_policy.php';
 admin_session();
 gng_config();
 try { migrate(); } catch (Throwable $e) { /* database non ancora installato: ci pensa setup.php */ }
@@ -53,6 +54,11 @@ if ($isPost) {
     if (!is_string($back) || !str_starts_with($back, '?')) $back = '?p=scores';
     $id = (int) ($_POST['id'] ?? 0);
     switch ($_POST['action'] ?? '') {
+        case 'cookie_save':
+            meta_set('cp_enabled', !empty($_POST['cp_enabled']) ? '1' : '0');
+            foreach (array_keys(CP_FIELDS) as $k) meta_set($k, trim((string) ($_POST[$k] ?? '')));
+            flash(!empty($_POST['cp_enabled']) ? 'Cookie policy salvata e attiva nel gioco.' : 'Cookie policy salvata. È spenta: nel gioco non compare.');
+            break;
         case 'logout':
             $_SESSION = []; session_destroy(); header('Location: ./'); exit;
         case 'hide':
@@ -148,6 +154,33 @@ if ($p === 'magic') {
         <td><form method="post" class="inline" onsubmit="return confirm('Eliminare questa parola?')"><?= csrf_field() ?><input type="hidden" name="action" value="word_delete"><input type="hidden" name="id" value="<?= (int) $w['id'] ?>"><button class="ghost small">Elimina</button></form></td></tr>
       <?php endforeach; if (!$words): ?><tr><td colspan="5" style="color:var(--muted)">Ancora nessuna parola.</td></tr><?php endif; ?>
     </table></div>
+    <?php
+    page_foot(); exit;
+}
+
+if ($p === 'cookie') {
+    page_head('Cookie policy', true, 'cookie');
+    $s = cp_settings();
+    ?>
+    <h1>Cookie policy</h1>
+    <p class="lead">Il testo è già scritto su misura per il gioco (nessun cookie per chi gioca, solo memoria locale per le preferenze, nessuno strumento di terze parti). Qui compili solo i dati del titolare e decidi se mostrarla: quando è attiva compare il pulsante 🍪 nel gioco e la pagina <a href="../cookie.php" target="_blank" style="color:var(--orange)">cookie.php</a>.</p>
+    <form method="post">
+      <?= csrf_field() ?><input type="hidden" name="action" value="cookie_save">
+      <div class="card">
+        <label class="row" style="font-size:17px"><input type="checkbox" name="cp_enabled" value="1" <?= $s['enabled'] ? 'checked' : '' ?> style="width:22px;height:22px">
+          <b>Cookie policy attiva</b> <span class="badge <?= $s['enabled'] ? 'live' : '' ?>"><?= $s['enabled'] ? 'VISIBILE NEL GIOCO' : 'SPENTA' ?></span></label>
+      </div>
+      <div class="card">
+        <h2 style="margin-top:0">Dati del titolare</h2>
+        <?php foreach (CP_FIELDS as $k => $label): ?>
+          <p style="margin:0 0 12px"><label style="display:block;color:var(--muted);font-size:13px;margin-bottom:4px"><?= h($label) ?></label>
+          <input type="text" name="<?= $k ?>" value="<?= h($s[$k]) ?>" maxlength="255" style="width:100%"></p>
+        <?php endforeach; ?>
+        <button>Salva</button>
+      </div>
+    </form>
+    <h2>Anteprima</h2>
+    <div class="card cp-preview" style="background:#0a0a0c"><?= cp_html($s, 'it') ?></div>
     <?php
     page_foot(); exit;
 }

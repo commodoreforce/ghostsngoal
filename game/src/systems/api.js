@@ -40,6 +40,7 @@ function source() {
 }
 
 export const Api = {
+  legal: (lang) => call(`legal.php?lang=${lang}`),
   visit: (lang) => call('visit.php', { device: deviceKind(), lang, source: source() }),
   // ogni partita ottiene un gettone dal server: serve a verificare che il punteggio sia plausibile
   startRun: (character, extra = {}) => call('run.php', { action: 'start', character, device: deviceKind(), ...extra }),

@@ -15,7 +15,7 @@ const T = 16;
 const CITY_F = 0.15;      // velocità della città (rispetto alla telecamera)
 const STADIUM_F = 0.35;   // velocità dello stadio
 const SIGN_X = 262;       // centro dell'insegna OROGEL STADIUM nel piano dell'ingresso
-const INSIDE_F = 0.3;     // velocità della tavola dell'interno dello stadio
+const INSIDE_F = 0.295;   // velocità della tavola dell'interno dello stadio: all'arena del boss si vede la Curva Mare
 
 export class LevelScene extends Phaser.Scene {
   constructor(key = 'Level') { super(key); }

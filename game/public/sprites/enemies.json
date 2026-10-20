@@ -575,5 +575,37 @@
     "frames": [
       "__solo"
     ]
+  },
+  "led0": {
+    "sheet": "en_led0",
+    "frameWidth": 96,
+    "frameHeight": 14,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "led1": {
+    "sheet": "en_led1",
+    "frameWidth": 96,
+    "frameHeight": 14,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "led2": {
+    "sheet": "en_led2",
+    "frameWidth": 96,
+    "frameHeight": 14,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "led3": {
+    "sheet": "en_led3",
+    "frameWidth": 96,
+    "frameHeight": 14,
+    "frames": [
+      "__solo"
+    ]
   }
 }

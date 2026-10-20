@@ -140,6 +140,14 @@ export class Level3Scene extends LevelScene {
     };
     this.bgs.beach.water = strips('l3_beach_water', (this.meta.beach || {}).waterY || 158);
     this.bgs.port.water = strips('l3_port_water', (this.meta.port || {}).waterY || 150);
+    // il mare in tempesta dietro il molo: righe che ondeggiano forte, sopra il dipinto
+    this.bgs.pier.water = strips('l3_pier_water', (this.meta.pier || {}).waterY || 121);
+    this.bgs.pier.water.forEach((st) => { st.storm = true; st.setDepth(-9.95); });
+    // spruzzi delle creste (sullo sfondo, fissi allo schermo)
+    this.fxSea = this.add.particles(0, 0, 'px', {
+      speed: { min: 20, max: 70 }, angle: { min: 220, max: 320 }, gravityY: 160, lifespan: 900,
+      tint: [0xffffff, 0xd8e4ff, 0x9ab8f0], alpha: { start: 0.9, end: 0 }, scale: { start: 1, end: 0.4 }, emitting: false,
+    }).setScrollFactor(0).setDepth(-9.6);
     // la nave in mare aperto: cielo di tempesta, il mare che rolla, il faro che si allontana
     this.shipBg = {
       sky: img('l3_pier_sky', -12.05),
@@ -220,9 +228,11 @@ export class Level3Scene extends LevelScene {
       if (B.water) {
         for (const s of B.water) {
           // HDMA: ogni riga si sposta di qualche pixel, di più verso la riva
-          const wob = Math.round(Math.sin(time / 380 + s.row * 0.55) * (0.6 + s.k * 2.4));
+          const wob = s.storm
+            ? Math.round(Math.sin(time / 260 + s.row * 0.42) * (1.2 + s.k * 3.2) + Math.sin(time / 900 - s.row * 0.2) * 2)
+            : Math.round(Math.sin(time / 380 + s.row * 0.55) * (0.6 + s.k * 2.4));
           s.tilePositionX = -px + wob;
-          s.y = s.y0 + py;
+          s.y = s.y0 + py + (s.storm ? Math.round(Math.sin(time / 700 + s.row * 0.15) * 1.2) : 0);
           s.setAlpha(w).setVisible(w > 0.01);
         }
       }
@@ -325,6 +335,13 @@ export class Level3Scene extends LevelScene {
       }
       const flare = Math.max(0, s) ** 6;
       gl.fillStyle(0xfff4c8, (0.25 + flare * 0.6) * q.w); gl.fillCircle(lx, ly, 5 + flare * 14);
+      // le creste: ogni tanto un'onda si rompe e schizza schiuma
+      if (this.fxSea && m.pier.crests && time > (this.nextCrest || 0)) {
+        this.nextCrest = time + Phaser.Math.Between(180, 520);
+        const [cx0, cy0] = Phaser.Utils.Array.GetRandom(m.pier.crests);
+        const n = Phaser.Math.Between(3, 9);
+        if (q.w > 0.3) this.fxSea.explode(n, q.x + cx0 + Phaser.Math.Between(-12, 12), q.y + cy0);
+      }
       // la nave del Conte all'orizzonte: la si vede solo quando cade un fulmine
       if (this.shipSil) this.shipSil.setAlpha(this.time.now < this.weather.litUntil ? q.w * 0.95 : 0);
     }

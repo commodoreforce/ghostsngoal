@@ -25,7 +25,7 @@ export class BootScene extends Phaser.Scene {
       for (const en of Object.values(data || {})) this.load.image(`real_${en.sheet}`, `./sprites/${en.sheet}.png`);
     });
     // sfondi dipinti (tools/build_backgrounds.py): se mancano resta il parallasse provvisorio
-    for (const k of ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso', 'l1_inside0', 'l1_inside1']) this.load.image(k, `./backgrounds/${k}.png`);
+    for (const k of ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso', 'l1_inside0', 'l1_inside1', 'intro_room']) this.load.image(k, `./backgrounds/${k}.png`);
     // livello 2 (tools/build_l2_backgrounds.py): fondali, terreni, fontana, cartolina della Malatestiana
     this.load.json('bgManifest', './backgrounds/bg_manifest.json');
     for (const k of ['l2_ponte_sky', 'l2_ponte', 'l2_piazza_sky', 'l2_piazza', 'l2_library', 'l2_library_card', 'l2_scalette_sky', 'l2_scalette',
@@ -33,7 +33,7 @@ export class BootScene extends Phaser.Scene {
       'l2_ground_bank', 'l2_ground_bank_deep', 'l2_ground_cobble', 'l2_ground_cobble_deep', 'l2_ground_floor', 'l2_ground_floor_deep',
       'l2_ground_belv', 'l2_ground_belv_deep']) this.load.image(k, `./backgrounds/${k}.png`);
     // livello 3 (tools/build_l3_backgrounds.py)
-    for (const k of ['l3_beach_sky', 'l3_beach', 'l3_beach_water', 'l3_port_sky', 'l3_port', 'l3_port_water', 'l3_pier_sky', 'l3_pier',
+    for (const k of ['l3_beach_sky', 'l3_beach', 'l3_beach_water', 'l3_port_sky', 'l3_port', 'l3_port_water', 'l3_pier_sky', 'l3_pier', 'l3_pier_water',
       'l3_sea', 'l3_far_lighthouse', 'l3_hull', 'l3_ground_sand', 'l3_ground_sand_deep', 'l3_ground_quay', 'l3_ground_quay_deep',
       'l3_ground_pier', 'l3_ground_pier_deep', 'l3_ground_board', 'l3_ground_board_deep', 'l3_ground_deck', 'l3_ground_deck_deep']) this.load.image(k, `./backgrounds/${k}.png`);
     this.load.on('loaderror', () => { /* manca un file: resta lo sprite provvisorio */ });

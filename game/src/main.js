@@ -29,7 +29,10 @@ Api.visit(getLang()); // conteggio accessi (anonimo)
 // l'audio dei browser parte solo dopo un'interazione
 const wakeAudio = () => { unlockAudio(); resumePendingMusic(); };
 Input.onAny(wakeAudio);
-window.addEventListener('pointerdown', wakeAudio, { passive: true });
+// su iPhone e su alcuni Android il primo "pointerdown" non basta: si riprova a ogni tocco e clic
+['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) => window.addEventListener(ev, wakeAudio, { passive: true, capture: true }));
+// tornando sulla pagina (dopo una telefonata o un cambio di app) la musica riparte
+document.addEventListener('visibilitychange', () => { if (!document.hidden) wakeAudio(); });
 
 // strumenti del cabinato: muto, effetto CRT, schermo intero
 const muteBtn = document.getElementById('tMute');
@@ -59,6 +62,26 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyM') { unlockAudio(); setMuted(!isMuted()); refreshMute(); }
   if (e.code === 'KeyF') document.getElementById('tFull').click();
 });
+
+// cookie policy: il pulsante compare solo se è attiva nel pannello admin
+{
+  const btn = document.getElementById('tCookie');
+  const box = document.getElementById('legal');
+  if (btn && box) {
+  const body = box.querySelector('.legal-body');
+  let html = null;
+  const close = () => { box.hidden = true; };
+  Api.legal(getLang()).then((r) => { if (r.ok && r.enabled && r.html) { html = r.html; btn.hidden = false; } });
+  btn.addEventListener('click', () => { if (!html) return; body.innerHTML = html; box.hidden = false; box.querySelector('.legal-box').scrollTop = 0; });
+  box.querySelector('.legal-x').addEventListener('click', close);
+  box.addEventListener('click', (e) => { if (e.target === box) close(); });
+  window.addEventListener('keydown', (e) => { if (!box.hidden && e.key === 'Escape') close(); });
+  // finché è aperta, i tasti non arrivano al gioco
+  box.addEventListener('keydown', (e) => e.stopPropagation());
+  // dentro la finestra si deve poter scorrere anche su iPhone
+  box.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+  }
+}
 
 // impedisce lo zoom con doppio tocco e lo scroll durante il gioco su iPhone
 document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });

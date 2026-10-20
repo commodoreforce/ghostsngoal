@@ -91,6 +91,7 @@ button.small { padding:4px 9px; font-size:13px; }
     <a href="?p=magic" class="<?= $active === 'magic' ? 'on' : '' ?>">Parola magica</a>
     <a href="?p=filter" class="<?= $active === 'filter' ? 'on' : '' ?>">Filtro nomi</a>
     <a href="?p=stats" class="<?= $active === 'stats' ? 'on' : '' ?>">Statistiche</a>
+    <a href="?p=cookie" class="<?= $active === 'cookie' ? 'on' : '' ?>">Cookie policy</a>
   </nav>
   <nav><form method="post" action="?p=logout"><?= csrf_field() ?><input type="hidden" name="action" value="logout"><button class="ghost small">Esci</button></form></nav>
 </header>

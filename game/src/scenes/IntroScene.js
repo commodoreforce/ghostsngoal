@@ -17,8 +17,10 @@ export class IntroScene extends Phaser.Scene {
 
     this.done = false;
     this.cameras.main.setBackgroundColor('#0a0710');
-    const g = this.add.graphics();
-    // magazzino: scaffali con maglie piegate
+    // lo spogliatoio del Manuzzi (dipinto); se manca, il magazzino disegnato a mano
+    const room = this.textures.exists('intro_room');
+    if (room) this.add.image(0, 0, 'intro_room').setOrigin(0);
+    const g = this.add.graphics().setVisible(!room);
     g.fillStyle(0x1a1420, 1).fillRect(0, 0, W, 168);
     g.fillStyle(0x120d18, 1).fillRect(0, 168, W, 56);
     for (let s = 0; s < 3; s++) {
@@ -28,20 +30,23 @@ export class IntroScene extends Phaser.Scene {
         if (k < 6) g.fillStyle(k % 2 ? 0x3a3a46 : 0xf4f4f0, 1).fillRect(157 + k * 15, 44 + s * 34, 11, 10);
       }
     }
-    // lampadina appesa
-    g.lineStyle(1, 0x444444).lineBetween(W / 2, 0, W / 2, 30);
-    this.bulb = this.add.circle(W / 2, 34, 4, 0xffe7a0);
-    this.glow = this.add.circle(W / 2, 34, 60, 0xffe7a0, 0.08);
+    // la lampada appesa (nello spogliatoio è quella sopra la cassapanca)
+    if (!room) g.lineStyle(1, 0x444444).lineBetween(W / 2, 0, W / 2, 30);
+    const lx = room ? 127 : W / 2, ly = room ? 31 : 34;
+    this.bulb = this.add.circle(lx, ly, room ? 2 : 4, 0xffe7a0);
+    this.glow = this.add.circle(lx, ly + (room ? 46 : 0), room ? 56 : 60, 0xffe7a0, room ? 0.05 : 0.08);
+    // fascia scura per le scritte, sopra il mosaico del pavimento
+    if (room) this.add.rectangle(0, 176, W, H - 176, 0x050308, 0.72).setOrigin(0).setDepth(9);
     this.dark = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0).setDepth(5);
 
     const realPet = this.textures.get('petrosino').has('pet0');
-    this.pet = this.add.sprite(128, realPet ? 146 : 154, 'petrosino', realPet ? 'pet0' : undefined).setDepth(6);
+    this.pet = this.add.sprite(room ? 112 : 128, room ? 150 : realPet ? 146 : 154, 'petrosino', realPet ? 'pet0' : undefined).setDepth(6);
     if (realPet && this.anims.exists('pet_idle')) this.pet.play('pet_idle');
-    this.bag = this.add.image(104, 162, 'kitbag').setDepth(6);
+    this.bag = this.add.image(104, 162, 'kitbag').setDepth(6).setVisible(!room);
     if (!realPet) this.tweens.add({ targets: this.pet, y: 152, yoyo: true, repeat: -1, duration: 420 });
 
-    this.caption = center(this, 180, '', { color: C.white, wrap: 240 }).setDepth(10);
-    this.caption2 = center(this, 204, '', { color: C.grey, wrap: 240 }).setDepth(10);
+    this.caption = center(this, room ? 184 : 180, '', { color: C.white, wrap: 240 }).setDepth(10);
+    this.caption2 = center(this, room ? 204 : 204, '', { color: C.grey, wrap: 240 }).setDepth(10);
 
     const seq = [
       [300, () => this.say(t('intro1'))],

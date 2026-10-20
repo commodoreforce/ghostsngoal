@@ -243,6 +243,16 @@ def main():
     save(quant(scene, 64), 'l3_pier', mf)
     meta['pier'] = {'lamp': [86, 26], 'lamps': [[172, 86], [167, 112], [238, 107], [229, 118], [296, 117], [322, 120]]}
     pier = tile_from(fm, 200, 64, 96)
+    # il mare in tempesta dietro il molo: una fascia che nel gioco ondeggia a righe (solo il mare,
+    # tagliato lungo il bordo del molo)
+    from PIL import ImageDraw
+    y0, y1 = 121, 176
+    mask = Image.new('L', (w, GH), 0)
+    ImageDraw.Draw(mask).polygon([(343, y0), (w, y0), (w, y1), (196, y1), (196, 173), (343, 138)], fill=255)
+    al = np.asarray(mask)[y0:y1]
+    save(quant(np.dstack([fm[y0:y1], al]).astype(np.uint8), 48), 'l3_pier_water', mf)
+    meta['pier']['waterY'] = y0
+    meta['pier']['crests'] = [[352, 124], [338, 128], [287, 125], [372, 130], [410, 136], [455, 132], [300, 150], [250, 168]]
 
     # mare aperto per la nave: la fascia di onde a destra del molo, resa ripetibile
     sea = fm[128:176, 270:523]
