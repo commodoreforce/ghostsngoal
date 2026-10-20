@@ -1114,7 +1114,8 @@ export class Level3Scene extends LevelScene {
       this.physics.world.setBounds(0, 0, this.worldW, this.worldH + 76, true, true, false, false);
       const cam = this.cameras.main;
       cam.setBounds(0, 0, this.worldW, this.worldH);
-      cam.startFollow(this.player, true, 0.12, 0.12);
+      this.camTarget.x = this.player.x; this.camTarget.y = this.camAnchorY = this.player.y;
+      cam.startFollow(this.camTarget, true, 0.12, 0.12);
       cam.setFollowOffset(-30, 46);
       playMusic(this.musicKey);
     });
@@ -1160,7 +1161,9 @@ export class Level3Scene extends LevelScene {
     const cam = this.cameras.main;
     cam.stopFollow();
     cam.pan(this.arenaX + W / 2, this.deckY - 190 + H / 2, 700, 'Sine.easeInOut');
-    this.physics.world.setBounds(this.arenaX, 0, W, this.worldH + 76, true, true, false, false);
+    // il muro invisibile si ferma prima della poppa sfondata: durante il duello in mare non si cade
+    const stern = this.L.ship.gapFrom * T - 2;
+    this.physics.world.setBounds(this.arenaX, 0, Math.min(W, stern - this.arenaX), this.worldH + 76, true, true, false, false);
     cam.setBounds(this.arenaX, 0, W, this.worldH);
     for (const e of [...this.enemies]) if (e.alive) e.kill(e.x, true);
     stopMusic();
@@ -1222,6 +1225,7 @@ export class Level3Scene extends LevelScene {
 
   onBossDefeated(boss) {
     this.ending = true;
+    this.physics.world.setBounds(this.arenaX, 0, W, this.worldH + 76, true, true, false, false);
     Run.stats.killsBy.count = (Run.stats.killsBy.count || 0) + 1;
     this.award(boss.points, boss.x, boss.y - 30, C.gold);
     for (const hz of this.hazards) hz.destroy();

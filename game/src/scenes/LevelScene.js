@@ -68,8 +68,13 @@ export class LevelScene extends Phaser.Scene {
 
     const startX = this.fromCheckpoint ? (this.L.checkpoint + 2) * T : (this.L.startX || 2.5) * T;
     this.player = new Player(this, startX, this.groundY - 30, Run.character, Run.kit);
-    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
-    this.cameras.main.setDeadzone(24, 60);
+    // la telecamera segue un bersaglio: in orizzontale è il giocatore, in verticale la quota dei
+    // piedi all'ultimo appoggio. Un salto non solleva l'inquadratura (il terreno resta in vista),
+    // una caduta sì, subito; e se si sale molto in alto (corde, sartiame) la telecamera insegue.
+    this.camTarget = { x: this.player.x, y: this.player.y };
+    this.camAnchorY = this.player.y;
+    this.cameras.main.startFollow(this.camTarget, true, 0.12, 0.12);
+    this.cameras.main.setDeadzone(24, 12);
     this.cameras.main.setFollowOffset(-30, 0);
 
     // ripartendo dal checkpoint le ondate già superate non tornano tutte insieme
@@ -370,6 +375,7 @@ export class LevelScene extends Phaser.Scene {
 
     // look-ahead della telecamera nella direzione di corsa
     const cam = this.cameras.main;
+    this.updateCamTarget(P);
     if (!this.bossActive) cam.followOffset.x = Phaser.Math.Linear(cam.followOffset.x, -P.facing * 34, 0.04);
 
     // parallasse: scrolling a pixel interi, come l'hardware dell'epoca
@@ -458,11 +464,28 @@ export class LevelScene extends Phaser.Scene {
     }
   }
 
+  updateCamTarget(P) {
+    const ct = this.camTarget;
+    if (!ct) return;
+    ct.x = P.x;
+    const free = P.state !== 'play' && P.state !== 'hurt' && P.state !== 'dead';
+    const grounded = P.body && (P.body.blocked.down || P.body.touching.down);
+    if (free || grounded) this.camAnchorY = P.y;          // appoggiato (o in una scena guidata): si segue
+    else if (P.y > this.camAnchorY) this.camAnchorY = P.y; // sta cadendo sotto il punto di partenza
+    else if (P.y < this.camAnchorY - 84) this.camAnchorY = P.y + 84;   // sta salendo davvero in alto
+    if (P.state === 'dead') return;                        // morendo vola via dallo schermo: la telecamera resta
+    ct.y += (this.camAnchorY - ct.y) * (grounded || free ? 0.25 : 0.5);
+  }
+
   // modalità prova: dalle buche si torna sull'ultimo punto sicuro, il tempo riparte
   cheatRescue(cause) {
     const P = this.player;
-    if (cause === 'pit' || cause === 'river') {
-      P.setPosition(this.safeX ?? P.x - 48, this.groundY - 60);
+    if (cause !== 'time') {
+      // buche, fiume, mare: si torna sull'ultimo punto sicuro (dentro l'arena, se si è nel duello)
+      let x = this.safeX ?? P.x - 48;
+      const b = this.physics.world.bounds;
+      x = Phaser.Math.Clamp(x, b.x + 16, b.right - 16);
+      P.setPosition(x, (this.deckY && this.bossActive ? this.deckY : this.groundY) - 60);
       P.body.setVelocity(0, 0);
       P.invulnUntil = this.time.now + 900;
       Sfx.parry();

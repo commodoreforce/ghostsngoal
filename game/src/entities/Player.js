@@ -71,7 +71,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   applyLook() {
-    const key = `${this.prefix}_${this.texVariant()}`;
+    const v = this.texVariant();
+    // la statua d'oro è la stessa con qualsiasi maglia: è tutta oro
+    const key = v === 'gold' ? `pl_${this.char.id}_gold` : `${this.prefix}_${v}`;
     if (key !== this.currentTex) {
       const frame = this.frame ? this.frame.name : 'idle0';
       this.currentTex = key;
