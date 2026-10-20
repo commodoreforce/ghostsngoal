@@ -70,12 +70,14 @@ GNG_CONFIG=$PWD/scripts/test/config.php php -S localhost:8000 -t server
 
 ## Messa online su Serverplan
 
+Il gioco vive sul suo dominio, **ghostsngoals.com** (hosting PHP/MySQL Serverplan), nella radice del sito: il gioco su `https://ghostsngoals.com/`, l'admin su `/admin/`, le cartoline condivise su `/share.php?id=…`. Attiva il certificato SSL (Let's Encrypt, gratuito dal pannello) e il redirect da `www.` e da `http` alla versione `https://ghostsngoals.com`, così le anteprime dei link sui social usano sempre lo stesso indirizzo.
+
 1. **Database**: crea un database MySQL dal pannello Serverplan.
 2. **Configurazione**: sul server, nella cartella del sito, copia `config.sample.php` come `config.php` e compila i dati. Il file non è mai nel repository.
-3. **Installazione**: apri `https://TUO-SITO/admin/setup.php`, inserisci la `setup_key` e crea l'account admin. Le tabelle si creano da sole.
+3. **Installazione**: apri `https://ghostsngoals.com/admin/setup.php`, inserisci la `setup_key` e crea l'account admin. Le tabelle si creano da sole.
 4. **Pubblicazione automatica**: in GitHub → Settings → Secrets and variables → Actions aggiungi:
    - `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`
-   - `FTP_STAGING_DIR` (es. `/staging.tuosito.it/`) e `FTP_PROD_DIR` (es. `/public_html/halloween/`)
+   - `FTP_STAGING_DIR` (es. `/staging.ghostsngoals.com/`) e `FTP_PROD_DIR` (es. `/public_html/`)
 
    Ogni modifica su `main` va sullo staging; per andare in produzione si crea un tag di versione (es. `v1.0.0`).
 5. **Staging protetto**: proteggi la cartella dello staging con password dal pannello Serverplan.

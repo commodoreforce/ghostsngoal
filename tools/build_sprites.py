@@ -160,6 +160,93 @@ def recolor_shirt(im, base, shade):
     return out
 
 
+# ------------------------------------------------------------------ maglie 2026-27 dei giocatori di movimento
+# Trasferta: maglia nera con i bordi e la scritta dello sponsor oro, calzoncini e calzettoni neri.
+# Terza: maglia blu con le due strisce bianche verticali (e il filo blu in mezzo), tutto blu.
+AWAY_RAMP = [(10, 10, 14), (24, 24, 30), (40, 40, 48), (62, 62, 72)]
+GOLD = [(150, 104, 40), (200, 148, 64), (232, 186, 96)]
+BLUE_RAMP = [(14, 34, 120), (24, 58, 178), (40, 90, 222), (86, 132, 240)]
+STRIPE_RAMP = [(150, 160, 190), (206, 212, 232), (244, 246, 252)]
+
+
+def dark_neutral(p):
+    r, g, b, a = p
+    return a > 0 and max(r, g, b) < 95 and max(r, g, b) - min(r, g, b) < 26
+
+
+def kit_parts(im):
+    """Maglia (il bianco più grande), calzoncini (il nero subito sotto la maglia) e calzettoni
+    (i bianchi più in basso)."""
+    shirt = shirt_pixels(im)
+    if not shirt:
+        return [], [], []
+    sx = [x for x, _ in shirt]; sy = [y for _, y in shirt]
+    x0, x1, bottom = min(sx) - 3, max(sx) + 3, max(sy)
+    px = im.load()
+    shorts = [(x, y) for y in range(bottom - 2, min(im.height, bottom + 11)) for x in range(max(0, x0), min(im.width, x1 + 1))
+              if dark_neutral(px[x, y]) and px[x, y][:3] != OUTLINE[:3]]
+    # il contorno resta contorno: i calzoncini sono i neri non di bordo (con un vicino non trasparente su 4 lati)
+    def inner(x, y):
+        return all(0 <= x + dx < im.width and 0 <= y + dy < im.height and px[x + dx, y + dy][3] > 0 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+    shorts = [p for p in shorts if inner(*p)]
+    socks = [p for c in components(im, light_neutral)[1:] for p in c if p[1] > bottom + 4]
+    return shirt, shorts, socks
+
+
+def kit_away(frame):
+    shirt, shorts, socks = kit_parts(frame)
+    out = ramp_pixels(frame, shirt, AWAY_RAMP)
+    if shirt:
+        px = out.load()
+        ys = [y for _, y in shirt]; y0, h = min(ys), max(ys) - min(ys) + 1
+        on = set(shirt)
+        top = [p for p in shirt if p[1] == y0]
+        if top:
+            tx = sorted(x for x, _ in top); tc = (tx[0] + tx[-1]) / 2
+            for p in top:
+                if abs(p[0] - tc) <= max(1, (tx[-1] - tx[0]) * 0.3):
+                    px[p] = GOLD[1] + (255,)                                   # colletto oro
+        # la scritta dello sponsor: due righe oro sul petto
+        band = [p for p in shirt if p[1] == y0 + round(h * 0.42)]
+        if band:
+            bx = sorted(x for x, _ in band)
+            cx = (bx[0] + bx[-1]) / 2
+            for x, y in band:
+                if abs(x - cx) <= max(2, (bx[-1] - bx[0]) * 0.32):
+                    px[x, y] = GOLD[2] + (255,)
+                    if (x, y + 1) in on and (x % 2 == 0):
+                        px[x, y + 1] = GOLD[0] + (255,)
+        # bordino oro in fondo alle maniche: i pixel più a sinistra e a destra della maglia, sulle righe alte
+        for y in range(y0 + 2, y0 + round(h * 0.55)):
+            row = [x for x, yy in shirt if yy == y]
+            if row and len(row) > 2:
+                for x in (min(row), max(row)):
+                    if (x, y + 1) not in on or (x, y - 1) not in on:
+                        px[x, y] = GOLD[1] + (255,)
+    out = ramp_pixels(out, socks, AWAY_RAMP[:3]) if socks else out
+    return out
+
+
+def kit_third(frame):
+    shirt, shorts, socks = kit_parts(frame)
+    out = ramp_pixels(frame, shirt, BLUE_RAMP)
+    if shirt:
+        src = frame.load()
+        px = out.load()
+        xs = [x for x, _ in shirt]; x0, w = min(xs), max(xs) - min(xs) + 1
+        lums = {p: sum(src[p][:3]) / 3 for p in shirt}
+        lo, hi = min(lums.values()), max(lums.values())
+        # le due strisce bianche, un po' a destra del centro (come la maglia vera), con il filo blu in mezzo
+        for p in shirt:
+            fx = (p[0] - x0) / max(1, w - 1)
+            if 0.44 <= fx <= 0.52 or 0.6 <= fx <= 0.66:
+                t = (lums[p] - lo) / max(1.0, hi - lo)
+                px[p] = STRIPE_RAMP[min(len(STRIPE_RAMP) - 1, int(t * len(STRIPE_RAMP)))] + (255,)
+    out = ramp_pixels(out, shorts, BLUE_RAMP[:3]) if shorts else out
+    out = ramp_pixels(out, socks, BLUE_RAMP) if socks else out
+    return out
+
+
 # ------------------------------------------------------------------ portiere (Klinsmann)
 # Il portiere ha la divisa tutta rossa: le maglie si cambiano ricolorando il rosso,
 # senza maglia si toglie il pezzo rosso più grande (la maglia; pantaloncini e calzettoni restano).
@@ -669,7 +756,7 @@ def build(char_id, src_dir, out_dir):
                 ('_away', lambda f: star_kit(f, None, STARS_DARK)),
                 ('_third', lambda f: star_kit(f, DENIM, STARS_WHITE))]
     else:
-        kits = [('', ident)] + [(f'_{k}', (lambda c: (lambda f: recolor_shirt(f, c['shirt'], c['shade'])))(c)) for k, c in KITS.items()]
+        kits = [('', ident), ('_away', kit_away), ('_third', kit_third)]
 
     # varianti con un accessorio in testa
     acc_frames = None

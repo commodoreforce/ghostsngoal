@@ -103,14 +103,21 @@ export function drawCard(scene, kind, data) {
 
   // pipistrelli e zucche
   const bat = frameOf(scene, 'bat', 'bat1');
-  [[14, story ? 70 : 48, false], [w - 66, story ? 168 : 128, true], [30, story ? 150 : 110, true]].forEach(([x, y, f]) => blit(ctx, bat, x, y, 1, f));
+  [[w - 50, story ? 70 : 40, false], [w - 66, story ? 168 : 128, true], [30, story ? 150 : 158, true]].forEach(([x, y, f]) => blit(ctx, bat, x, y, 1, f));
 
   // titolo
   let y = story ? 16 : 10;
   pixText(ctx, L.pre, w / 2, y, { size: 8, color: '#9a96c8', align: 'center' });
   y += 13;
   pixText(ctx, "GHOSTS 'N GOALS", w / 2, y, { size: 16, color: '#f4f4f0', align: 'center', stroke: '#ff7a1a', shadow: '#000' });
-  y += story ? 40 : 26;
+  y += story ? 30 : 26;
+
+  // lo scudetto del Cesena: nella storia grande sotto il titolo, nel post piccolo accanto al ritratto
+  const crest = frameOf(scene, 'crest');
+  if (crest && story) {
+    blit(ctx, crest, Math.round(w / 2 - crest.w / 2), y);
+    y += crest.h + 14;
+  }
 
   // ritratto nella cornice (oro se ha salvato Petrosino)
   const ps = 2;
@@ -123,6 +130,9 @@ export function drawCard(scene, kind, data) {
   ctx.fillStyle = gold ? '#a0700a' : '#8a3a08'; ctx.fillRect(px - 2, y - 2, pw + 4, pw + 4);
   ctx.fillStyle = '#120c22'; ctx.fillRect(px, y, pw, pw);
   blit(ctx, pf, px, y, ps);
+  // nel post lo scudetto sta a sinistra del ritratto, a misura piena
+  if (crest && !story) blit(ctx, crest, Math.max(2, Math.round((px - 6) / 2 - crest.w / 2)), y + Math.round(pw / 2 - crest.h / 2));
+
   // nome del personaggio su una targhetta
   const nameY = y + pw + 4;
   ctx.fillStyle = '#000'; ctx.fillRect(px - 6, nameY, pw + 12, 13);
@@ -133,7 +143,7 @@ export function drawCard(scene, kind, data) {
   pixText(ctx, L.best, w / 2, y, { size: 8, color: '#ff3b3b', align: 'center', shadow: '#000' });
   y += 11;
   pixText(ctx, String(Math.max(0, Math.floor(data.score))).padStart(7, '0'), w / 2, y, { size: 16, color: '#ffd23f', align: 'center', stroke: '#000' });
-  y += story ? 24 : 21;
+  y += story ? 22 : 21;
   if (data.rank) { pixText(ctx, `#${data.rank} ${L.rank}`, w / 2, y, { size: 8, color: '#f4f4f0', align: 'center', stroke: '#000' }); y += 13; }
   const place = data.cleared ? L.saved : `${L.lvl} ${data.level} · ${L.places[data.level] || ''}`;
   pixText(ctx, place, w / 2, y, { size: 8, color: data.cleared ? '#7fd06a' : '#c8c4e8', align: 'center', stroke: '#000' });

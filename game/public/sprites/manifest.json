@@ -24,10 +24,10 @@
     ],
     "sheets": [
       "pl_shpendi_base",
-      "pl_shpendi_away_base",
-      "pl_shpendi_third_base",
       "pl_shpendi_naked",
+      "pl_shpendi_away_base",
       "pl_shpendi_away_naked",
+      "pl_shpendi_third_base",
       "pl_shpendi_third_naked",
       "pl_shpendi_gold"
     ],

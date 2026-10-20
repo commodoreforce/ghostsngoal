@@ -156,7 +156,7 @@ export class NameEntryScene extends Phaser.Scene {
     const data = {
       character: Run.character, score: Run.score, level: Run.levelReached, cleared: this.cleared,
       rank: scoreId ? this.rank : null, nickname: scoreId ? this.nick : null,
-      host: location.host.toUpperCase(), url: scoreId ? `${base}share.php?id=${scoreId}${it ? '' : '&lang=en'}` : base,
+      host: /ghostsngoals/i.test(location.host) ? location.host.replace(/^www\./i, '').toUpperCase() : 'GHOSTSNGOALS.COM', url: scoreId ? `${base}share.php?id=${scoreId}${it ? '' : '&lang=en'}` : base,
     };
     const wrap = document.createElement('div');
     Object.assign(wrap.style, { position: 'absolute', left: '0', right: '0', bottom: '3%', display: 'flex', justifyContent: 'center', gap: '3%', zIndex: 3 });

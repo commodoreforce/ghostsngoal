@@ -59,8 +59,8 @@ export const KITS = [
 ];
 export const KIT_COLORS = {
   home: { shirt: '#f4f4f0', shirtSh: '#c9c9d2', trim: '#16161c', shorts: '#16161c', sock: '#f4f4f0', sockBand: '#16161c', gk: '#2d2d36', gkSh: '#1d1d24', gkTrim: '#ff7a1a' },
-  away: { shirt: '#16161c', shirtSh: '#0b0b10', trim: '#f4f4f0', shorts: '#f4f4f0', sock: '#16161c', sockBand: '#f4f4f0', gk: '#ffd23f', gkSh: '#c98a12', gkTrim: '#16161c' },
-  third: { shirt: '#4a5162', shirtSh: '#343a48', trim: '#ff7a1a', shorts: '#343a48', sock: '#4a5162', sockBand: '#ff7a1a', gk: '#8a4ad0', gkSh: '#5a2a8a', gkTrim: '#16161c' },
+  away: { shirt: '#18181e', shirtSh: '#0a0a0e', trim: '#c8943f', shorts: '#16161c', sock: '#18181e', sockBand: '#c8943f', gk: '#ffd23f', gkSh: '#c98a12', gkTrim: '#16161c' },
+  third: { shirt: '#285ade', shirtSh: '#183ab2', trim: '#f4f4f0', shorts: '#183ab2', sock: '#285ade', sockBand: '#f4f4f0', gk: '#8a4ad0', gkSh: '#5a2a8a', gkTrim: '#16161c' },
 };
 // il Mister ha sempre la tuta; gli altri scelgono tra tre maglie (Hubner tra le sue tre storiche)
 export const hasKits = (c) => !c.look.coach;

@@ -62,6 +62,12 @@ if ($s) {
         imagecopyresized($im, $p, $px, $py, 0, 0, $pw, $pw, imagesx($p), imagesy($p));
         imagedestroy($p);
     }
+    // lo scudetto del Cesena in alto a destra, a metà misura
+    $crest = __DIR__ . '/sprites/en_crest.png';
+    if (is_file($crest) && ($c = @imagecreatefrompng($crest))) {
+        imagecopyresampled($im, $c, SW - 36, 18, 0, 0, (int) (imagesx($c) / 2), (int) (imagesy($c) / 2), imagesx($c), imagesy($c));
+        imagedestroy($c);
+    }
     $x = 152;
     px_text($im, $font, (string) $s['nickname'], $x, 30, 8, $rgb('#9fe8ff'), 'left', $black);
     px_text($im, $font, $en ? 'MY HIGH SCORE' : 'IL MIO RECORD', $x, 46, 8, $rgb('#ff3b3b'), 'left', $black);
