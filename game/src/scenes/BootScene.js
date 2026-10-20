@@ -32,6 +32,10 @@ export class BootScene extends Phaser.Scene {
       'l2_belvedere_sky', 'l2_belvedere', 'l2_fountain', 'l2_steps',
       'l2_ground_bank', 'l2_ground_bank_deep', 'l2_ground_cobble', 'l2_ground_cobble_deep', 'l2_ground_floor', 'l2_ground_floor_deep',
       'l2_ground_belv', 'l2_ground_belv_deep']) this.load.image(k, `./backgrounds/${k}.png`);
+    // livello 3 (tools/build_l3_backgrounds.py)
+    for (const k of ['l3_beach_sky', 'l3_beach', 'l3_beach_water', 'l3_port_sky', 'l3_port', 'l3_port_water', 'l3_pier_sky', 'l3_pier',
+      'l3_sea', 'l3_far_lighthouse', 'l3_hull', 'l3_ground_sand', 'l3_ground_sand_deep', 'l3_ground_quay', 'l3_ground_quay_deep',
+      'l3_ground_pier', 'l3_ground_pier_deep', 'l3_ground_board', 'l3_ground_board_deep', 'l3_ground_deck', 'l3_ground_deck_deep']) this.load.image(k, `./backgrounds/${k}.png`);
     this.load.on('loaderror', () => { /* manca un file: resta lo sprite provvisorio */ });
   }
 

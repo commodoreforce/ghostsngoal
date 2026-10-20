@@ -110,5 +110,186 @@
       "r": 11.0
     },
     "comuneFrom": 429
+  },
+  "l3_beach_sky": {
+    "width": 523,
+    "height": 224
+  },
+  "l3_beach": {
+    "width": 523,
+    "height": 166
+  },
+  "l3_beach_water": {
+    "width": 523,
+    "height": 38
+  },
+  "l3_port_sky": {
+    "width": 523,
+    "height": 224
+  },
+  "l3_port": {
+    "width": 523,
+    "height": 156
+  },
+  "l3_port_water": {
+    "width": 523,
+    "height": 44
+  },
+  "l3_pier_sky": {
+    "width": 523,
+    "height": 224
+  },
+  "l3_pier": {
+    "width": 523,
+    "height": 224
+  },
+  "l3_sea": {
+    "width": 506,
+    "height": 48
+  },
+  "l3_far_lighthouse": {
+    "width": 70,
+    "height": 80
+  },
+  "l3_ground_sand": {
+    "width": 64,
+    "height": 16
+  },
+  "l3_ground_sand_deep": {
+    "width": 64,
+    "height": 16
+  },
+  "l3_ground_quay": {
+    "width": 64,
+    "height": 16
+  },
+  "l3_ground_quay_deep": {
+    "width": 64,
+    "height": 16
+  },
+  "l3_ground_pier": {
+    "width": 64,
+    "height": 16
+  },
+  "l3_ground_pier_deep": {
+    "width": 64,
+    "height": 16
+  },
+  "l3_ground_board": {
+    "width": 32,
+    "height": 16
+  },
+  "l3_ground_board_deep": {
+    "width": 32,
+    "height": 16
+  },
+  "l3_ground_deck": {
+    "width": 32,
+    "height": 16
+  },
+  "l3_ground_deck_deep": {
+    "width": 32,
+    "height": 16
+  },
+  "l3_hull": {
+    "width": 32,
+    "height": 32
+  },
+  "_l3": {
+    "beach": {
+      "window": [
+        175,
+        44
+      ],
+      "wheel": [
+        234,
+        108,
+        22
+      ],
+      "moon": [
+        384,
+        36
+      ],
+      "waterY": 158
+    },
+    "port": {
+      "lamps": [
+        [
+          5,
+          100
+        ],
+        [
+          152,
+          101
+        ],
+        [
+          262,
+          103
+        ],
+        [
+          349,
+          100
+        ],
+        [
+          508,
+          100
+        ],
+        [
+          120,
+          104
+        ]
+      ],
+      "green": [
+        [
+          42,
+          121
+        ],
+        [
+          210,
+          115
+        ],
+        [
+          80,
+          197
+        ],
+        [
+          446,
+          193
+        ]
+      ],
+      "waterY": 150
+    },
+    "pier": {
+      "lamp": [
+        86,
+        26
+      ],
+      "lamps": [
+        [
+          172,
+          86
+        ],
+        [
+          167,
+          112
+        ],
+        [
+          238,
+          107
+        ],
+        [
+          229,
+          118
+        ],
+        [
+          296,
+          117
+        ],
+        [
+          322,
+          120
+        ]
+      ]
+    }
   }
 }

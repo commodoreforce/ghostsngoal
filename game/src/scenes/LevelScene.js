@@ -700,11 +700,12 @@ export class LevelScene extends Phaser.Scene {
   tryParry(P) {
     const range = 30;
     for (const hz of this.hazards) {
-      if (!hz.active || hz.friendly || !(hz.kind === 'shoe' || hz.kind === 'piadina')) continue;
+      if (!hz.active || hz.friendly || !(hz.kind === 'shoe' || hz.kind === 'piadina' || hz.parryable)) continue;
       const dx = (hz.x - P.x) * P.facing;
       if (dx > -6 && dx < range && Math.abs(hz.y - (P.y - 4)) < 26) {
         hz.friendly = true;
         if (hz.kind === 'shoe') hz.setTexture('mazfx', 'shoeGold'); else hz.setTint(0xffd23f);
+        if (hz.body.gravity) hz.body.setGravityY(0);
         hz.step = null;
         const target = this.boss && this.boss.alive ? this.boss : null;
         const a = target ? Phaser.Math.Angle.Between(hz.x, hz.y, target.x, target.y - 10) : (P.facing > 0 ? 0 : Math.PI);

@@ -40,7 +40,7 @@ if ($action === 'end') {
     $st = [];
     foreach (['shots', 'hits', 'kills', 'deaths', 'boosts', 'pumpkins', 'crates'] as $k) $st[$k] = $num($raw[$k] ?? 0);
     $by = (array) ($raw['killsBy'] ?? []);
-    foreach (GNG_KILL_KINDS as $k) $st["k_$k"] = $num($by[$k] ?? 0, ($k === 'boss' || $k === 'azdora') ? 10 : 100000);
+    foreach (GNG_KILL_KINDS as $k) $st["k_$k"] = $num($by[$k] ?? 0, in_array($k, ['boss', 'azdora', 'octopus', 'count'], true) ? 10 : 100000);
     $stats = json_encode($st);
     // modalità prova: dichiarata all'inizio o alla fine, la partita non va mai in classifica
     $cheat = ((int) $run['cheat'] === 1 || !empty($in['cheat'])) ? 1 : 0;

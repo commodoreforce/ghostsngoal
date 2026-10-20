@@ -225,7 +225,9 @@ if ($p === 'stats') {
         COALESCE(SUM(k_zombie),0) k_zombie, COALESCE(SUM(k_bat),0) k_bat, COALESCE(SUM(k_pumpkin),0) k_pumpkin,
         COALESCE(SUM(k_ghost),0) k_ghost, COALESCE(SUM(k_boss),0) k_boss,
         COALESCE(SUM(k_fisher),0) k_fisher, COALESCE(SUM(k_owl),0) k_owl, COALESCE(SUM(k_eel),0) k_eel, COALESCE(SUM(k_washer),0) k_washer,
-        COALESCE(SUM(k_wolf),0) k_wolf, COALESCE(SUM(k_book),0) k_book, COALESCE(SUM(k_azdora),0) k_azdora FROM runs WHERE $E")->fetch();
+        COALESCE(SUM(k_wolf),0) k_wolf, COALESCE(SUM(k_book),0) k_book, COALESCE(SUM(k_azdora),0) k_azdora,
+        COALESCE(SUM(k_crab),0) k_crab, COALESCE(SUM(k_gull),0) k_gull, COALESCE(SUM(k_jelly),0) k_jelly, COALESCE(SUM(k_sailor),0) k_sailor,
+        COALESCE(SUM(k_rat),0) k_rat, COALESCE(SUM(k_octopus),0) k_octopus, COALESCE(SUM(k_count),0) k_count FROM runs WHERE $E")->fetch();
 
     // distribuzioni
     $byHero = q("SELECT hero AS k, COUNT(*) AS n FROM runs WHERE $G GROUP BY hero ORDER BY n DESC")->fetchAll();
@@ -249,7 +251,9 @@ if ($p === 'stats') {
 
     $causeNames = ['pit' => 'Caduto in una buca', 'time' => 'Tempo scaduto', 'zombie' => 'Zombie', 'bat' => 'Pipistrello', 'pumpkin' => 'Zucca', 'ghost' => 'Fantasma', 'boss' => 'Mazapegùl', 'enemy' => 'Nemico',
         'river' => 'Caduto nel Savio', 'fisher' => 'Pescatore scheletro', 'owl' => 'Civetta', 'eel' => 'Anguilla fantasma',
-        'washer' => 'Lavandaia spettro', 'wolf' => 'Lupo mannaro', 'book' => 'Libro volante', 'azdora' => 'Azdora indemoniata'];
+        'washer' => 'Lavandaia spettro', 'wolf' => 'Lupo mannaro', 'book' => 'Libro volante', 'azdora' => 'Azdora indemoniata',
+        'sea' => 'Caduto in mare', 'wave' => 'Onda sul molo', 'crab' => 'Granchio scheletro', 'gull' => 'Gabbiano', 'jelly' => 'Medusa fantasma',
+        'sailor' => 'Marinaio scheletro', 'rat' => 'Topo di stiva', 'octopus' => 'Piovra del Porto Canale', 'count' => 'Conte Vampiro'];
     $kitNames = ['home' => 'Casa (bianca)', 'away' => 'Trasferta', 'third' => 'Terza maglia'];
     $deviceNames = ['mobile' => 'Telefono', 'tablet' => 'Tablet', 'desktop' => 'Computer', '' => 'Non rilevato'];
     $langNames = ['it' => 'Italiano', 'en' => 'Inglese', '' => 'Non rilevata'];
@@ -361,7 +365,11 @@ if ($p === 'stats') {
           ['k' => 'Pescatori scheletro', 'n' => (int) $sum['k_fisher']], ['k' => 'Civette', 'n' => (int) $sum['k_owl']],
           ['k' => 'Anguille fantasma', 'n' => (int) $sum['k_eel']], ['k' => 'Lavandaie spettro', 'n' => (int) $sum['k_washer']],
           ['k' => 'Lupi mannari', 'n' => (int) $sum['k_wolf']], ['k' => 'Libri volanti', 'n' => (int) $sum['k_book']],
-          ['k' => 'Azdore liberate', 'n' => (int) $sum['k_azdora']]], fn ($r) => $r['n'] > 0)), fn ($v) => $v, true); ?></div>
+          ['k' => 'Azdore liberate', 'n' => (int) $sum['k_azdora']],
+          ['k' => 'Granchi scheletro', 'n' => (int) $sum['k_crab']], ['k' => 'Gabbiani', 'n' => (int) $sum['k_gull']],
+          ['k' => 'Meduse fantasma', 'n' => (int) $sum['k_jelly']], ['k' => 'Marinai scheletro', 'n' => (int) $sum['k_sailor']],
+          ['k' => 'Topi di stiva', 'n' => (int) $sum['k_rat']], ['k' => 'Piovre sconfitte', 'n' => (int) $sum['k_octopus']],
+          ['k' => 'Conti sconfitti (Petrosino libero)', 'n' => (int) $sum['k_count']]], fn ($r) => $r['n'] > 0)), fn ($v) => $v, true); ?></div>
       <div class="card"><h2>Livello raggiunto</h2><?php $bars($byLevel, fn ($v) => 'Livello ' . $v, true); ?></div>
       <div class="card"><h2>Come si muore</h2><?php $bars($byCause, fn ($v) => $causeNames[$v] ?? $v, true); ?></div>
       <div class="card"><h2>Dispositivo</h2><?php $bars($byDevice, fn ($v) => $deviceNames[$v] ?? $v, true); ?></div>

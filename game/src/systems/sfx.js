@@ -140,6 +140,37 @@ export const Sfx = {
   piadina: () => tone({ type: 'triangle', f0: 900, f1: 1300, dur: 0.12, vol: 0.12 }),
   // guarigione: arpeggio maggiore luminoso, come un incantesimo che si scioglie
   cure: () => { [523, 659, 784, 1046, 1318, 1568, 2093].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: 0.3, vol: 0.28, at: i * 0.08 })); tone({ type: 'sine', f0: 262, dur: 1.4, vol: 0.3, at: 0.1 }); },
+  // ---- livello 3
+  // granchio: due schiocchi di chela
+  crab: () => { noise({ dur: 0.04, vol: 0.4, f: 2600, q: 3 }); noise({ dur: 0.04, vol: 0.35, f: 3000, q: 3, at: 0.09 }); },
+  // gabbiano: il verso stridulo che conosce chi ha mangiato in spiaggia
+  gull: () => { tone({ type: 'sawtooth', f0: 1500, f1: 950, dur: 0.18, vol: 0.18 }); tone({ type: 'sawtooth', f0: 1300, f1: 1700, dur: 0.14, vol: 0.14, at: 0.16 }); tone({ type: 'sawtooth', f0: 1600, f1: 900, dur: 0.22, vol: 0.14, at: 0.3 }); },
+  zap: () => { tone({ type: 'sawtooth', f0: 120, f1: 160, dur: 0.6, vol: 0.2 }); noise({ dur: 0.6, vol: 0.18, f: 5200, q: 0.6 }); },
+  harpoon: () => { noise({ dur: 0.2, vol: 0.35, f: 2400, q: 0.8, sweep: -1800 }); tone({ type: 'triangle', f0: 520, f1: 300, dur: 0.06, vol: 0.25 }); },
+  squeak: () => tone({ type: 'sine', f0: 2300, f1: 2900, dur: 0.06, vol: 0.12 }),
+  // la piovra: un brontolio che gorgoglia
+  octo: () => { tone({ type: 'sawtooth', f0: 90, f1: 45, dur: 0.9, vol: 0.4 }); noise({ dur: 0.8, vol: 0.3, f: 220, q: 1.5 }); [0.1, 0.25, 0.4].forEach((a) => tone({ type: 'sine', f0: 300, f1: 520, dur: 0.06, vol: 0.12, at: a })); },
+  clink: () => { tone({ type: 'triangle', f0: 1900, dur: 0.05, vol: 0.2 }); tone({ type: 'triangle', f0: 2700, dur: 0.07, vol: 0.12, at: 0.03 }); },
+  sweep: () => noise({ dur: 0.9, vol: 0.35, f: 700, q: 0.6, sweep: -400 }),
+  ink: () => { noise({ dur: 0.25, vol: 0.45, f: 300, q: 0.7 }); tone({ type: 'sine', f0: 200, f1: 90, dur: 0.2, vol: 0.25 }); },
+  // la risata del Conte: bassa, lenta, teatrale
+  countLaugh: () => { [330, 300, 270, 240, 210].forEach((f, i) => { tone({ type: 'square', f0: f, f1: f * 0.9, dur: 0.13, vol: 0.2, at: i * 0.17 }); tone({ type: 'triangle', f0: f / 2, dur: 0.12, vol: 0.3, at: i * 0.17 }); }); },
+  orb: () => { tone({ type: 'sine', f0: 500, f1: 1100, dur: 0.18, vol: 0.2 }); tone({ type: 'sine', f0: 700, f1: 1400, dur: 0.14, vol: 0.12, at: 0.06 }); },
+  swarm: () => { for (let i = 0; i < 9; i++) noise({ dur: 0.04, vol: 0.18, f: 2600 + (i % 3) * 600, q: 2, at: i * 0.05 }); },
+  heart: () => { tone({ type: 'triangle', f0: 80, f1: 40, dur: 0.12, vol: 0.6 }); tone({ type: 'triangle', f0: 80, f1: 40, dur: 0.12, vol: 0.5, at: 0.2 }); },
+  wind: () => noise({ dur: 2.6, vol: 0.4, f: 380, q: 0.4, sweep: 900 }),
+  screech: () => { tone({ type: 'sawtooth', f0: 1900, f1: 700, dur: 0.55, vol: 0.25 }); tone({ type: 'square', f0: 2400, f1: 900, dur: 0.45, vol: 0.12, at: 0.05 }); },
+  swoop: () => noise({ dur: 0.6, vol: 0.4, f: 900, q: 0.5, sweep: -700 }),
+  // la risacca che arriva: fruscio lungo che cresce
+  surf: () => { noise({ dur: 1.4, vol: 0.32, f: 900, q: 0.4, sweep: -300 }); noise({ dur: 1.0, vol: 0.2, f: 2400, q: 0.5, at: 0.5 }); },
+  rumble: () => { noise({ dur: 0.8, vol: 0.4, f: 120, q: 0.6 }); tone({ type: 'triangle', f0: 50, f1: 40, dur: 0.8, vol: 0.3 }); },
+  crash: () => { noise({ dur: 1.0, vol: 0.6, f: 700, q: 0.4, sweep: -450 }); noise({ dur: 0.6, vol: 0.35, f: 2600, q: 0.5, at: 0.05 }); },
+  cage: () => { tone({ type: 'square', f0: 320, f1: 300, dur: 0.12, vol: 0.25 }); noise({ dur: 0.18, vol: 0.3, f: 2200, q: 3 }); tone({ type: 'square', f0: 420, f1: 260, dur: 0.3, vol: 0.18, at: 0.15 }); },
+  creak: () => { tone({ type: 'sawtooth', f0: 150, f1: 190, dur: 0.5, vol: 0.14 }); tone({ type: 'sawtooth', f0: 190, f1: 140, dur: 0.6, vol: 0.12, at: 0.55 }); },
+  hug: () => [523, 659, 784, 659, 784, 1046].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: 0.16, vol: 0.28, at: i * 0.12 })),
+  // l'alba: un accordo che si apre
+  dawn: () => { [294, 370, 440, 587, 740, 880].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: 2.2 - i * 0.2, vol: 0.22, at: i * 0.18 })); tone({ type: 'sine', f0: 147, dur: 2.6, vol: 0.3 }); },
+  soon: () => { [220, 262, 330, 311].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: 0.6, vol: 0.3, at: i * 0.35 })); tone({ type: 'sine', f0: 110, dur: 1.8, vol: 0.3 }); },
   gameOver: () => [392, 370, 349, 330, 262].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: i === 4 ? 0.8 : 0.22, vol: 0.45, at: i * 0.24 })),
 };
 
@@ -202,6 +233,37 @@ const TRACKS = {
       46, 0, 0, 0, 58, 0, 0, 0, 58, 0, 0, 0, 45, 0, 0, 0, 57, 0, 0, 0, 38, 0, 0, 0],
     drum: 'k...s...s...',
   },
+  // livello 3: una canzone di marinai in la minore, a tempo di 6/8, suonata da un'orchestrina fantasma
+  level3: {
+    bpm: 150,
+    lead: [69, 0, 0, 69, 0, 72, 74, 0, 0, 72, 0, 69, 67, 0, 0, 64, 0, 0, 67, 0, 69, 0, 0, 0,
+      69, 0, 0, 69, 0, 72, 76, 0, 0, 74, 0, 72, 71, 0, 0, 67, 0, 0, 69, 0, 0, 0, 0, 0,
+      76, 0, 0, 76, 0, 74, 72, 0, 0, 74, 0, 76, 77, 0, 0, 76, 0, 0, 74, 0, 72, 0, 0, 0,
+      69, 0, 0, 72, 0, 74, 76, 0, 74, 72, 0, 71, 69, 0, 0, 64, 0, 0, 69, 0, 0, 0, 0, 0],
+    bass: [45, 0, 0, 0, 0, 0, 52, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0,
+      45, 0, 0, 0, 0, 0, 52, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0,
+      48, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0,
+      45, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0],
+    drum: 'k..h.hs..h.h',
+  },
+  // il Conte: organo da cattedrale (onda a dente di sega), re minore, tutto in discesa
+  count: {
+    bpm: 172, leadType: 'sawtooth',
+    lead: [74, 72, 74, 0, 0, 0, 69, 0, 67, 65, 64, 65, 0, 0, 62, 0, 74, 72, 74, 0, 0, 0, 70, 0, 69, 67, 66, 67, 0, 0, 69, 0,
+      62, 65, 69, 74, 77, 74, 69, 65, 62, 65, 69, 74, 77, 0, 76, 0, 70, 74, 77, 82, 81, 77, 74, 70, 69, 73, 76, 81, 79, 76, 73, 69],
+    bass: [38, 50, 38, 50, 38, 50, 38, 50, 34, 46, 34, 46, 33, 45, 33, 45, 38, 50, 38, 50, 34, 46, 34, 46, 33, 45, 33, 45, 33, 45, 33, 45,
+      38, 50, 38, 50, 38, 50, 38, 50, 34, 46, 34, 46, 34, 46, 34, 46, 31, 43, 31, 43, 34, 46, 34, 46, 33, 45, 33, 45, 33, 45, 37, 49],
+    drum: 'k.hsk.hsk.hskkss',
+  },
+  // l'alba e il finale: re maggiore, finalmente
+  finale: {
+    bpm: 128,
+    lead: [74, 0, 78, 81, 0, 78, 86, 0, 85, 0, 81, 0, 83, 0, 0, 0, 81, 0, 78, 74, 0, 76, 78, 0, 76, 0, 73, 0, 74, 0, 0, 0,
+      78, 0, 81, 86, 0, 85, 83, 0, 81, 0, 79, 0, 78, 0, 76, 0, 74, 76, 78, 79, 81, 0, 83, 0, 85, 0, 86, 0, 0, 0, 0, 0],
+    bass: [50, 62, 50, 62, 47, 59, 47, 59, 43, 55, 43, 55, 45, 57, 45, 57, 50, 62, 50, 62, 47, 59, 47, 59, 45, 57, 45, 57, 50, 62, 50, 62,
+      43, 55, 43, 55, 47, 59, 47, 59, 43, 55, 43, 55, 45, 57, 45, 57, 50, 62, 50, 62, 43, 55, 43, 55, 45, 57, 45, 57, 50, 62, 50, 0],
+    drum: 'k.h.s.h.k.h.s.hh',
+  },
   boost: {
     bpm: 190,
     lead: [72, 76, 79, 84, 79, 76, 72, 76, 74, 77, 81, 86, 81, 77, 74, 77, 72, 76, 79, 84, 86, 84, 83, 81, 79, 77, 76, 74, 72, 0, 84, 0],
@@ -233,7 +295,7 @@ export function playMusic(name) {
       const i = step % tr.lead.length;
       const ln = tr.lead[i]; const bn = tr.bass[i % tr.bass.length];
       const at = nextTime - ctx.currentTime;
-      if (ln) tone({ type: 'square', f0: N(ln), dur: stepDur * 0.9, vol: 0.22, at, out: musicGain });
+      if (ln) tone({ type: tr.leadType || 'square', f0: N(ln), dur: stepDur * 0.9, vol: tr.leadType === 'sawtooth' ? 0.16 : 0.22, at, out: musicGain });
       if (bn) tone({ type: 'triangle', f0: N(bn), dur: stepDur * 0.95, vol: 0.5, at, out: musicGain });
       const d = tr.drum[step % tr.drum.length];
       if (d === 'k') tone({ type: 'sine', f0: 150, f1: 40, dur: 0.09, vol: 0.7, at, out: musicGain });

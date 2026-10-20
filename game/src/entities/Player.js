@@ -83,6 +83,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   // ------------------------------------------------------------- aggiornamento
   update(time, delta) {
     if (this.state === 'intro') { this.body.setVelocityX(0); this.animate(time); return; }
+    // nelle scene del finale è la scena a muovere e animare il personaggio
+    if (this.state === 'scripted') return;
     if (this.state === 'dead' || this.state === 'cheer') { this.animate(time); return; }
     if (this.state === 'hurt') {
       if (this.body.blocked.down && time > this.hurtUntil) this.state = 'play';
@@ -105,6 +107,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (right) { target = this.tune.runSpeed; this.facing = 1; }
     }
     if (sliding) target = this.facing * 190;
+    // terreno (la sabbia rallenta) e vento o risacca che spingono (accovacciati si resiste meglio)
+    target *= this.terrainMul ?? 1;
+    if (this.windX) target += this.windX * (crouching ? 0.35 : 1);
     // avvolto nel lenzuolo della lavandaia: lento, niente tiri; saltando ci si libera prima
     const wrapped = time < (this.wrappedUntil || 0);
     if (wrapped) {
@@ -135,7 +140,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       Sfx.kick();
       this.scene.dust(this.x, this.body.bottom);
     } else if (wantsJump && canCoyote && !sliding && !wrapped) {
-      let v = this.tune.jumpVel;
+      let v = this.tune.jumpVel * (this.jumpMul ?? 1);
       if (this.boosted && this.char.id === 'klinsmann') v *= 1.38;
       this.body.setVelocityY(v);
       this.jumpPressedAt = -9999; this.lastGrounded = -9999;

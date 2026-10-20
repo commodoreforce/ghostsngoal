@@ -287,5 +287,293 @@
     "frames": [
       "__solo"
     ]
+  },
+  "crab": {
+    "sheet": "en_crab",
+    "frameWidth": 36,
+    "frameHeight": 30,
+    "frames": [
+      "crab0",
+      "crab1",
+      "crab2",
+      "crabSide",
+      "crabAtk",
+      "crabHide",
+      "crabPeek",
+      "die0",
+      "die1"
+    ]
+  },
+  "gull": {
+    "sheet": "en_gull",
+    "frameWidth": 34,
+    "frameHeight": 30,
+    "frames": [
+      "gullF",
+      "fly0",
+      "fly1",
+      "fly2",
+      "dive",
+      "carry0",
+      "carry1",
+      "die0"
+    ]
+  },
+  "jelly": {
+    "sheet": "en_jelly",
+    "frameWidth": 40,
+    "frameHeight": 44,
+    "frames": [
+      "jel0",
+      "jelC",
+      "jelE",
+      "jelSide",
+      "jelZ0",
+      "jelZ1",
+      "die0",
+      "die1"
+    ]
+  },
+  "rat": {
+    "sheet": "en_rat",
+    "frameWidth": 34,
+    "frameHeight": 18,
+    "frames": [
+      "ratF",
+      "run0",
+      "run1",
+      "run2",
+      "leap",
+      "die0"
+    ]
+  },
+  "sailor": {
+    "sheet": "en_sailor",
+    "frameWidth": 64,
+    "frameHeight": 54,
+    "frames": [
+      "salF",
+      "sal0",
+      "walk0",
+      "walk1",
+      "salWind",
+      "salThrow",
+      "die0",
+      "die1"
+    ]
+  },
+  "harpoon": {
+    "sheet": "en_harpoon",
+    "frameWidth": 34,
+    "frameHeight": 8,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "vampire": {
+    "sheet": "en_vampire",
+    "frameWidth": 80,
+    "frameHeight": 72,
+    "frames": [
+      "v0",
+      "v1",
+      "vSide",
+      "vWalk0",
+      "vWalk1",
+      "vCast",
+      "vThrow",
+      "vBats",
+      "vHurt",
+      "vRise"
+    ]
+  },
+  "demon": {
+    "sheet": "en_demon",
+    "frameWidth": 172,
+    "frameHeight": 136,
+    "frames": [
+      "d0",
+      "d1",
+      "d2",
+      "dSide",
+      "dDive",
+      "d0c",
+      "d1c",
+      "d2c",
+      "dSidec",
+      "dDivec"
+    ]
+  },
+  "orb": {
+    "sheet": "en_orb",
+    "frameWidth": 10,
+    "frameHeight": 10,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "pet3": {
+    "sheet": "en_pet3",
+    "frameWidth": 44,
+    "frameHeight": 50,
+    "frames": [
+      "petArms",
+      "petHug",
+      "petArms1"
+    ]
+  },
+  "cage": {
+    "sheet": "en_cage",
+    "frameWidth": 74,
+    "frameHeight": 70,
+    "frames": [
+      "cageFull",
+      "cageOpen",
+      "cageFull1"
+    ]
+  },
+  "octopus": {
+    "sheet": "en_octopus",
+    "frameWidth": 80,
+    "frameHeight": 66,
+    "frames": [
+      "oct_open",
+      "oct_half",
+      "oct_shut",
+      "oct_hurt",
+      "oct_angry"
+    ]
+  },
+  "tentacle": {
+    "sheet": "en_tentacle",
+    "frameWidth": 18,
+    "frameHeight": 18,
+    "frames": [
+      "seg0",
+      "seg1",
+      "seg2",
+      "seg3",
+      "seg4",
+      "seg5",
+      "tip",
+      "ink"
+    ]
+  },
+  "pattino": {
+    "sheet": "en_pattino",
+    "frameWidth": 48,
+    "frameHeight": 22,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "lettini": {
+    "sheet": "en_lettini",
+    "frameWidth": 30,
+    "frameHeight": 16,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "umbY": {
+    "sheet": "en_umbY",
+    "frameWidth": 14,
+    "frameHeight": 60,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "umbT": {
+    "sheet": "en_umbT",
+    "frameWidth": 14,
+    "frameHeight": 60,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "lantern": {
+    "sheet": "en_lantern",
+    "frameWidth": 12,
+    "frameHeight": 18,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "hatch": {
+    "sheet": "en_hatch",
+    "frameWidth": 28,
+    "frameHeight": 8,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "nest": {
+    "sheet": "en_nest",
+    "frameWidth": 36,
+    "frameHeight": 14,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "foam": {
+    "sheet": "en_foam",
+    "frameWidth": 32,
+    "frameHeight": 8,
+    "frames": [
+      "__solo"
+    ]
+  },
+  "boat0": {
+    "sheet": "en_boat0",
+    "frameWidth": 105,
+    "frameHeight": 104,
+    "frames": [
+      "__solo"
+    ],
+    "anchors": {
+      "deck": [
+        0,
+        87,
+        104
+      ]
+    }
+  },
+  "boat1": {
+    "sheet": "en_boat1",
+    "frameWidth": 114,
+    "frameHeight": 107,
+    "frames": [
+      "__solo"
+    ],
+    "anchors": {
+      "deck": [
+        0,
+        91,
+        113
+      ]
+    }
+  },
+  "boat2": {
+    "sheet": "en_boat2",
+    "frameWidth": 132,
+    "frameHeight": 128,
+    "frames": [
+      "__solo"
+    ],
+    "anchors": {
+      "deck": [
+        1,
+        110,
+        124
+      ]
+    }
+  },
+  "rig": {
+    "sheet": "en_rig",
+    "frameWidth": 205,
+    "frameHeight": 168,
+    "frames": [
+      "__solo"
+    ]
   }
 }

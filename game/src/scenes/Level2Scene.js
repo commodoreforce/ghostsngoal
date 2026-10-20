@@ -46,6 +46,7 @@ export class Level2Scene extends LevelScene {
     this.lastMidnightSpawn = 0;
     this.libraryShown = this.fromCheckpoint;
     this.lastSec = 'ponte';
+    this.fxSplash = null; this.candleLight = null; this.wrapSheet = null; this.boss = null;
     super.create();
     this.physics.add.collider(this.player, this.barrels, (p, b) => { b.ridden = true; });
     // sulla salita la telecamera sta un po' più in alto del giocatore: si vede dove si mettono i piedi
@@ -832,12 +833,19 @@ export class Level2Scene extends LevelScene {
     });
   }
 
+  // livello 2 superato: il Conte è volato al mare, si va a Cesenatico
   afterClear(delay) {
     this.time.delayedCall(delay + 2400, () => {
-      center(this, 184, t('demoEnd2'), { fixed: true, depth: 120, color: C.orange, wrap: 230 });
+      center(this, 184, t('nextStage2'), { fixed: true, depth: 120, color: C.orange, wrap: 230 });
       LocalBest.set(Run.score);
     });
-    this.time.delayedCall(delay + 5200, () => this.scene.start('NameEntry', { cleared: true }));
+    this.time.delayedCall(delay + 4800, () => {
+      this.cameras.main.fadeOut(500, 0, 0, 0);
+      this.time.delayedCall(520, () => {
+        Run.level = 3; Run.levelReached = Math.max(Run.levelReached, 3);
+        this.scene.start('Level3', { fromLevel2: true });
+      });
+    });
   }
 
   // il checkpoint del livello 2 è dentro la biblioteca

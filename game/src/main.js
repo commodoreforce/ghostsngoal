@@ -11,9 +11,11 @@ import { SelectScene } from './scenes/SelectScene.js';
 import { IntroScene } from './scenes/IntroScene.js';
 import { LevelScene } from './scenes/LevelScene.js';
 import { Level2Scene } from './scenes/Level2Scene.js';
+import { Level3Scene } from './scenes/Level3Scene.js';
 import { NameEntryScene } from './scenes/NameEntryScene.js';
 import { W, H } from './systems/ui.js';
 import { CrtScreen } from './systems/crt.js';
+import { Run } from './systems/state.js';
 
 // i cabinati aggiornavano animazioni e movimento a scatti: il gioco disegna 20 fotogrammi al secondo
 // (la fisica resta calcolata a 60 passi al secondo, quindi i salti non cambiano)
@@ -79,7 +81,7 @@ async function start() {
     input: { keyboard: false, mouse: false, touch: false, gamepad: false },
     audio: { noAudio: true },
     banner: false,
-    scene: [BootScene, TitleScene, SelectScene, IntroScene, LevelScene, Level2Scene, NameEntryScene],
+    scene: [BootScene, TitleScene, SelectScene, IntroScene, LevelScene, Level2Scene, Level3Scene, NameEntryScene],
   });
   game.events.on('prestep', () => Input.update());
   // tubo catodico vero (shader WebGL); se non disponibile resta l'effetto leggero in CSS
@@ -90,5 +92,6 @@ async function start() {
   }
   window.__crt = crt;
   window.__gng = game; // utile per i test
+  window.__run = Run;
 }
 start();

@@ -15,6 +15,7 @@ export class SelectScene extends Phaser.Scene {
   create() {
     this.stage2 = false;
     this.key2 = this.input.keyboard ? this.input.keyboard.addKey('TWO') : null;
+    this.key3 = this.input.keyboard ? this.input.keyboard.addKey('THREE') : null;
     this.cameras.main.setBackgroundColor('#0b0812');
     // sfondo a righe diagonali bianconere che scorrono
     const g = this.add.graphics();
@@ -156,6 +157,7 @@ export class SelectScene extends Phaser.Scene {
     this.time.delayedCall(2200, () => {
       Run.reset(c.id, kit);
       // modalità di prova: con il tasto 2 si parte direttamente dal livello 2
+      if (this.stage2 === 3 && Cheat.on) { Run.level = 3; this.scene.start('Level3', {}); return; }
       if (this.stage2 && Cheat.on) { Run.level = 2; this.scene.start('Level2', {}); return; }
       this.scene.start('Intro');
     });
@@ -251,6 +253,12 @@ export class SelectScene extends Phaser.Scene {
   }
 
   update() {
+    if (Cheat.on && !this.stage2 && this.key3 && this.key3.isDown) {
+      this.stage2 = 3;
+      Sfx.cheat();
+      const tag = center(this, 150, getLang() === 'it' ? 'PROVA: SI PARTE DAL LIVELLO 3' : 'TEST: STARTING FROM STAGE 3', { color: C.gold });
+      this.tweens.add({ targets: tag, alpha: 0.3, yoyo: true, repeat: -1, duration: 300 });
+    }
     if (Cheat.on && !this.stage2 && this.key2 && this.key2.isDown) {
       this.stage2 = true;
       Sfx.cheat();
