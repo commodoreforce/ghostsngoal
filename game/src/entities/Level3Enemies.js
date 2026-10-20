@@ -237,7 +237,8 @@ export class Sailor extends Enemy {
 export class Rat extends Enemy {
   constructor(scene, x, y, dir) {
     super(scene, x, y, 'rat', 'run0', { kind: 'rat', hp: 1, points: 100, eyeOffset: { x: -10, y: -2 } });
-    footBody(this, 20, 10);
+    // corpo più alto del disegno: accovacciato il pallone li prende sempre
+    footBody(this, 26, 18);
     this.speed = Phaser.Math.Between(92, 118);
     this.dir = dir;
     this.leaping = false;
