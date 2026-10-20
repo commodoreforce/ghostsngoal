@@ -22,8 +22,10 @@ if ($nick === null || !nickname_allowed($nick)) {
 }
 
 q('UPDATE runs SET submitted = 1 WHERE id = ?', [$run['id']]);
-q('INSERT INTO scores (run_id, nickname, score, hero, level_reached, lap, created_at, ip_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [$run['id'], $nick, (int) $run['score'], $run['hero'], (int) $run['level_reached'], (int) $run['lap'], time(), $run['ip_hash']]);
+// hidden: 0 in classifica, 1 nascosto dall'admin, 2 da verificare (compare quando l'admin lo approva)
+$review = (int) ($run['review'] ?? 0) === 1;
+q('INSERT INTO scores (run_id, nickname, score, hero, level_reached, lap, created_at, ip_hash, hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [$run['id'], $nick, (int) $run['score'], $run['hero'], (int) $run['level_reached'], (int) $run['lap'], time(), $run['ip_hash'], $review ? 2 : 0]);
 $id = (int) db()->lastInsertId();
 $rank = 1 + (int) q('SELECT COUNT(*) FROM scores WHERE hidden = 0 AND (score > ? OR (score = ? AND id < ?))', [(int) $run['score'], (int) $run['score'], $id])->fetchColumn();
-json_out(['ok' => true, 'id' => $id, 'rank' => $rank]);
+json_out(['ok' => true, 'id' => $id, 'rank' => $rank, 'review' => $review]);

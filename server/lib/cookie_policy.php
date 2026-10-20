@@ -16,18 +16,6 @@ const CP_FIELDS = [
     'cp_updated' => 'Data dell\'ultimo aggiornamento (gg/mm/aaaa)',
 ];
 
-function meta_get(string $k, string $default = ''): string {
-    try {
-        $v = q('SELECT v FROM meta WHERE k = ?', [$k])->fetchColumn();
-        return $v === false ? $default : (string) $v;
-    } catch (Throwable $e) { return $default; }
-}
-
-function meta_set(string $k, string $v): void {
-    q('DELETE FROM meta WHERE k = ?', [$k]);
-    q('INSERT INTO meta (k, v) VALUES (?, ?)', [$k, mb_substr($v, 0, 255, 'UTF-8')]);
-}
-
 function cp_settings(): array {
     $s = ['enabled' => meta_get('cp_enabled', '0') === '1'];
     foreach (array_keys(CP_FIELDS) as $k) $s[$k] = meta_get($k);

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Input } from '../systems/input.js';
 import { Sfx, stopMusic } from '../systems/sfx.js';
 import { Api } from '../systems/api.js';
+import { RunLog } from '../systems/runlog.js';
 import { Run } from '../systems/state.js';
 import { t, getLang } from '../i18n.js';
 import { center, C, W, H } from '../systems/ui.js';
@@ -13,7 +14,7 @@ export class IntroScene extends Phaser.Scene {
 
   create() {
     // il gettone della partita si chiede subito, senza far aspettare il giocatore
-    Api.startRun(Run.character, { kit: Run.kit, lang: getLang(), cheat: Run.cheat }).then((r) => { if (r.ok && r.token) Run.token = r.token; });
+    RunLog.begin({ kit: Run.kit, lang: getLang(), cheat: Run.cheat });
 
     this.done = false;
     this.cameras.main.setBackgroundColor('#0a0710');

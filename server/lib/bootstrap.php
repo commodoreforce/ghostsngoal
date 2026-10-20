@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 const GNG_HEROES = ['shpendi', 'ciofi', 'klinsmann', 'diamanti', 'hubner'];
 const GNG_NAME_MAX = 10;
-const GNG_SCHEMA = 2;   // si alza quando cambia la struttura del database
+const GNG_SCHEMA = 3;   // si alza quando cambia la struttura del database
 const GNG_KITS = ['home', 'away', 'third'];
 const GNG_KILL_KINDS = ['zombie', 'bat', 'pumpkin', 'ghost', 'boss', 'fisher', 'owl', 'eel', 'washer', 'wolf', 'book', 'azdora',
     'crab', 'gull', 'jelly', 'sailor', 'rat', 'octopus', 'count'];
@@ -266,6 +266,12 @@ function run_extra_columns(): array {
         'device' => "VARCHAR(8) NOT NULL DEFAULT ''",
         'lang' => "VARCHAR(2) NOT NULL DEFAULT ''",
         'cheat' => 'SMALLINT NOT NULL DEFAULT 0',
+        // classifica a prova di furbi
+        'rkey' => "VARCHAR(64) NOT NULL DEFAULT ''",
+        'seq' => 'INT NOT NULL DEFAULT 0',
+        'events' => 'TEXT NULL',
+        'flags' => "VARCHAR(255) NOT NULL DEFAULT ''",
+        'review' => 'SMALLINT NOT NULL DEFAULT 0',
     ];
     foreach (['kills', 'shots', 'hits', 'deaths', 'boosts', 'pumpkins', 'crates'] as $c) $cols[$c] = 'INT NOT NULL DEFAULT 0';
     foreach (GNG_KILL_KINDS as $k) $cols["k_$k"] = 'INT NOT NULL DEFAULT 0';
@@ -293,6 +299,19 @@ function migrate(): void {
     }
     q("DELETE FROM meta WHERE k = 'schema'");
     q("INSERT INTO meta (k, v) VALUES ('schema', ?)", [(string) GNG_SCHEMA]);
+}
+
+// impostazioni chiave/valore (tabella meta)
+function meta_get(string $k, string $default = ''): string {
+    try {
+        $v = q('SELECT v FROM meta WHERE k = ?', [$k])->fetchColumn();
+        return $v === false ? $default : (string) $v;
+    } catch (Throwable $e) { return $default; }
+}
+
+function meta_set(string $k, string $v): void {
+    q('DELETE FROM meta WHERE k = ?', [$k]);
+    q('INSERT INTO meta (k, v) VALUES (?, ?)', [$k, mb_substr($v, 0, 255, 'UTF-8')]);
 }
 
 // divisione intera valida sia su MySQL sia su SQLite

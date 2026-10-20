@@ -20,6 +20,9 @@ class InputHub {
     this.state = {};
     this.prev = {};
     this.latch = {};     // pressioni brevissime tra un fotogramma e l'altro (il gioco gira a 20 fps)
+    this.count = {};     // pressioni totali per tasto: nessuna va persa, nemmeno durante il fermo immagine
+    this.padPrev = {};
+    this.seen = {};
     this.lastTyped = [];  // per l'inserimento del nome e della parola magica
     this.peekBuf = [];    // copia per i codici segreti, non toglie nulla all'inserimento del nome
     this.anyListeners = new Set();
@@ -30,7 +33,7 @@ class InputHub {
     window.addEventListener('keydown', (e) => {
       if (e.target && e.target.tagName === 'INPUT') return; // si sta scrivendo nella parola magica
       const b = KEYMAP[e.code];
-      if (b) { if (!this.keys[b]) this.latch[b] = true; this.keys[b] = true; e.preventDefault(); }
+      if (b) { if (!this.keys[b] && !e.repeat) this.hit(b); this.keys[b] = true; e.preventDefault(); }
       if (e.key.length === 1 || e.key === 'Backspace') {
         this.lastTyped.push(e.key); this.peekBuf.push(e.key);
         if (this.lastTyped.length > 32) this.lastTyped.shift();
@@ -46,28 +49,54 @@ class InputHub {
     this.bindTouch();
   }
 
+  // una pressione nuova: vale anche se il tasto risultava ancora giù nel fotogramma prima (doppio tocco veloce)
+  hit(b) { this.latch[b] = true; this.count[b] = (this.count[b] || 0) + 1; }
+  presses(b) { return this.count[b] || 0; }
+
   onAny(fn) { this.anyListeners.add(fn); return () => this.anyListeners.delete(fn); }
 
-  bindButton(id, name) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const down = (e) => {
-      e.preventDefault();
-      this.touch[name] = true; this.latch[name] = true; el.classList.add('pressed');
-      if (navigator.vibrate) navigator.vibrate(8);
-      this.anyListeners.forEach((fn) => fn());
+  // pulsanti touch: si può strisciare il dito da un pulsante all'altro (da TIRO a SALTO) senza
+  // sollevarlo, come sui cabinati; il pulsante sotto il dito è quello premuto
+  bindButtons(map) {
+    const els = Object.entries(map).map(([id, name]) => [document.getElementById(id), name]).filter(([el]) => el);
+    if (!els.length) return;
+    const owner = new Map();   // pointerId -> nome del pulsante sotto il dito
+    const nameAt = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      const hit = el && els.find(([b]) => b === el || b.contains(el));
+      return hit ? hit[1] : null;
     };
-    const up = (e) => { e.preventDefault(); this.touch[name] = false; el.classList.remove('pressed'); };
-    el.addEventListener('pointerdown', down);
-    el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
-    el.addEventListener('pointerleave', up);
+    const elOf = (n) => (els.find(([, nm]) => nm === n) || [])[0];
+    const refresh = () => {
+      const held = new Set(owner.values());
+      for (const [el, n] of els) {
+        const on = held.has(n);
+        if (on && !this.touch[n]) { this.hit(n); if (navigator.vibrate) navigator.vibrate(8); this.anyListeners.forEach((fn) => fn()); }
+        this.touch[n] = on;
+        el.classList.toggle('pressed', on);
+      }
+    };
+    for (const [el, name] of els) {
+      el.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        try { el.releasePointerCapture(e.pointerId); } catch (err) { /* ignora */ }
+        owner.set(e.pointerId, name);
+        if (this.touch[name]) this.hit(name);          // secondo dito sullo stesso pulsante
+        refresh();
+      });
+    }
+    window.addEventListener('pointermove', (e) => {
+      if (!owner.has(e.pointerId)) return;
+      const n = nameAt(e.clientX, e.clientY);
+      if (n && n !== owner.get(e.pointerId)) { owner.set(e.pointerId, n); refresh(); }
+    }, { passive: true });
+    const up = (e) => { if (owner.delete(e.pointerId)) refresh(); };
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
   }
 
   bindTouch() {
-    this.bindButton('btnA', 'a');
-    this.bindButton('btnB', 'b');
-    this.bindButton('btnStart', 'start');
+    this.bindButtons({ btnA: 'a', btnB: 'b', btnStart: 'start' });
 
     // Joystick "mobile": dove appoggi il pollice, nella metà sinistra del pannello,
     // lì nasce il centro del joystick. Non serve centrare il disegno guardando il gioco.
@@ -122,7 +151,7 @@ class InputHub {
   pollPad() {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     const p = pads && Array.from(pads).find((x) => x && x.connected);
-    if (!p) { this.pad = {}; return; }
+    if (!p) { this.pad = {}; this.padPrev = {}; return; }
     const ax = p.axes[0] || 0, ay = p.axes[1] || 0;
     const b = (i) => !!(p.buttons[i] && p.buttons[i].pressed);
     this.pad = {
@@ -130,13 +159,19 @@ class InputHub {
       up: ay < -0.5 || b(12), down: ay > 0.5 || b(13),
       a: b(0), b: b(2) || b(1), start: b(9),
     };
+    for (const k of ['a', 'b', 'start']) if (this.pad[k] && !this.padPrev[k]) this.hit(k);
+    this.padPrev = { ...this.pad };
     if (Object.values(this.pad).some(Boolean)) this.anyListeners.forEach((fn) => fn());
   }
 
   // chiamato una volta per frame dal gioco
   update() {
     this.pollPad();
+    this.edge = {};
     for (const k of BUTTONS) {
+      const n = this.count[k] || 0;
+      this.edge[k] = n !== (this.seen[k] || 0);
+      this.seen[k] = n;
       this.prev[k] = this.state[k];
       this.state[k] = !!(this.keys[k] || this.touch[k] || this.pad[k] || this.latch[k]);
     }
@@ -144,7 +179,7 @@ class InputHub {
   }
 
   down(k) { return this.state[k]; }
-  pressed(k) { return this.state[k] && !this.prev[k]; }
+  pressed(k) { return (this.state[k] && !this.prev[k]) || !!(this.edge && this.edge[k]); }
   released(k) { return !this.state[k] && this.prev[k]; }
   anyPressed() { return ['a', 'b', 'start'].some((k) => this.pressed(k)); }
   peekTyped() { const t = this.peekBuf; this.peekBuf = []; return t; }

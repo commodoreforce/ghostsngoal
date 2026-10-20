@@ -114,9 +114,13 @@ async function start() {
     game.events.on('postrender', () => crt.draw());
     crt.setEnabled(!crtOff);
   }
-  window.__crt = crt;
-  window.__gng = game; // utile per i test
-  window.__run = Run;
-  window.__share = ShareCard;
+  window.__crt = crt;   // serve al pulsante CRT
+  // agganci per i test automatici: solo in locale, mai sul sito pubblico
+  // (altrimenti chiunque potrebbe scriversi il punteggio dalla console del browser)
+  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+    window.__gng = game;
+    window.__run = Run;
+    window.__share = ShareCard;
+  }
 }
 start();

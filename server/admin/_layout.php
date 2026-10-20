@@ -60,6 +60,11 @@ th, td { text-align:left; padding:9px 8px; border-bottom:1px solid var(--line); 
 th { color:var(--muted); font-weight:600; font-size:13px; }
 td.num { font-variant-numeric:tabular-nums; text-align:right; }
 tr.hidden td { opacity:.45; text-decoration:line-through; }
+tr.pending td { background:rgba(255,210,63,.07); }
+.flags { margin:4px 0 0; padding-left:18px; color:var(--gold); font-size:13px; }
+.timeline { font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.switch { display:flex; align-items:center; gap:12px; font-size:17px; }
+.switch input { width:22px; height:22px; }
 input[type=text], input[type=password], input[type=datetime-local], input[type=search] { background:#0b0b10; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:9px 10px; font:inherit; min-width:0; }
 button, .btn { font:inherit; border:0; border-radius:6px; padding:8px 14px; cursor:pointer; background:var(--text); color:#000; font-weight:600; text-decoration:none; display:inline-block; }
 button.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
@@ -87,11 +92,15 @@ button.small { padding:4px 9px; font-size:13px; }
 <header>
   <b>GHOSTS <span>'N</span> GOALS · ADMIN</b>
   <nav>
+    <?php $pending = 0; try { $pending = (int) q('SELECT COUNT(*) FROM scores WHERE hidden = 2')->fetchColumn(); } catch (Throwable $e) { /* niente */ } ?>
+    <?php $maintOn = function_exists('meta_get') && meta_get('maint_on', '0') === '1'; ?>
     <a href="?p=scores" class="<?= $active === 'scores' ? 'on' : '' ?>">Classifica</a>
+    <a href="?p=review" class="<?= $active === 'review' ? 'on' : '' ?>">Da verificare<?= $pending ? ' <span class="badge next">' . $pending . '</span>' : '' ?></a>
     <a href="?p=magic" class="<?= $active === 'magic' ? 'on' : '' ?>">Parola magica</a>
     <a href="?p=filter" class="<?= $active === 'filter' ? 'on' : '' ?>">Filtro nomi</a>
     <a href="?p=stats" class="<?= $active === 'stats' ? 'on' : '' ?>">Statistiche</a>
     <a href="?p=cookie" class="<?= $active === 'cookie' ? 'on' : '' ?>">Cookie policy</a>
+    <a href="?p=maint" class="<?= $active === 'maint' ? 'on' : '' ?>">Manutenzione<?= $maintOn ? ' <span class="badge next">ON</span>' : '' ?></a>
   </nav>
   <nav><form method="post" action="?p=logout"><?= csrf_field() ?><input type="hidden" name="action" value="logout"><button class="ghost small">Esci</button></form></nav>
 </header>

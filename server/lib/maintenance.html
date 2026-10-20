@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07050f">
+  <meta name="robots" content="noindex">
+  <title>MISSING · GHOSTS 'N GOALS · Cesena FC</title>
+  <meta name="description" content="Hanno rapito Petrosino. Presto online l'arcade di Halloween del Cesena FC. #DAIBURDEL">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MISSING: PETROSINO">
+  <meta property="og:description" content="Hanno rapito Petrosino. Presto online l'arcade di Halloween del Cesena FC. #DAIBURDEL">
+  <meta property="og:image" content="%BASE%missing/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      background: #07050f;
+      background-image:
+        radial-gradient(ellipse at 50% 38%, rgba(70, 52, 110, .55), rgba(7, 5, 15, 0) 62%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 3px);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      padding: 16px;
+    }
+    .wall { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2.5vh; }
+    .poster {
+      display: block;
+      height: min(84vh, calc((100vw - 32px) * 1.4));
+      width: auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      transform: rotate(-1.6deg);
+      transform-origin: 50% 2%;
+      filter: drop-shadow(0 18px 26px rgba(0, 0, 0, .65));
+      animation: sway 6s ease-in-out infinite;
+    }
+    /* la luce del lampione che tremola */
+    .flicker {
+      position: fixed; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 35%, rgba(255, 210, 140, .10), transparent 55%);
+      animation: flick 5s steps(1) infinite;
+    }
+    @keyframes sway { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(-.6deg); } }
+    @keyframes flick { 0%, 100% { opacity: 1; } 41% { opacity: .35; } 43% { opacity: 1; } 71% { opacity: .55; } 72% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .poster, .flicker { animation: none; } }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  </style>
+</head>
+<body>
+  <div class="flicker" aria-hidden="true"></div>
+  <main class="wall">
+    <h1 class="sr">MISSING: Petrosino</h1>
+    <img class="poster" src="%BASE%missing/poster.png" width="640" height="896"
+         alt="Volantino: MISSING. Foto di Petrosino. Petrosino, visto l'ultima volta nello spogliatoio.">
+  </main>
+</body>
+</html>

@@ -7,6 +7,7 @@ import { Run } from '../systems/state.js';
 const COYOTE_MS = 120;       // si può saltare poco dopo aver lasciato il bordo
 const BUFFER_MS = 110;       // il salto premuto poco prima di atterrare viene ricordato
 const KICK_ANIM_MS = 140;
+const SHOT_BUFFER_MS = 220;  // tiro premuto con già i palloni in campo: parte appena se ne libera uno
 const CHARGE_MS = 650;
 const INVULN_MS = 2200;
 
@@ -41,6 +42,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.pounding = false;
     this.tookDamage = false;
     this.currentTex = null;
+    // le pressioni si contano: così nessun tocco va perso (fermo immagine, doppio tocco veloce)
+    this.seenA = Input.presses('a');
+    this.seenB = Input.presses('b');
+    this.shotPendingUntil = 0;
     this.applyLook();
   }
 
@@ -84,6 +89,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   // ------------------------------------------------------------- aggiornamento
   update(time, delta) {
+    if (this.state !== 'play') { this.seenA = Input.presses('a'); this.seenB = Input.presses('b'); this.shotPendingUntil = 0; }
     if (this.state === 'intro') { this.body.setVelocityX(0); this.animate(time); return; }
     // nelle scene del finale è la scena a muovere e animare il personaggio
     if (this.state === 'scripted') return;
@@ -130,7 +136,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     else this.standBody();
 
     // salto
-    if (Input.pressed('a')) this.jumpPressedAt = time;
+    const nA = Input.presses('a');
+    if (nA !== this.seenA) { this.seenA = nA; this.jumpPressedAt = time; }
     const canCoyote = time - this.lastGrounded < COYOTE_MS;
     const wantsJump = time - this.jumpPressedAt < BUFFER_MS;
     if (wantsJump && down && onGround && this.onPlank && Math.abs(vx) < 30) {
@@ -159,15 +166,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     // tiro
-    if (Input.pressed('b') && !wrapped) {
-      if (this.char.id === 'klinsmann' && this.scene.tryParry(this)) {
-        this.kickUntil = time + KICK_ANIM_MS;
-        this.diveUntil = time + 260;          // tuffo in parata
-      } else {
-        this.shoot(up, down && !onGround, crouching, false);
+    const nB = Input.presses('b');
+    if (nB !== this.seenB) {
+      this.seenB = nB;
+      if (!wrapped) {
+        if (this.char.id === 'klinsmann' && this.scene.tryParry(this)) {
+          this.kickUntil = time + KICK_ANIM_MS;
+          this.diveUntil = time + 260;          // tuffo in parata
+          this.shotPendingUntil = 0;
+        } else {
+          this.shotPendingUntil = time + SHOT_BUFFER_MS;
+        }
+        this.chargeStart = time; this.charging = true; this.chargeSfx = false;
       }
-      this.chargeStart = time; this.charging = true; this.chargeSfx = false;
     }
+    // il tiro richiesto parte subito, o appena un pallone torna libero
+    if (this.shotPendingUntil > time && !wrapped && this.shoot(up, down && !onGround, crouching, false)) this.shotPendingUntil = 0;
     if (this.charging && Input.down('b') && time - this.chargeStart > CHARGE_MS) {
       if (!this.chargeSfx) { Sfx.charge(); this.chargeSfx = true; }
       if ((time >> 6) % 2) this.setTintFill(0xffd23f); else this.clearTint();
@@ -187,7 +201,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const time = sc.time.now;
     const boostKind = this.boosted ? this.char.id : null;
     const fire = boostKind === 'hubner';
-    if (!charged && !fire && sc.activeBalls(false) >= this.tune.maxBalls) return;
+    if (!charged && !fire && sc.activeBalls(false) >= this.tune.maxBalls) return false;
     this.kickUntil = time + KICK_ANIM_MS;
     const dir = this.facing;
     let angle = 0; // gradi: 0 avanti, -45 su, 45 giù
@@ -206,6 +220,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     } else sc.spawnBall({ ...base, kind: charged ? 'charged' : 'normal' });
     Run.stats.shots++;
     if (fire) { Sfx.fireball(); sc.cameras.main.shake(160, 0.008); } else if (keeper) Sfx.throw(); else Sfx.kick();
+    return true;
   }
 
   landPound() {

@@ -44,6 +44,7 @@ export const Api = {
   visit: (lang) => call('visit.php', { device: deviceKind(), lang, source: source() }),
   // ogni partita ottiene un gettone dal server: serve a verificare che il punteggio sia plausibile
   startRun: (character, extra = {}) => call('run.php', { action: 'start', character, device: deviceKind(), ...extra }),
+  progress: (body) => call('run.php', { action: 'progress', ...body }),
   endRun: (token, payload) => call('run.php', { action: 'end', token, ...payload }),
   submitScore: (token, nickname) => call('score.php', { token, nickname }),
   leaderboard: (limit = 10) => call(`leaderboard.php?limit=${limit}`),

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Input } from '../systems/input.js';
+import { RunLog } from '../systems/runlog.js';
 import { Sfx, playMusic, stopMusic, setMusicTempo } from '../systems/sfx.js';
 import { Run } from '../systems/state.js';
 import { LocalBest } from '../systems/api.js';
@@ -29,6 +30,7 @@ export class LevelScene extends Phaser.Scene {
 
   create() {
     this.L = this.levelData();
+    RunLog.level(Run.level);        // il server segna l'ora d'ingresso nel livello
     this.groundY = this.L.groundRow * T;   // 208 nel livello 1
     this.worldH = this.L.worldH || H;      // il livello 2 è più alto: si sale sul Monte
     this.musicKey = this.L.music || 'level1';
@@ -461,6 +463,8 @@ export class LevelScene extends Phaser.Scene {
       this.physics.world.resume(); this.tweens.resumeAll(); this.anims.resumeAll(); this.time.paused = false;
       playMusic(this.bossActive ? this.bossMusic() : (this.player.boosted && this.player.char.id === 'diamanti') ? 'boost' : this.musicKey);
       this.pauseBox.destroy();
+      // i tasti premuti durante la pausa non devono far saltare o tirare alla ripresa
+      this.player.seenA = Input.presses('a'); this.player.seenB = Input.presses('b');
     }
   }
 

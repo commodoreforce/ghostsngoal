@@ -84,6 +84,8 @@ Il gioco vive sul suo dominio, **ghostsngoals.com** (hosting PHP/MySQL Serverpla
 
 ## Pannello admin (`/admin/`)
 
+- **Manutenzione**: un interruttore. Quando è attiva chi apre il sito vede il volantino *MISSING · PETROSINO* (anche l'anteprima dei link sui social); tu, collegato all'admin con lo stesso browser, vedi il gioco e puoi provarlo online. Anteprima del volantino: `/?missing=1`. Ai motori di ricerca arriva un "torna presto" (503), non un errore.
+- **Da verificare**: la classifica a prova di furbi. Ogni partita riceve dal server un gettone e una chiave segreta; a ogni livello e alla fine il gioco manda punteggio e uccisioni firmati, e il server ci annota la sua ora. Le partite impossibili (punti che crescono più in fretta di quanto il gioco permetta, livelli finiti in tempi impossibili, dati manomessi) vengono scartate da sole; quelle dubbie e, se vuoi, i primi N posti o i punteggi sopra una soglia restano fuori dalla classifica finché non li approvi. I limiti (tempi minimi per livello, punti al secondo) sono in `server/lib/anticheat.php`.
 - **Classifica**: nascondi un punteggio, sostituisci un nome con BURDEL, banna un nome.
 - **Parola magica**: parola attiva, calendario delle prossime (si attivano da sole), numero di sblocchi.
 - **Filtro nomi**: parole vietate, con riconoscimento di varianti tipo D10 o C4ZZ0. Con `=` davanti si blocca solo la parola intera.

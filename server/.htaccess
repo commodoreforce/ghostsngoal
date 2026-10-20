@@ -1,5 +1,7 @@
 # GHOSTS 'N GOALS — regole per Apache (Serverplan)
 Options -Indexes
+# la pagina d'ingresso decide tra gioco e volantino "MISSING" (manutenzione, dall'admin)
+DirectoryIndex index.php index.html
 
 # file di configurazione e librerie: mai accessibili dal web
 <FilesMatch "^(config\.php|config\.sample\.php|composer\.(json|lock))$">
@@ -32,4 +34,6 @@ Options -Indexes
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !=https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # anche chi apre index.html direttamente passa dal controllo della manutenzione
+  RewriteRule ^index\.html$ index.php [L]
 </IfModule>

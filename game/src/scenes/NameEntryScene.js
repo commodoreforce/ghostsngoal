@@ -8,6 +8,7 @@ import { t, getLang } from '../i18n.js';
 import { center, txt, pad, C, W, H } from '../systems/ui.js';
 import { surface } from '../systems/layout.js';
 import { shareRecord, cardBlob } from '../systems/shareCard.js';
+import { RunLog } from '../systems/runlog.js';
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-!'.split('');
 const MAX = 10;
@@ -49,8 +50,7 @@ export class NameEntryScene extends Phaser.Scene {
     };
     // la scena è "attiva" solo dopo create(): si parte al primo frame
     this.time.delayedCall(10, () => {
-      if (Run.token) Api.endRun(Run.token, payload).then(finish);
-      else finish({ ok: false, offline: true });
+      RunLog.end(payload).then(finish, () => finish({ ok: false, offline: true }));
     });
   }
 
@@ -109,6 +109,7 @@ export class NameEntryScene extends Phaser.Scene {
       Sfx.confirm();
       this.rank = r.rank || this.rank;
       this.nick = nick;
+      this.review = !!r.review;
       this.showBoard(r.id);
     } else if (r.error === 'name') {
       Sfx.unlockFail();
@@ -141,6 +142,8 @@ export class NameEntryScene extends Phaser.Scene {
         if (me) { const bar = this.add.rectangle(W / 2, y + 3, W - 12, 13).setStrokeStyle(1, 0xffd23f); this.tweens.add({ targets: bar, alpha: 0.2, yoyo: true, repeat: -1, duration: 220 }); }
       });
     }
+    // punteggio da controllare a mano (i primi posti, se in admin è attivo): compare dopo l'approvazione
+    if (this.review) center(this, 190, getLang() === 'it' ? 'RECORD IN VERIFICA' : 'SCORE UNDER REVIEW', { color: C.gold });
     this.backAt = this.time.now + (Run.cheat ? 9000 : 30000);
     this.time.delayedCall(800, () => { this.canLeave = true; });
     if (!Run.cheat && Run.score > 0) this.shareButtons(highlightId);

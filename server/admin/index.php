@@ -3,6 +3,7 @@
 declare(strict_types=1);
 require __DIR__ . '/_layout.php';
 require __DIR__ . '/../lib/cookie_policy.php';
+require __DIR__ . '/../lib/anticheat.php';
 admin_session();
 gng_config();
 try { migrate(); } catch (Throwable $e) { /* database non ancora installato: ci pensa setup.php */ }
@@ -58,6 +59,18 @@ if ($isPost) {
             meta_set('cp_enabled', !empty($_POST['cp_enabled']) ? '1' : '0');
             foreach (array_keys(CP_FIELDS) as $k) meta_set($k, trim((string) ($_POST[$k] ?? '')));
             flash(!empty($_POST['cp_enabled']) ? 'Cookie policy salvata e attiva nel gioco.' : 'Cookie policy salvata. È spenta: nel gioco non compare.');
+            break;
+        case 'approve':
+            q('UPDATE scores SET hidden = 0 WHERE id = ? AND hidden = 2', [$id]); flash('Punteggio approvato: ora è in classifica.'); break;
+        case 'reject':
+            q('UPDATE scores SET hidden = 1 WHERE id = ? AND hidden = 2', [$id]); flash('Punteggio rifiutato: resta fuori dalla classifica.'); break;
+        case 'ac_save':
+            meta_set('ac_review_top', (string) max(0, min(100, (int) ($_POST['review_top'] ?? 0))));
+            meta_set('ac_review_over', (string) max(0, (int) ($_POST['review_over'] ?? 0)));
+            flash('Impostazioni della verifica salvate.'); break;
+        case 'maint_save':
+            meta_set('maint_on', !empty($_POST['maint_on']) ? '1' : '0');
+            flash(!empty($_POST['maint_on']) ? 'Manutenzione ATTIVA: chi apre il sito vede il volantino MISSING. Tu, collegato all\'admin, vedi il gioco.' : 'Manutenzione spenta: il gioco è online per tutti.');
             break;
         case 'logout':
             $_SESSION = []; session_destroy(); header('Location: ./'); exit;
@@ -153,6 +166,92 @@ if ($p === 'magic') {
       <tr><td><b><?= h($w['word']) ?></b></td><td><?= date('d/m/Y H:i', $ts) ?></td><td><?= $state ?></td><td class="num"><?= (int) $w['unlocks'] ?></td>
         <td><form method="post" class="inline" onsubmit="return confirm('Eliminare questa parola?')"><?= csrf_field() ?><input type="hidden" name="action" value="word_delete"><input type="hidden" name="id" value="<?= (int) $w['id'] ?>"><button class="ghost small">Elimina</button></form></td></tr>
       <?php endforeach; if (!$words): ?><tr><td colspan="5" style="color:var(--muted)">Ancora nessuna parola.</td></tr><?php endif; ?>
+    </table></div>
+    <?php
+    page_foot(); exit;
+}
+
+if ($p === 'maint') {
+    page_head('Manutenzione', true, 'maint');
+    $on = meta_get('maint_on', '0') === '1';
+    ?>
+    <h1>Manutenzione</h1>
+    <p class="lead">Quando è attiva, chi apre il sito vede il volantino <b>MISSING · PETROSINO</b> al posto del gioco (anche condividendo il link, l'anteprima sui social è il volantino). Tu, finché sei collegato a questo pannello con lo stesso browser, vedi il gioco normale e puoi provarlo online.</p>
+    <form method="post">
+      <?= csrf_field() ?><input type="hidden" name="action" value="maint_save">
+      <div class="card">
+        <label class="switch"><input type="checkbox" name="maint_on" value="1" <?= $on ? 'checked' : '' ?>>
+          <b>Manutenzione attiva</b> <span class="badge <?= $on ? 'next' : 'live' ?>"><?= $on ? 'IL PUBBLICO VEDE IL VOLANTINO' : 'GIOCO ONLINE PER TUTTI' ?></span></label>
+        <p style="margin:14px 0 0"><button>Salva</button></p>
+      </div>
+    </form>
+    <div class="card row" style="gap:16px;align-items:flex-start">
+      <img src="../missing/poster.png" alt="Volantino MISSING" style="width:160px;image-rendering:pixelated;border-radius:4px">
+      <div>
+        <p style="margin-top:0">Per vedere la pagina esattamente come la vede il pubblico: <a href="../?missing=1" target="_blank" style="color:var(--orange)">apri l'anteprima</a>.</p>
+        <p class="muted" style="color:var(--muted);font-size:13px">La classifica e le statistiche continuano a funzionare. I motori di ricerca ricevono il messaggio "torna presto", così il sito non viene penalizzato.</p>
+      </div>
+    </div>
+    <?php
+    page_foot(); exit;
+}
+
+if ($p === 'review') {
+    page_head('Da verificare', true, 'review');
+    $acs = ac_settings();
+    $rows = q('SELECT s.*, r.started_at, r.ended_at, r.duration_ms, r.events, r.flags, r.kills, r.shots, r.hits, r.device, r.cleared
+               FROM scores s LEFT JOIN runs r ON r.id = s.run_id WHERE s.hidden = 2 ORDER BY s.score DESC, s.id ASC LIMIT 100')->fetchAll();
+    $since = time() - 7 * 86400;
+    $rejected = q('SELECT id, hero, score, level_reached, started_at, ended_at, flags FROM runs
+                   WHERE plausible = 0 AND cheat = 0 AND ended_at IS NOT NULL AND started_at > ? AND score > 0 ORDER BY score DESC LIMIT 20', [$since])->fetchAll();
+    $mmss = fn ($sec) => sprintf('%d:%02d', intdiv(max(0, (int) $sec), 60), max(0, (int) $sec) % 60);
+    $timeline = function (array $r) use ($mmss): string {
+        $ev = json_decode((string) ($r['events'] ?? ''), true) ?: [];
+        $prevT = (int) $r['started_at']; $prevS = 0; $out = [];
+        foreach ($ev as $e) {
+            $dt = (int) $e['t'] - $prevT; $ds = (int) $e['sc'] - $prevS;
+            $label = !empty($e['end']) ? (!empty($e['cleared']) ? 'fino al finale' : 'fino al game over') : 'fino al livello ' . (int) $e['l'];
+            $out[] = $label . ': ' . $mmss($dt) . ' · ' . number_format($ds, 0, ',', '.') . ' punti' . ($dt > 0 ? ' (' . round($ds / $dt) . '/s)' : '');
+            $prevT = (int) $e['t']; $prevS = (int) $e['sc'];
+        }
+        return implode('<br>', array_map('h', $out));
+    };
+    ?>
+    <h1>Da verificare</h1>
+    <p class="lead">Qui arrivano i punteggi che entrano in classifica solo dopo il tuo OK: i primi posti (se lo imposti qui sotto), quelli sopra una soglia, e le partite con qualcosa di strano ma non impossibile (per esempio un passaggio di livello perso per strada da una connessione ballerina). Le partite impossibili sono già scartate in automatico: le trovi in fondo alla pagina.</p>
+    <form method="post" class="card">
+      <?= csrf_field() ?><input type="hidden" name="action" value="ac_save">
+      <div class="row" style="gap:18px">
+        <label>Verifica a mano i primi <input type="text" name="review_top" value="<?= (int) $acs['review_top'] ?>" style="width:60px" inputmode="numeric"> posti</label>
+        <label>e tutti i punteggi sopra <input type="text" name="review_over" value="<?= (int) $acs['review_over'] ?>" style="width:110px" inputmode="numeric"> punti</label>
+        <button>Salva</button>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin:10px 0 0">0 = spento. Con premi in palio consiglio almeno i primi 3. Chi gioca vede comunque la sua posizione, con la scritta "RECORD IN VERIFICA".</p>
+    </form>
+    <div class="card"><table>
+      <tr><th>Nome</th><th class="num">Punti</th><th>Partita</th><th>Perché è qui</th><th>Azioni</th></tr>
+      <?php foreach ($rows as $r):
+        $dur = $r['ended_at'] ? (int) $r['ended_at'] - (int) $r['started_at'] : 0; ?>
+      <tr class="pending">
+        <td><b><?= h($r['nickname']) ?></b><br><span style="color:var(--muted);font-size:13px"><?= h($heroNames[$r['hero']] ?? $r['hero']) ?> · <?= date('d/m H:i', (int) $r['created_at']) ?></span></td>
+        <td class="num"><?= number_format((int) $r['score'], 0, ',', '.') ?><br><span style="color:var(--muted);font-size:13px"><?= $dur > 0 ? round((int) $r['score'] / $dur) . '/s' : '' ?></span></td>
+        <td class="timeline">Durata reale <?= $mmss($dur) ?> · livello <?= (int) $r['level_reached'] ?><?= (int) $r['cleared'] ? ' · Petrosino salvato' : '' ?><br><?= $timeline($r) ?><br>Nemici <?= (int) $r['kills'] ?> · tiri <?= (int) $r['shots'] ?> · a segno <?= (int) $r['hits'] ?></td>
+        <td><ul class="flags"><?php foreach (ac_labels((string) $r['flags']) as $l): ?><li><?= h($l) ?></li><?php endforeach; ?></ul></td>
+        <td><div class="row">
+          <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="approve"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="back" value="?p=review"><button class="small">Approva</button></form>
+          <form method="post" class="inline" onsubmit="return confirm('Rifiutare questo punteggio?')"><?= csrf_field() ?><input type="hidden" name="action" value="reject"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="back" value="?p=review"><button class="danger small">Rifiuta</button></form>
+        </div></td>
+      </tr>
+      <?php endforeach; if (!$rows): ?><tr><td colspan="5" style="color:var(--muted)">Niente da verificare.</td></tr><?php endif; ?>
+    </table></div>
+    <h2>Partite scartate in automatico (ultimi 7 giorni)</h2>
+    <div class="card"><table>
+      <tr><th class="num">Punti</th><th class="opt">Personaggio</th><th class="opt">Quando</th><th>Motivo</th></tr>
+      <?php foreach ($rejected as $r): ?>
+      <tr><td class="num"><?= number_format((int) $r['score'], 0, ',', '.') ?></td><td class="opt"><?= h($heroNames[$r['hero']] ?? $r['hero']) ?></td>
+        <td class="opt"><?= date('d/m H:i', (int) $r['started_at']) ?> · <?= $mmss((int) $r['ended_at'] - (int) $r['started_at']) ?></td>
+        <td><ul class="flags"><?php foreach (ac_labels((string) $r['flags']) as $l): ?><li><?= h($l) ?></li><?php endforeach; ?></ul></td></tr>
+      <?php endforeach; if (!$rejected): ?><tr><td colspan="4" style="color:var(--muted)">Nessuna partita scartata.</td></tr><?php endif; ?>
     </table></div>
     <?php
     page_foot(); exit;
@@ -438,17 +537,18 @@ $back = '?p=scores' . ($search !== '' ? '&q=' . urlencode($search) : '') . ($pag
   <?php
   foreach ($rows as $i => $r):
     $hidden = (int) $r['hidden'] === 1;
-    $rank = $hidden ? '–' : (string) (1 + (int) q('SELECT COUNT(*) FROM scores WHERE hidden = 0 AND (score > ? OR (score = ? AND id < ?))', [$r['score'], $r['score'], $r['id']])->fetchColumn());
+    $pend = (int) $r['hidden'] === 2;
+    $rank = ($hidden || $pend) ? '–' : (string) (1 + (int) q('SELECT COUNT(*) FROM scores WHERE hidden = 0 AND (score > ? OR (score = ? AND id < ?))', [$r['score'], $r['score'], $r['id']])->fetchColumn());
   ?>
-  <tr class="<?= $hidden ? 'hidden' : '' ?>">
+  <tr class="<?= $hidden ? 'hidden' : ($pend ? 'pending' : '') ?>">
     <td class="num"><?= $rank ?></td>
-    <td><b><?= h($r['nickname']) ?></b></td>
+    <td><b><?= h($r['nickname']) ?></b><?= $pend ? ' <a href="?p=review" class="badge next" style="text-decoration:none">da verificare</a>' : '' ?></td>
     <td class="num"><?= number_format((int) $r['score'], 0, ',', '.') ?></td>
     <td class="opt"><?= h($heroNames[$r['hero']] ?? $r['hero']) ?></td>
     <td class="opt"><?= date('d/m H:i', (int) $r['created_at']) ?></td>
     <td><div class="row">
       <?php $form = fn ($action, $label, $cls = 'ghost small', $confirm = '') => '<form method="post" class="inline"' . ($confirm ? ' onsubmit="return confirm(\'' . $confirm . '\')"' : '') . '>' . csrf_field() . '<input type="hidden" name="action" value="' . $action . '"><input type="hidden" name="id" value="' . (int) $r['id'] . '"><input type="hidden" name="back" value="' . h($back) . '"><button class="' . $cls . '">' . $label . '</button></form>'; ?>
-      <?= $hidden ? $form('show', 'Ripristina') : $form('hide', 'Nascondi') ?>
+      <?= $pend ? $form('approve', 'Approva', 'small') : ($hidden ? $form('show', 'Ripristina') : $form('hide', 'Nascondi')) ?>
       <?= $form('censor', 'BURDEL') ?>
       <?= $form('ban', 'Banna nome', 'danger small', 'Bannare questo nome? Tutti i suoi punteggi verranno nascosti.') ?>
     </div></td>
