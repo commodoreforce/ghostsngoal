@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Enemy } from './Enemies.js';
 import { Sfx } from '../systems/sfx.js';
+import { lerpK } from '../systems/frame.js';
 
 // Boss finale: IL CONTE VAMPIRO, sul cassero della sua nave. Tre fasi:
 //  1  IL CONTE     sfere di sangue a ventaglio; si scioglie in pipistrelli e ricompare dall'altra parte
@@ -142,8 +143,8 @@ export class CountBoss extends Phaser.Physics.Arcade.Sprite {
     this.eyes.setPosition(this.x, this.y - 20);
     if (this.form === 'swarm') {
       // la nuvola segue il giocatore da sopra
-      this.swarmX = Phaser.Math.Linear(this.swarmX, Phaser.Math.Clamp(P.x, this.arena.left + 40, this.arena.right - 40), 0.02);
-      this.swarmY = Phaser.Math.Linear(this.swarmY, this.deckY - 92 + Math.sin(time / 500) * 10, 0.05);
+      this.swarmX = Phaser.Math.Linear(this.swarmX, Phaser.Math.Clamp(P.x, this.arena.left + 40, this.arena.right - 40), lerpK(0.02));
+      this.swarmY = Phaser.Math.Linear(this.swarmY, this.deckY - 92 + Math.sin(time / 500) * 10, lerpK(0.05));
       this.swarm = this.swarm.filter((b) => b.active && b.alive);
       if (time > this.nextStream && !this.reforming) {
         this.nextStream = time + 2300;

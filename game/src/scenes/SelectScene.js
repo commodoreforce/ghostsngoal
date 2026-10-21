@@ -192,6 +192,7 @@ export class SelectScene extends Phaser.Scene {
     });
     screen.appendChild(input);
     this.magicInput = input;
+    document.body.classList.add('magic');   // le zone dei comandi non coprono il campo di testo
     const close = document.createElement('button');
     close.textContent = '✕';
     close.setAttribute('aria-label', 'Chiudi');
@@ -228,6 +229,7 @@ export class SelectScene extends Phaser.Scene {
     this.kitIdx = Math.max(0, KITS.findIndex((k) => k.id === (this.registry.get('lastKit') || 'home')));
     if (this.magicInput) { this.magicInput.remove(); this.magicInput = null; }
     if (this.magicClose) { this.magicClose.remove(); this.magicClose = null; }
+    document.body.classList.remove('magic');
     if (this.magicLayer && !silent) { this.magicLayer.destroy(); }
     this.magicLayer = null;
   }

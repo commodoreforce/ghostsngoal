@@ -18,12 +18,13 @@ import { NameEntryScene } from './scenes/NameEntryScene.js';
 import { LeagueScene } from './scenes/LeagueScene.js';
 import { W, H } from './systems/ui.js';
 import { CrtScreen } from './systems/crt.js';
+import { Frame } from './systems/frame.js';
 import { Run } from './systems/state.js';
 import * as ShareCard from './systems/shareCard.js';
 
-// i cabinati aggiornavano animazioni e movimento a scatti: il gioco disegna 20 fotogrammi al secondo
-// (la fisica resta calcolata a 60 passi al secondo, quindi i salti non cambiano)
-export const ARCADE_FPS = 20;
+// 60 fotogrammi al secondo, come i cabinati veri: i comandi si leggono ogni 16 ms invece di 50.
+// Le animazioni restano con i loro pochi fotogrammi "da sala giochi" (ognuna ha la sua velocità).
+export const ARCADE_FPS = 60;
 
 setLang(getLang());
 Input.init();
@@ -99,7 +100,7 @@ async function start() {
     render: { preserveDrawingBuffer: true, antialias: false, pixelArt: true },
     roundPixels: true,
     backgroundColor: '#000000',
-    fps: { target: 60, limit: ARCADE_FPS, smoothStep: false },
+    fps: { target: ARCADE_FPS, smoothStep: false },
     physics: { default: 'arcade', arcade: { gravity: { y: 850 }, debug: false, tileBias: 8 } },
     scale: { mode: Phaser.Scale.NONE },
     input: { keyboard: false, mouse: false, touch: false, gamepad: false },
@@ -107,7 +108,7 @@ async function start() {
     banner: false,
     scene: [BootScene, TitleScene, SelectScene, IntroScene, LevelScene, PenaltyScene, Level2Scene, Level3Scene, LeagueScene, NameEntryScene],
   });
-  game.events.on('prestep', () => Input.update());
+  game.events.on('prestep', () => { Frame.set(game.loop.delta); Input.update(); });
   // tubo catodico vero (shader WebGL); se non disponibile resta l'effetto leggero in CSS
   const crt = new CrtScreen(document.getElementById('game'), game.canvas);
   if (crt.ok) {
@@ -121,6 +122,7 @@ async function start() {
     window.__gng = game;
     window.__run = Run;
     window.__share = ShareCard;
+    window.__gngInput = Input;
   }
 }
 start();

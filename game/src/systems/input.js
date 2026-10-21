@@ -56,15 +56,36 @@ class InputHub {
   onAny(fn) { this.anyListeners.add(fn); return () => this.anyListeners.delete(fn); }
 
   // pulsanti touch: si può strisciare il dito da un pulsante all'altro (da TIRO a SALTO) senza
-  // sollevarlo, come sui cabinati; il pulsante sotto il dito è quello premuto
-  bindButtons(map) {
+  // sollevarlo, come sui cabinati; il pulsante sotto il dito è quello premuto.
+  // Nella metà destra del pannello (zoneId) non ci sono punti morti: ogni tocco va al pulsante
+  // più vicino, anche se cade tra A e B o appena fuori dal cerchio (il pollice è più largo dei pulsanti).
+  bindButtons(map, zoneId, zoneButtons = []) {
     const els = Object.entries(map).map(([id, name]) => [document.getElementById(id), name]).filter(([el]) => el);
     if (!els.length) return;
     const owner = new Map();   // pointerId -> nome del pulsante sotto il dito
+    const zone = zoneId ? document.getElementById(zoneId) : null;
+    const zoneEls = els.filter(([, n]) => zoneButtons.includes(n));
+    // il pulsante più vicino al dito, se il dito è entro una volta e mezzo il diametro dal suo centro
+    const nearest = (x, y) => {
+      let best = null, bd = Infinity;
+      for (const [b, n] of zoneEls) {
+        const r = b.getBoundingClientRect();
+        if (!r.width) continue;
+        const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
+        if (d < bd && d < b.offsetWidth * 1.5) { bd = d; best = n; }
+      }
+      return best;
+    };
+    const inZone = (x, y) => {
+      if (!zone) return false;
+      const r = zone.getBoundingClientRect();
+      return r.width > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    };
     const nameAt = (x, y) => {
       const el = document.elementFromPoint(x, y);
       const hit = el && els.find(([b]) => b === el || b.contains(el));
-      return hit ? hit[1] : null;
+      if (hit) return hit[1];
+      return inZone(x, y) ? nearest(x, y) : null;
     };
     const elOf = (n) => (els.find(([, nm]) => nm === n) || [])[0];
     const refresh = () => {
@@ -85,6 +106,17 @@ class InputHub {
         refresh();
       });
     }
+    if (zone) {
+      zone.addEventListener('pointerdown', (e) => {
+        const n = nearest(e.clientX, e.clientY);
+        if (!n) return;
+        e.preventDefault();
+        try { zone.releasePointerCapture(e.pointerId); } catch (err) { /* ignora */ }
+        owner.set(e.pointerId, n);
+        if (this.touch[n]) this.hit(n);
+        refresh();
+      });
+    }
     window.addEventListener('pointermove', (e) => {
       if (!owner.has(e.pointerId)) return;
       const n = nameAt(e.clientX, e.clientY);
@@ -96,7 +128,7 @@ class InputHub {
   }
 
   bindTouch() {
-    this.bindButtons({ btnA: 'a', btnB: 'b', btnStart: 'start' });
+    this.bindButtons({ btnA: 'a', btnB: 'b', btnStart: 'start' }, 'btnZone', ['a', 'b']);
 
     // Joystick "mobile": dove appoggi il pollice, nella metà sinistra del pannello,
     // lì nasce il centro del joystick. Non serve centrare il disegno guardando il gioco.

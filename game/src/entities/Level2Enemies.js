@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Enemy } from './Enemies.js';
 import { Sfx } from '../systems/sfx.js';
+import { lerpK } from '../systems/frame.js';
 
 // Nemici del livello 2. Come nel livello 1, ognuno annuncia la mossa prima di farla
 // (posa di carica, lampo, verso): difficile, mai ingiusto.
@@ -252,7 +253,7 @@ export class Book extends Enemy {
     if (!this.alive) return;
     const dx = player.x - this.x;
     const dir = Math.sign(dx) || -1;
-    this.baseY = Phaser.Math.Linear(this.baseY, player.y - 18, 0.012);
+    this.baseY = Phaser.Math.Linear(this.baseY, player.y - 18, lerpK(0.012));
     const y = this.baseY + Math.sin((time + this.t0) / 230) * 16;
     this.body.setVelocity(dir * 46, (y - this.y) * 5);
     this.setFrame(['book0', 'book1', 'book2', 'book1'][((time + this.t0) >> 6) % 4]);

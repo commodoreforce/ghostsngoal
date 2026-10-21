@@ -11,6 +11,7 @@ import { Run } from '../systems/state.js';
 import { LocalBest } from '../systems/api.js';
 import { t } from '../i18n.js';
 import { txt, center, floatText, C, W, H } from '../systems/ui.js';
+import { Frame, lerpK, thin } from '../systems/frame.js';
 
 const T = 16;
 
@@ -203,7 +204,7 @@ export class Level3Scene extends LevelScene {
     const fadeIn = (from, len) => Phaser.Math.Clamp((cx - from) / len, 0, 1);
     const wPort = fadeIn(86, 8);
     const wPier = fadeIn(180, 7);
-    this.onShip = Phaser.Math.Linear(this.onShip, this.boarded ? 1 : 0, 0.06);
+    this.onShip = Phaser.Math.Linear(this.onShip, this.boarded ? 1 : 0, lerpK(0.06));
     const sh = this.onShip;
     const weights = { beach: (1 - wPort) * (1 - sh), port: wPort * (1 - wPier) * (1 - sh), pier: wPier * (1 - sh) };
     const lift = this.worldH - H - sy;
@@ -677,7 +678,7 @@ export class Level3Scene extends LevelScene {
       // sabbia e passerelle
       if (tx < 92 && grounded) {
         const board = this.L.boardwalks.some(([a, b]) => tx >= a && tx < b);
-        if (!board) { terr = 0.74; jump = 0.9; if (Math.abs(P.body.velocity.x) > 20 && (time >> 7) % 3 === 0) this.fxDust.explode(1, P.x, P.body.bottom); }
+        if (!board) { terr = 0.74; jump = 0.9; if (Math.abs(P.body.velocity.x) > 20 && thin() && (time >> 7) % 3 === 0) this.fxDust.explode(1, P.x, P.body.bottom); }
       }
       push += this.updateTide(time, P, grounded);
       this.updateSurges(time, P);
@@ -775,7 +776,7 @@ export class Level3Scene extends LevelScene {
       const key = `${z.a}`;
       if (u > 0.5 && u < 0.75) {
         // preavviso: spruzzi che salgono dal bordo del molo e un brontolio
-        if ((time >> 6) % 2) this.fxSpray.explode(1, Phaser.Math.Between(x0, x1), gY + 2);
+        if (thin() && (time >> 6) % 2) this.fxSpray.explode(1, Phaser.Math.Between(x0, x1), gY + 2);
         if (this.surgeWarn !== key + Math.floor(time / 3600)) { this.surgeWarn = key + Math.floor(time / 3600); if (Math.abs(P.x - (x0 + x1) / 2) < 200) Sfx.rumble(); }
       } else if (u >= 0.75 && u < 0.92) {
         const k = (u - 0.75) / 0.17;
@@ -858,7 +859,7 @@ export class Level3Scene extends LevelScene {
     const storm = this.ending ? 0 : Math.max(pier * 0.38, this.onShip * 0.3);
     let target = storm * (1 - this.dawnK);
     if (this.time.now < (this.weather.litUntil || 0)) target = Math.min(target, 0.05);
-    this.darkness = Phaser.Math.Linear(this.darkness, target, 0.08);
+    this.darkness = Phaser.Math.Linear(this.darkness, target, lerpK(0.08));
     if (this.darkness < 0.02) { this.darkRT.setVisible(false); return; }
     const rt = this.darkRT;
     rt.setVisible(true);
@@ -973,7 +974,7 @@ export class Level3Scene extends LevelScene {
     k.body.setVelocity(vx, vy);
     k.dieAt = this.time.now + 3000;
     k.step = (time) => {
-      k.angle += 10;
+      k.angle += 10 * Frame.f;
       if (k.y > this.groundY - 6 && k.body.velocity.y > 0) {
         const s = this.add.ellipse(k.x, this.groundY - 1, 14, 3, 0x0a0410, 0.9).setDepth(14);
         this.tweens.add({ targets: s, alpha: 0, delay: 1800, duration: 500, onComplete: () => s.destroy() });
@@ -1115,7 +1116,7 @@ export class Level3Scene extends LevelScene {
       const cam = this.cameras.main;
       cam.setBounds(0, 0, this.worldW, this.worldH);
       this.camTarget.x = this.player.x; this.camTarget.y = this.camAnchorY = this.player.y;
-      cam.startFollow(this.camTarget, true, 0.12, 0.12);
+      cam.startFollow(this.camTarget, true, 1 - Math.pow(0.88, 1 / 3), 1 - Math.pow(0.88, 1 / 3));
       cam.setFollowOffset(-30, 46);
       playMusic(this.musicKey);
     });

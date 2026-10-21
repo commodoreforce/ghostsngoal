@@ -9,6 +9,7 @@ import { Run } from '../systems/state.js';
 import { LocalBest } from '../systems/api.js';
 import { t } from '../i18n.js';
 import { txt, center, floatText, C, W, H } from '../systems/ui.js';
+import { Frame, lerpK, thin } from '../systems/frame.js';
 
 const T = 16;
 
@@ -568,7 +569,7 @@ export class Level2Scene extends LevelScene {
       const a = Phaser.Math.Angle.Between(s.x, s.y, P.x, P.y - 8);
       const v = s.body.velocity;
       const want = new Phaser.Math.Vector2(Math.cos(a), Math.sin(a)).scale(92);
-      s.body.setVelocity(Phaser.Math.Linear(v.x || dir * 92, want.x, 0.05), Phaser.Math.Linear(v.y, want.y, 0.07));
+      s.body.setVelocity(Phaser.Math.Linear(v.x || dir * 92, want.x, lerpK(0.05)), Phaser.Math.Linear(v.y, want.y, lerpK(0.07)));
       s.setFrame(`sheet${(time >> 7) % 3}`);
       s.setFlipX(v.x < 0);
     };
@@ -608,7 +609,7 @@ export class Level2Scene extends LevelScene {
       p.vx -= dir * 300 * dt;                 // boomerang: rallenta, si ferma e torna indietro
       p.body.setVelocity(p.vx, 0);
       p.setFrame(['pia0', 'pia1', 'pia2', 'pia1'][(time >> 6) % 4]);
-      if ((time >> 7) % 4 === 0) this.fxSpark.setParticleTint(0x6aff5a), this.fxSpark.explode(1, p.x, p.y);
+      if (thin() && (time >> 7) % 4 === 0) this.fxSpark.setParticleTint(0x6aff5a), this.fxSpark.explode(1, p.x, p.y);
       if (Math.sign(p.vx) !== dir && boss.active && Math.abs(p.x - boss.x) < 16) p.destroy();
       if (p.x < this.arenaX - 30 || p.x > this.arenaX + W + 30) p.destroy();
     };
@@ -623,7 +624,7 @@ export class Level2Scene extends LevelScene {
       s.body.setSize(14, 10);
       s.body.setVelocityX(dir * 150);
       s.dieAt = this.time.now + 1500;
-      s.step = (time) => { s.setScale(1 + Math.sin(time / 60) * 0.12, 1); if ((time >> 6) % 2) this.fxDust.explode(1, s.x, s.y + 4); };
+      s.step = (time) => { s.setScale(1 + Math.sin(time / 60) * 0.12, 1); if (thin() && (time >> 6) % 2) this.fxDust.explode(1, s.x, s.y + 4); };
       this.hazards.push(s);
     });
     this.fxWhite.explode(16, x, y - 4);
@@ -647,7 +648,7 @@ export class Level2Scene extends LevelScene {
           c.body.setSize(8, 7);
           c.body.setVelocityY(300);
           c.dieAt = this.time.now + 2000;
-          c.step = () => { c.angle += 12; if (c.y > g - 4) { this.fxGold.explode(4, c.x, g - 2); c.destroy(); } };
+          c.step = () => { c.angle += 12 * Frame.f; if (c.y > g - 4) { this.fxGold.explode(4, c.x, g - 2); c.destroy(); } };
           this.hazards.push(c);
         });
       });
@@ -713,7 +714,7 @@ export class Level2Scene extends LevelScene {
   updateLights() {
     const lib = this.inLibrary && !this.ending;
     const target = lib ? 0.62 : 0;
-    this.darkness = Phaser.Math.Linear(this.darkness, target, 0.08);
+    this.darkness = Phaser.Math.Linear(this.darkness, target, lerpK(0.08));
     if (this.darkness < 0.02) { this.darkRT.setVisible(false); return; }
     const cam = this.cameras.main;
     const rt = this.darkRT;

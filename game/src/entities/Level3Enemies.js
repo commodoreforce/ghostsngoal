@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Enemy } from './Enemies.js';
 import { Sfx } from '../systems/sfx.js';
+import { chance, thin } from '../systems/frame.js';
 
 // Nemici del livello 3. Come sempre ognuno annuncia la mossa (lampo, verso, posa di carica).
 
@@ -172,7 +173,7 @@ export class Jelly extends Enemy {
     if (sinking && this.y > this.surfaceY + 20) { this.level.splash(this.x, this.surfaceY); this.alive = false; this.eyes.destroy(); this.destroy(); return; }
     if (this.zapping) {
       this.setFrame((time >> 6) % 2 ? 'jelZ0' : 'jelZ1');
-      if ((time >> 5) % 3 === 0) this.level.zapSpark(this.x + Phaser.Math.Between(-14, 14), this.y + Phaser.Math.Between(-4, 18));
+      if (thin() && (time >> 5) % 3 === 0) this.level.zapSpark(this.x + Phaser.Math.Between(-14, 14), this.y + Phaser.Math.Between(-4, 18));
       return;
     }
     this.setFrame(pulse < 0.25 ? 'jelC' : pulse < 0.6 ? 'jel0' : 'jelE');
@@ -260,7 +261,7 @@ export class Rat extends Enemy {
     this.setFlipX(this.dir > 0);
     this.setFrame(['run0', 'run1', 'run2', 'run1'][(time >> 6) % 4]);
     if (onGround && (this.body.blocked.left || this.body.blocked.right)) this.body.setVelocityY(-200);
-    if (onGround && Math.abs(dx) < 46 && Math.abs(dx) > 12 && Math.sign(dx) === this.dir && Math.random() < 0.08) {
+    if (onGround && Math.abs(dx) < 46 && Math.abs(dx) > 12 && Math.sign(dx) === this.dir && chance(0.08)) {
       this.leaping = true; this.leapAt = time;
       this.body.setVelocity(this.dir * 150, -210);
       Sfx.squeak();

@@ -11,6 +11,7 @@ import { Weather } from '../systems/weather.js';
 import { LEVEL1 } from '../levels/level1.js';
 import { t } from '../i18n.js';
 import { txt, center, pad, floatText, C, W, H } from '../systems/ui.js';
+import { Frame, lerpK, thin } from '../systems/frame.js';
 
 const T = 16;
 const CITY_F = 0.15;      // velocità della città (rispetto alla telecamera)
@@ -19,6 +20,8 @@ const SIGN_X = 262;       // centro dell'insegna OROGEL STADIUM nel piano dell'i
 const INSIDE_F = 0.295;   // velocità della tavola dell'interno dello stadio: all'arena del boss si vede la Curva Mare
 
 // colore di ogni potere: lampo, cornice dello schermo e scia del giocatore
+// la telecamera insegue come a 20 fps (0,12 a fotogramma), ora che i fotogrammi sono 60
+const CAM_LERP = 1 - Math.pow(1 - 0.12, 1 / 3);
 const BOOST_W = 56;        // larghezza della barra del boost
 const BOOST_COLORS = { shpendi: 0xffd23f, ciofi: 0xffe066, klinsmann: 0x5aa0ff, diamanti: 0xc77dff, hubner: 0xff7a1a };
 
@@ -80,7 +83,7 @@ export class LevelScene extends Phaser.Scene {
     // una caduta sì, subito; e se si sale molto in alto (corde, sartiame) la telecamera insegue.
     this.camTarget = { x: this.player.x, y: this.player.y };
     this.camAnchorY = this.player.y;
-    this.cameras.main.startFollow(this.camTarget, true, 0.12, 0.12);
+    this.cameras.main.startFollow(this.camTarget, true, CAM_LERP, CAM_LERP);
     this.cameras.main.setDeadzone(24, 12);
     this.cameras.main.setFollowOffset(-30, 0);
 
@@ -427,7 +430,7 @@ export class LevelScene extends Phaser.Scene {
     // look-ahead della telecamera nella direzione di corsa
     const cam = this.cameras.main;
     this.updateCamTarget(P);
-    if (!this.bossActive) cam.followOffset.x = Phaser.Math.Linear(cam.followOffset.x, -P.facing * 34, 0.04);
+    if (!this.bossActive) cam.followOffset.x = Phaser.Math.Linear(cam.followOffset.x, -P.facing * 34, lerpK(0.04));
 
     // parallasse: scrolling a pixel interi, come l'hardware dell'epoca
     const sx = cam.scrollX;
@@ -449,7 +452,7 @@ export class LevelScene extends Phaser.Scene {
         const left = (P.boostUntil - time) / P.tune.boostTime;
         this.hudBoost.width = BOOST_W * Phaser.Math.Clamp(left, 0, 1);
         setMusicTempo(P.boostUntil - time < 2000 ? 1.3 : 1.15);
-        if ((time >> 5) % 3 === 0) this.boostAura(P);
+        if (thin() && (time >> 5) % 3 === 0) this.boostAura(P);
         this.boostTrail(P, time);
       }
       // arena del boss
@@ -469,7 +472,7 @@ export class LevelScene extends Phaser.Scene {
     for (let i = this.hazards.length - 1; i >= 0; i--) {
       const hz = this.hazards[i];
       if (!hz.active) { this.hazards.splice(i, 1); continue; }
-      if (hz.kind === 'shoe') hz.angle += 24 * Math.sign(hz.body.velocity.x || 1);
+      if (hz.kind === 'shoe') hz.angle += 24 * Frame.f * Math.sign(hz.body.velocity.x || 1);
       if (hz.step && !hz.friendly) hz.step(time, delta);
       if (!hz.active) { this.hazards.splice(i, 1); continue; }
       if (!hz.friendly) this.leagueProjectile(hz);
@@ -526,7 +529,7 @@ export class LevelScene extends Phaser.Scene {
     for (const l of this.parallax) l.tilePositionX = Math.round(sx * l.factor + (l.drift ? time * l.drift : 0));
     // passaggio dall'esterno dello stadio al campo
     const inB = sx > (this.L.checkpoint - 8) * T;
-    const k = this.inside = Phaser.Math.Linear(this.inside || 0, inB ? 1 : 0, 0.08);
+    const k = this.inside = Phaser.Math.Linear(this.inside || 0, inB ? 1 : 0, lerpK(0.08));
     this.bgStands.setAlpha(k);
     this.pitchRows.forEach((r) => r.setAlpha(k));
     this.fgPitch.setAlpha(k);
@@ -565,7 +568,7 @@ export class LevelScene extends Phaser.Scene {
     else if (P.y > this.camAnchorY) this.camAnchorY = P.y; // sta cadendo sotto il punto di partenza
     else if (P.y < this.camAnchorY - 84) this.camAnchorY = P.y + 84;   // sta salendo davvero in alto
     if (P.state === 'dead') return;                        // morendo vola via dallo schermo: la telecamera resta
-    ct.y += (this.camAnchorY - ct.y) * (grounded || free ? 0.25 : 0.5);
+    ct.y += (this.camAnchorY - ct.y) * lerpK(grounded || free ? 0.25 : 0.5);
   }
 
   // si torna sull'ultimo punto sicuro (dentro l'arena, se si è nel duello)
@@ -790,8 +793,8 @@ export class LevelScene extends Phaser.Scene {
       const b = this.balls[i];
       if (!b.active) { this.balls.splice(i, 1); continue; }
       if (time - b.born > b.life) { this.killBall(b, true); this.balls.splice(i, 1); continue; }
-      if (b.kind !== 'fire') b.angle += b.body.velocity.x > 0 ? 18 : -18;
-      if ((b.kind === 'fire' || b.kind === 'gold') && (time >> 5) % 2) this.fxGold.explode(1, b.x - Math.sign(b.body.velocity.x) * 6, b.y);
+      if (b.kind !== 'fire') b.angle += (b.body.velocity.x > 0 ? 18 : -18) * Frame.f;
+      if ((b.kind === 'fire' || b.kind === 'gold') && thin() && (time >> 5) % 2) this.fxGold.explode(1, b.x - Math.sign(b.body.velocity.x) * 6, b.y);
       if (b.homing) {
         // abilità di Diamanti: il mancino curva verso il nemico più vicino
         let best = null; let bd = 90;
@@ -1339,7 +1342,7 @@ export class LevelScene extends Phaser.Scene {
       if (prevOn && !this.lightsOn && cycle >= 5100 && cycle < 5200) Sfx.thunder();
     }
     const target = this.lightsOn ? 0 : 0.82;
-    this.darkness = Phaser.Math.Linear(this.darkness, target, this.lightsOn ? 0.15 : 0.3);
+    this.darkness = Phaser.Math.Linear(this.darkness, target, lerpK(this.lightsOn ? 0.15 : 0.3));
     // un lampo illumina anche lo stadio al buio, per un istante
     if (time < this.weather.litUntil) this.darkness = Math.min(this.darkness, 0.18);
     if (this.darkness < 0.02) { this.darkRT.setVisible(false); return; }

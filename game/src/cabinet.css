@@ -155,6 +155,7 @@ body.crt-off #game canvas { filter: none; }
 .btn.pressed, .btn:active { transform: translateY(calc(var(--u) * 1.2)); box-shadow: 0 calc(var(--u) * 0.2) 0 #000; }
 
 .btn-start {
+  position: relative;
   grid-column: 1 / span 2;
   font-family: inherit; font-size: calc(var(--u) * 2.4); color: var(--white);
   padding: calc(var(--u) * 1.8) calc(var(--u) * 5);
@@ -206,7 +207,10 @@ body.crt-off #game canvas { filter: none; }
   .panel { flex: 0 0 auto; min-height: calc(var(--u) * 56); padding-top: calc(var(--u) * 5); padding-bottom: calc(var(--u) * 4); }
   .stick { width: calc(var(--u) * 36); height: calc(var(--u) * 36); }
   .stick-knob { width: calc(var(--u) * 15); height: calc(var(--u) * 15); margin: calc(var(--u) * -7.5) 0 0 calc(var(--u) * -7.5); }
-  .btn { width: calc(var(--u) * 18); height: calc(var(--u) * 18); font-size: calc(var(--u) * 4); }
+  /* pulsanti da pollice adulto: circa 14 mm, con 6-7 mm tra l'uno e l'altro */
+  .btn { width: calc(var(--u) * 22); height: calc(var(--u) * 22); font-size: calc(var(--u) * 4.8); }
+  .buttons { gap: calc(var(--u) * 9); }
+  .btn-b { margin-top: calc(var(--u) * 9); }
   .btn small { font-size: calc(var(--u) * 2.4); }
   .btn-start { font-size: calc(var(--u) * 3); padding: calc(var(--u) * 2.2) calc(var(--u) * 7); margin-top: calc(var(--u) * 3); }
   .cab-foot { flex: 1 1 auto; align-items: stretch; padding-bottom: max(calc(var(--u) * 3), env(safe-area-inset-bottom)); }
@@ -230,14 +234,15 @@ body.crt-off #game canvas { filter: none; }
   .bezel { position: absolute; inset: 0; margin: 0; padding: 0; background: #000; display: flex; justify-content: center; }
   #screen { height: 100dvh; width: auto; border-radius: 0; }
   .panel { position: absolute; inset: 0; margin: 0; background: none; border: 0; pointer-events: none; padding: 0 3vw; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; align-items: end; padding-bottom: 6vh; }
-  .stick, .buttons, .btn-start, .stick-zone { pointer-events: auto; opacity: 0.4; transition: opacity 120ms; }
-  .stick.active, .btn.pressed { opacity: 0.75; }
-  .stick-zone { opacity: 0; width: 45%; }
+  .stick, .buttons, .btn-start, .stick-zone, .btn-zone { pointer-events: auto; opacity: 0.6; transition: opacity 120ms; }
+  .stick.active, .btn.pressed { opacity: 0.9; }
+  .stick-zone, .btn-zone { opacity: 0; width: 45%; }
+  .btn-zone { top: 40vh; }   /* solo in basso, dove ci sono i pulsanti: lo schermo sopra resta libero */
   .stick-knob { width: 14vh; height: 14vh; margin: -7vh 0 0 -7vh; }
   .btn-start { top: auto; bottom: 4vh; height: 8vh; padding-top: 0; padding-bottom: 0; align-self: end; grid-row: 1; grid-column: 1 / span 2; }
   .stick { width: 34vh; height: 34vh; justify-self: start; }
   .buttons { justify-self: end; transform: none; }
-  .btn { width: 17vh; height: 17vh; font-size: 4vh; }
+  .btn { width: 22vh; height: 22vh; font-size: 5vh; }
   .btn small { display: none; }
   .btn-start { position: absolute; top: 3vh; left: 50%; transform: translateX(-50%); font-size: 2.4vh; }
 }
@@ -252,6 +257,10 @@ body.crt-gl .crt { display: none; }
 
 /* zona del joystick mobile: tutta la metà sinistra del pannello */
 .stick-zone { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; z-index: 2; touch-action: none; }
+/* zona dei pulsanti: la metà destra, ogni tocco va al pulsante più vicino (niente punti morti) */
+.btn-zone { position: absolute; right: 0; top: 0; bottom: 0; width: 50%; z-index: 2; touch-action: none; }
+.btn-start { z-index: 3; }
+body.magic .btn-zone, body.magic .stick-zone { pointer-events: none !important; }
 .stick { pointer-events: none; z-index: 1; }
 .stick.active .stick-knob { transition: none; }
 
