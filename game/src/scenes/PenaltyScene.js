@@ -499,8 +499,9 @@ export class PenaltyScene extends Phaser.Scene {
   }
 
   say(a, b, col) {
-    this.big.setWordWrapWidth(null).setFontSize(a.length > 12 ? 8 : 16).setText(a).setColor(col).setScale(1.8).setAlpha(1);
-    this.tweens.add({ targets: this.big, scale: 1, duration: 260, ease: 'Back.easeOut' });
+    this.big.setWordWrapWidth(null).setFontSize(a.length > 12 ? 8 : 16).setText(a).setColor(col).setAlpha(1);
+    this.big.setScale(Math.min(1.8, 244 / Math.max(1, this.big.width)));
+    this.tweens.add({ targets: this.big, scale: 1, duration: 260, ease: 'Cubic.easeOut' });
     this.small.setText(b || '');
   }
 
