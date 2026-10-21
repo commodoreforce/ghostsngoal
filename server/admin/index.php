@@ -60,6 +60,14 @@ if ($isPost) {
             foreach (array_keys(CP_FIELDS) as $k) meta_set($k, trim((string) ($_POST[$k] ?? '')));
             flash(!empty($_POST['cp_enabled']) ? 'Cookie policy salvata e attiva nel gioco.' : 'Cookie policy salvata. È spenta: nel gioco non compare.');
             break;
+        case 'delete':
+            // cancellazione definitiva di un solo punteggio (prove, test, nomi sbagliati)
+            $row = q('SELECT nickname, score FROM scores WHERE id = ?', [$id])->fetch();
+            if ($row) {
+                q('DELETE FROM scores WHERE id = ?', [$id]);
+                flash('Cancellato il punteggio di ' . $row['nickname'] . ' (' . number_format((int) $row['score'], 0, ',', '.') . ' punti).');
+            }
+            break;
         case 'approve':
             q('UPDATE scores SET hidden = 0 WHERE id = ? AND hidden = 2', [$id]); flash('Punteggio approvato: ora è in classifica.'); break;
         case 'reject':
@@ -579,6 +587,7 @@ $back = '?p=scores' . ($search !== '' ? '&q=' . urlencode($search) : '') . ($pag
       <?= $pend ? $form('approve', 'Approva', 'small') : ($hidden ? $form('show', 'Ripristina') : $form('hide', 'Nascondi')) ?>
       <?= $form('censor', 'BURDEL') ?>
       <?= $form('ban', 'Banna nome', 'danger small', 'Bannare questo nome? Tutti i suoi punteggi verranno nascosti.') ?>
+      <?= $form('delete', 'Cancella', 'danger small', 'Cancellare per sempre questo punteggio? Non si può recuperare.') ?>
     </div></td>
   </tr>
   <?php endforeach; if (!$rows): ?><tr><td colspan="6" style="color:var(--muted)">Nessun punteggio<?= $search ? ' per questa ricerca' : ' per ora' ?>.</td></tr><?php endif; ?>
