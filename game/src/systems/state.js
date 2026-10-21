@@ -14,10 +14,13 @@ const newStats = () => ({ shots: 0, hits: 0, kills: 0, deaths: 0, boosts: 0, pum
 //   invuln    millisecondi di invulnerabilità dopo aver perso la maglia
 //   timer     tempo del livello
 //   pitShirt  cadendo in una buca si perde la maglia invece della vita
+//   spawn     ogni quanto rinascono gli zombie dalle tombe (più alto = più respiro)
+//   revive    persa una vita si riparte da dove si è caduti (il boss resta ferito),
+//             invece di tornare al checkpoint
 export const LEAGUES = {
-  1: { key: 'bkt', pts: 1, proj: 0.78, walk: 0.85, bossDmg: 1.35, enemyHp: 0, invuln: 3000, timer: 1.3, pitShirt: true, color: '#7fd06a' },
-  2: { key: 'a', pts: 2, proj: 1, walk: 1, bossDmg: 1, enemyHp: 0, invuln: 2200, timer: 1, pitShirt: false, color: '#9fe8ff' },
-  3: { key: 'ucl', pts: 3, proj: 1.18, walk: 1.12, bossDmg: 0.8, enemyHp: 1, invuln: 1600, timer: 0.85, pitShirt: false, color: '#ffd23f' },
+  1: { key: 'bkt', pts: 1, proj: 0.7, walk: 0.8, bossDmg: 1.5, enemyHp: 0, invuln: 3000, timer: 1.3, pitShirt: true, spawn: 1.4, revive: true, color: '#7fd06a' },
+  2: { key: 'a', pts: 2, proj: 1, walk: 1, bossDmg: 1, enemyHp: 0, invuln: 2200, timer: 1, pitShirt: false, spawn: 1, revive: false, color: '#9fe8ff' },
+  3: { key: 'ucl', pts: 3, proj: 1.18, walk: 1.12, bossDmg: 0.8, enemyHp: 1, invuln: 1600, timer: 0.85, pitShirt: false, spawn: 0.85, revive: false, color: '#ffd23f' },
 };
 export const league = () => LEAGUES[Math.min(3, Math.max(1, Run.loop || 1))];
 

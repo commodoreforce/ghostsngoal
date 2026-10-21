@@ -13,6 +13,7 @@ if ($recent < 20) {
     $device = in_array($in['device'] ?? '', ['mobile', 'tablet', 'desktop'], true) ? $in['device'] : '';
     $lang = in_array($in['lang'] ?? '', ['it', 'en'], true) ? $in['lang'] : '';
     $source = substr(preg_replace('/[^a-z0-9._-]/', '', strtolower((string) ($in['source'] ?? ''))) ?? '', 0, 60);
-    q('INSERT INTO visits (created_at, ip_hash, device, lang, source) VALUES (?, ?, ?, ?, ?)', [$now, $hash, $device, $lang, $source]);
+    $country = country_from_tz((string) ($in['tz'] ?? ''));
+    q('INSERT INTO visits (created_at, ip_hash, device, lang, source, country) VALUES (?, ?, ?, ?, ?, ?)', [$now, $hash, $device, $lang, $source, $country]);
 }
 json_out(['ok' => true]);

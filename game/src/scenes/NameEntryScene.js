@@ -34,7 +34,7 @@ export class NameEntryScene extends Phaser.Scene {
     const durationMs = Date.now() - Run.startedAt;
     const payload = {
       score: Run.score, character: Run.character, level: Run.level, loop: Run.loop, continues: Run.continues,
-      cleared: Run.saved || this.cleared, durationMs,   // "salvato": Petrosino liberato alla fine della Serie A stats: Run.stats, cause: Run.deathCause,
+      cleared: Run.saved || this.cleared, champion: this.cleared, durationMs,   // "salvato": Petrosino liberato alla fine della Serie A stats: Run.stats, cause: Run.deathCause,
       kit: Run.kit, cheat: Run.cheat,
     };
     const finish = (r) => {

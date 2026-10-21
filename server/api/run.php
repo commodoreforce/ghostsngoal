@@ -20,8 +20,9 @@ if ($action === 'start') {
     $device = in_array($in['device'] ?? '', ['mobile', 'tablet', 'desktop'], true) ? $in['device'] : '';
     $lang = in_array($in['lang'] ?? '', ['it', 'en'], true) ? $in['lang'] : '';
     $cheat = !empty($in['cheat']) ? 1 : 0;
-    q('INSERT INTO runs (token, hero, started_at, ip_hash, kit, device, lang, cheat, rkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [$token, $hero, time(), client_hash(), $kit, $device, $lang, $cheat, $rkey]);
+    $country = country_from_tz((string) ($in['tz'] ?? ''));
+    q('INSERT INTO runs (token, hero, started_at, ip_hash, kit, device, lang, cheat, rkey, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [$token, $hero, time(), client_hash(), $kit, $device, $lang, $cheat, $rkey, $country]);
     json_out(['ok' => true, 'token' => $token, 'key' => $rkey]);
 }
 
@@ -67,6 +68,7 @@ if ($action === 'end') {
     $lap = max(1, min(3, (int) ($in['loop'] ?? 1)));          // campionato: 1 Serie BKT, 2 Serie A, 3 Champions
     $stage = ac_stage($level, $lap);
     $continues = max(0, min(99, (int) ($in['continues'] ?? 0)));
+    $champion = (!empty($in['champion']) && $stage === AC_STAGES && $cleared) ? 1 : 0;   // Champions vinta
     $cleared = !empty($in['cleared']) ? 1 : 0;
     $durMs = max(0, (int) ($in['durationMs'] ?? 0));
     $cause = substr(preg_replace('/[^a-z_]/', '', strtolower((string) ($in['cause'] ?? ''))) ?? '', 0, 24);
@@ -127,8 +129,8 @@ if ($action === 'end') {
     }
     $review = ($plausible && array_diff($flagList, AC_HARD, AC_INFO)) ? 1 : 0;
 
-    $set = 'ended_at = ?, score = ?, level_reached = ?, lap = ?, cleared = ?, duration_ms = ?, cause = ?, stats = ?, plausible = ?, cheat = ?, seq = ?, events = ?, flags = ?, review = ?';
-    $args = [$now, $score, $level, $lap, $cleared, $durMs, $cause, $stats, $plausible, $cheat, max($seq, (int) $run['seq']), json_encode($events), $allFlags, $review];
+    $set = 'ended_at = ?, score = ?, level_reached = ?, lap = ?, cleared = ?, duration_ms = ?, cause = ?, stats = ?, plausible = ?, cheat = ?, seq = ?, events = ?, flags = ?, review = ?, champion = ?';
+    $args = [$now, $score, $level, $lap, $cleared, $durMs, $cause, $stats, $plausible, $cheat, max($seq, (int) $run['seq']), json_encode($events), $allFlags, $review, $champion];
     foreach ($st as $k => $v) { $set .= ", $k = ?"; $args[] = $v; }
     $args[] = $run['id'];
     q("UPDATE runs SET $set WHERE id = ?", $args);

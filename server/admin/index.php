@@ -403,7 +403,15 @@ if ($p === 'stats') {
     $byHero = q("SELECT hero AS k, COUNT(*) AS n FROM runs WHERE $G GROUP BY hero ORDER BY n DESC")->fetchAll();
     $byKit = q("SELECT kit AS k, COUNT(*) AS n FROM runs WHERE $G GROUP BY kit ORDER BY n DESC")->fetchAll();
     $heroScore = q("SELECT hero AS k, ROUND(AVG(score)) AS n FROM runs WHERE $E AND plausible = 1 GROUP BY hero ORDER BY n DESC")->fetchAll();
-    $byLevel = q("SELECT level_reached AS k, COUNT(*) AS n FROM runs WHERE $E GROUP BY level_reached ORDER BY level_reached")->fetchAll();
+    $byLevel = q("SELECT (CASE WHEN lap < 1 THEN 1 ELSE lap END) * 10 + level_reached AS k, COUNT(*) AS n FROM runs WHERE $E GROUP BY k ORDER BY k")->fetchAll();
+    $byCountry = q("SELECT country AS k, COUNT(DISTINCT ip_hash) AS n FROM visits GROUP BY country ORDER BY n DESC LIMIT 15")->fetchAll();
+    // fin dove arriva ogni giocatore (il punto più lontano tra tutte le sue partite)
+    $reach = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+    foreach (q("SELECT MAX(lap) AS l, MAX(champion) AS c FROM runs WHERE $E GROUP BY ip_hash")->fetchAll() as $r) {
+        $k = (int) $r['c'] === 1 ? 4 : max(1, min(3, (int) $r['l']));
+        $reach[$k]++;
+    }
+    $champions = (int) $one("SELECT COUNT(*) FROM runs WHERE $E AND champion = 1");
     $byCause = q("SELECT cause AS k, COUNT(*) AS n FROM runs WHERE $G AND cause IS NOT NULL AND cause <> '' GROUP BY cause ORDER BY n DESC")->fetchAll();
     $byDevice = q("SELECT device AS k, COUNT(*) AS n FROM visits GROUP BY device ORDER BY n DESC")->fetchAll();
     $byLang = q("SELECT lang AS k, COUNT(*) AS n FROM visits GROUP BY lang ORDER BY n DESC")->fetchAll();
@@ -427,6 +435,36 @@ if ($p === 'stats') {
     $kitNames = ['home' => 'Casa (bianca)', 'away' => 'Trasferta', 'third' => 'Terza maglia'];
     $deviceNames = ['mobile' => 'Telefono', 'tablet' => 'Tablet', 'desktop' => 'Computer', '' => 'Non rilevato'];
     $langNames = ['it' => 'Italiano', 'en' => 'Inglese', '' => 'Non rilevata'];
+    $leagueNames = [1 => 'Serie BKT', 2 => 'Serie A', 3 => 'Champions'];
+    // nome del paese in italiano (con la bandierina), dal codice a due lettere
+    $countryNames = ['IT' => 'Italia', 'SM' => 'San Marino', 'VA' => 'Città del Vaticano', 'CH' => 'Svizzera', 'FR' => 'Francia', 'DE' => 'Germania',
+        'AT' => 'Austria', 'ES' => 'Spagna', 'PT' => 'Portogallo', 'GB' => 'Regno Unito', 'IE' => 'Irlanda', 'BE' => 'Belgio', 'NL' => 'Paesi Bassi',
+        'LU' => 'Lussemburgo', 'DK' => 'Danimarca', 'SE' => 'Svezia', 'NO' => 'Norvegia', 'FI' => 'Finlandia', 'PL' => 'Polonia', 'CZ' => 'Cechia',
+        'SK' => 'Slovacchia', 'HU' => 'Ungheria', 'SI' => 'Slovenia', 'HR' => 'Croazia', 'AL' => 'Albania', 'RS' => 'Serbia', 'RO' => 'Romania',
+        'BG' => 'Bulgaria', 'GR' => 'Grecia', 'MT' => 'Malta', 'UA' => 'Ucraina', 'MD' => 'Moldavia', 'XK' => 'Kosovo', 'MK' => 'Macedonia del Nord',
+        'BA' => 'Bosnia ed Erzegovina', 'ME' => 'Montenegro', 'TR' => 'Turchia', 'MA' => 'Marocco', 'TN' => 'Tunisia', 'US' => 'Stati Uniti',
+        'CA' => 'Canada', 'BR' => 'Brasile', 'AR' => 'Argentina', 'UY' => 'Uruguay', 'AU' => 'Australia', 'CN' => 'Cina', 'JP' => 'Giappone', 'IN' => 'India'];
+    $countryLabel = function (string $cc) use ($countryNames): string {
+        if ($cc === '') return 'Non rilevato';
+        $name = $countryNames[$cc] ?? (class_exists('Locale') ? (string) Locale::getDisplayRegion('-' . $cc, 'it') : $cc);
+        $flag = mb_chr(0x1F1E6 + ord($cc[0]) - 65, 'UTF-8') . mb_chr(0x1F1E6 + ord($cc[1]) - 65, 'UTF-8');
+        return $flag . ' ' . ($name !== '' ? $name : $cc);
+    };
+    // grafico a torta, senza librerie: un cerchio con conic-gradient e la legenda accanto
+    $pie = function (array $slices) use ($n) {
+        $tot = array_sum(array_column($slices, 'n'));
+        if ($tot <= 0) { echo '<p class="muted">Ancora nessun dato.</p>'; return; }
+        $stops = []; $acc = 0;
+        foreach ($slices as $sl) {
+            $from = $acc / $tot * 100; $acc += $sl['n']; $to = $acc / $tot * 100;
+            $stops[] = $sl['c'] . ' ' . round($from, 2) . '% ' . round($to, 2) . '%';
+        }
+        echo '<div class="pie"><div class="disc" style="background:conic-gradient(' . implode(',', $stops) . ')"></div><ul>';
+        foreach ($slices as $sl) {
+            echo '<li><i style="background:' . $sl['c'] . '"></i><span>' . h($sl['k']) . '</span><b>' . round($sl['n'] / $tot * 100) . '%</b><small>' . $n($sl['n']) . '</small></li>';
+        }
+        echo '</ul></div>';
+    };
     $bars = function (array $rows, callable $label, bool $percent = false) {
         $max = max(1, ...array_map(fn ($r) => (int) $r['n'], $rows ?: [['n' => 1]]));
         $tot = max(1, array_sum(array_map(fn ($r) => (int) $r['n'], $rows)));
@@ -471,6 +509,12 @@ if ($p === 'stats') {
       .two { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; }
       .two .card { margin:0; } .two h2 { margin-top:0; }
       @media (max-width:640px) { .col span { display:none; } }
+      .pie { display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+      .pie .disc { width:160px; height:160px; border-radius:50%; flex:none; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); }
+      .pie ul { list-style:none; margin:0; padding:0; flex:1; min-width:180px; }
+      .pie li { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line); }
+      .pie li i { width:12px; height:12px; border-radius:3px; flex:none; }
+      .pie li span { flex:1; } .pie li b { width:44px; text-align:right; } .pie li small { width:60px; text-align:right; color:var(--muted); }
     </style>
     <h1>Statistiche</h1>
     <p class="lead">Dati anonimi: nessun indirizzo IP salvato in chiaro, nessun cookie. "Unici" vuol dire dispositivi/reti diversi, quindi è una stima. Le partite in modalità prova (trucco DAIBURDEL) sono escluse.</p>
@@ -489,7 +533,7 @@ if ($p === 'stats') {
       <?= $stat($n($playersAll), 'giocatori diversi', number_format($perPlayer, 1, ',', '.') . ' partite a testa') ?>
       <?= $stat($n(floor($hours)) . ' h ' . sprintf('%02d', (int) round(($hours - floor($hours)) * 60)), 'ore di gioco in tutto', 'sulle partite concluse') ?>
       <?= $stat($fmtDur($ended ? (int) ($totMs / $ended) : 0), 'durata media', 'più lunga ' . $fmtDur($maxMs)) ?>
-      <?= $stat($n($cleared), 'livelli completati', $pct($cleared, $ended) . ' delle partite') ?>
+      <?= $stat($n($cleared), 'Petrosino salvato', $pct($cleared, $ended) . ' delle partite · ' . $n($champions) . ' campioni d\'Europa') ?>
       <?= $stat($n($avgScore), 'punteggio medio', 'record ' . $n($best)) ?>
       <?= $stat($n($names), 'nomi in classifica') ?>
       <?= $stat($n($unlocks), 'sblocchi di Tatanka') ?>
@@ -540,7 +584,17 @@ if ($p === 'stats') {
           ['k' => 'Meduse fantasma', 'n' => (int) $sum['k_jelly']], ['k' => 'Marinai scheletro', 'n' => (int) $sum['k_sailor']],
           ['k' => 'Topi di stiva', 'n' => (int) $sum['k_rat']], ['k' => 'Piovre sconfitte', 'n' => (int) $sum['k_octopus']],
           ['k' => 'Conti sconfitti (Petrosino libero)', 'n' => (int) $sum['k_count']]], fn ($r) => $r['n'] > 0)), fn ($v) => $v, true); ?></div>
-      <div class="card"><h2>Livello raggiunto</h2><?php $bars($byLevel, fn ($v) => 'Livello ' . $v, true); ?></div>
+      <div class="card" style="grid-column:1/-1"><h2>Fin dove arrivano i giocatori</h2>
+        <p class="muted" style="font-size:13px;margin:0 0 12px">Per ogni giocatore conta la partita in cui è arrivato più lontano. Facile = Serie BKT, medio = Serie A, difficile = Champions League.</p>
+        <?php $pie([
+            ['k' => 'Fermi in Serie BKT (facile)', 'n' => $reach[1], 'c' => '#7fd06a'],
+            ['k' => 'Arrivati in Serie A (medio)', 'n' => $reach[2], 'c' => '#5aa0ff'],
+            ['k' => 'Arrivati in Champions League (difficile)', 'n' => $reach[3], 'c' => '#ffd23f'],
+            ['k' => 'Campioni d\'Europa (gioco finito)', 'n' => $reach[4], 'c' => '#ff7a1a'],
+        ]); ?></div>
+      <div class="card"><h2>Dove finisce la partita</h2><?php $bars($byLevel, fn ($v) => ($leagueNames[intdiv((int) $v, 10)] ?? 'Serie BKT') . ' · livello ' . ((int) $v % 10), true); ?></div>
+      <div class="card"><h2>Paesi</h2><?php $bars($byCountry, $countryLabel, true); ?>
+        <p class="muted" style="font-size:13px;margin:8px 0 0">Visitatori unici per paese, ricavato dal fuso orario del telefono (nessuna posizione, nessun IP). "Non rilevato" comprende gli accessi di prima di questa versione.</p></div>
       <div class="card"><h2>Come si muore</h2><?php $bars($byCause, fn ($v) => $causeNames[$v] ?? $v, true); ?></div>
       <div class="card"><h2>Dispositivo</h2><?php $bars($byDevice, fn ($v) => $deviceNames[$v] ?? $v, true); ?></div>
       <div class="card"><h2>Lingua</h2><?php $bars($byLang, fn ($v) => $langNames[$v] ?? $v, true); ?></div>

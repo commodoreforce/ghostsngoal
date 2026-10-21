@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 const GNG_HEROES = ['shpendi', 'ciofi', 'klinsmann', 'diamanti', 'hubner'];
 const GNG_NAME_MAX = 10;
-const GNG_SCHEMA = 3;   // si alza quando cambia la struttura del database
+const GNG_SCHEMA = 4;   // si alza quando cambia la struttura del database
 const GNG_KITS = ['home', 'away', 'third'];
 const GNG_KILL_KINDS = ['zombie', 'bat', 'pumpkin', 'ghost', 'boss', 'fisher', 'owl', 'eel', 'washer', 'wolf', 'book', 'azdora',
     'crab', 'gull', 'jelly', 'sailor', 'rat', 'octopus', 'count'];
@@ -272,6 +272,9 @@ function run_extra_columns(): array {
         'events' => 'TEXT NULL',
         'flags' => "VARCHAR(255) NOT NULL DEFAULT ''",
         'review' => 'SMALLINT NOT NULL DEFAULT 0',
+        // statistiche: paese (dal fuso orario del telefono) e campioni d'Europa
+        'country' => "VARCHAR(2) NOT NULL DEFAULT ''",
+        'champion' => 'SMALLINT NOT NULL DEFAULT 0',
     ];
     foreach (['kills', 'shots', 'hits', 'deaths', 'boosts', 'pumpkins', 'crates'] as $c) $cols[$c] = 'INT NOT NULL DEFAULT 0';
     foreach (GNG_KILL_KINDS as $k) $cols["k_$k"] = 'INT NOT NULL DEFAULT 0';
@@ -297,8 +300,20 @@ function migrate(): void {
     foreach (run_extra_columns() as $name => $def) {
         if (!in_array($name, $have, true)) db()->exec("ALTER TABLE runs ADD COLUMN $name $def");
     }
+    if (!in_array('country', table_columns('visits'), true)) db()->exec("ALTER TABLE visits ADD COLUMN country VARCHAR(2) NOT NULL DEFAULT ''");
     q("DELETE FROM meta WHERE k = 'schema'");
     q("INSERT INTO meta (k, v) VALUES ('schema', ?)", [(string) GNG_SCHEMA]);
+}
+
+// il paese dal fuso orario del telefono (Europe/Rome → IT): nessuna geolocalizzazione dell'IP.
+// I fusi senza paese (UTC, Etc/...) restano vuoti.
+function country_from_tz(string $tz): string {
+    if ($tz === '' || !preg_match('#^[A-Za-z_]+(/[A-Za-z0-9_+\-]+){0,2}$#', $tz)) return '';
+    try {
+        $loc = (new DateTimeZone($tz))->getLocation();
+        $cc = is_array($loc) ? strtoupper((string) ($loc['country_code'] ?? '')) : '';
+        return preg_match('/^[A-Z]{2}$/', $cc) ? $cc : '';
+    } catch (Throwable $e) { return ''; }
 }
 
 // impostazioni chiave/valore (tabella meta)

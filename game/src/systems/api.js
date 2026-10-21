@@ -39,11 +39,16 @@ function source() {
   } catch (e) { return ''; }
 }
 
+// il fuso orario del telefono (es. Europe/Rome): il server ne ricava solo il paese, niente posizione
+function tz() {
+  try { return (Intl.DateTimeFormat().resolvedOptions().timeZone || '').slice(0, 40); } catch (e) { return ''; }
+}
+
 export const Api = {
   legal: (lang) => call(`legal.php?lang=${lang}`),
-  visit: (lang) => call('visit.php', { device: deviceKind(), lang, source: source() }),
+  visit: (lang) => call('visit.php', { device: deviceKind(), lang, source: source(), tz: tz() }),
   // ogni partita ottiene un gettone dal server: serve a verificare che il punteggio sia plausibile
-  startRun: (character, extra = {}) => call('run.php', { action: 'start', character, device: deviceKind(), ...extra }),
+  startRun: (character, extra = {}) => call('run.php', { action: 'start', character, device: deviceKind(), tz: tz(), ...extra }),
   progress: (body) => call('run.php', { action: 'progress', ...body }),
   endRun: (token, payload) => call('run.php', { action: 'end', token, ...payload }),
   submitScore: (token, nickname) => call('score.php', { token, nickname }),

@@ -19,6 +19,7 @@ const SIGN_X = 262;       // centro dell'insegna OROGEL STADIUM nel piano dell'i
 const INSIDE_F = 0.295;   // velocità della tavola dell'interno dello stadio: all'arena del boss si vede la Curva Mare
 
 // colore di ogni potere: lampo, cornice dello schermo e scia del giocatore
+const BOOST_W = 56;        // larghezza della barra del boost
 const BOOST_COLORS = { shpendi: 0xffd23f, ciofi: 0xffe066, klinsmann: 0x5aa0ff, diamanti: 0xc77dff, hubner: 0xff7a1a };
 
 export class LevelScene extends Phaser.Scene {
@@ -104,7 +105,8 @@ export class LevelScene extends Phaser.Scene {
     this.player.state = 'intro';
     const [ta, tb] = this.introTexts();
     // il campionato in cui si gioca, sopra il nome del livello
-    const lg = center(this, 74, t(`lg${Math.min(3, Run.loop)}`), { color: league().color, fixed: true, depth: 120, stroke: '#000', strokeThickness: 2 });
+    // il campionato si annuncia solo dal secondo giro (al primo è semplicemente "il gioco")
+    const lg = center(this, 74, Run.loop > 1 ? t(`lg${Math.min(3, Run.loop)}`) : '', { color: league().color, fixed: true, depth: 120, stroke: '#000', strokeThickness: 2 });
     const a = center(this, 92, ta, { color: C.orange, fixed: true, depth: 120 });
     const b = center(this, 108, tb, { color: C.white, fixed: true, depth: 120 });
     this.time.delayedCall(1300, () => { a.setText(t('ready')); b.setText(''); lg.destroy(); });
@@ -237,6 +239,9 @@ export class LevelScene extends Phaser.Scene {
       this.add.tileSprite(x, this.groundY + T, w, H - this.groundY - T + 16, 'tiles', 'dirt').setOrigin(0).setDepth(10);
       this.addSolid(x, this.groundY, w, 64);
     }
+    // le buche: un vuoto nero che sprofonda, con il bordo del prato che si sbriciola,
+    // così si vedono anche di corsa e con poca luce
+    this.drawPits(this.L.ground, this.groundY, H + 16);
     // gradoni di pietra
     for (const bl of this.L.blocks) {
       const x = bl.x * T, y = bl.row * T, w = bl.w * T, h = this.groundY - y;
@@ -294,6 +299,34 @@ export class LevelScene extends Phaser.Scene {
     for (const [px, row] of this.L.pumpkins) this.addPickup('pumpkin', px * T + 8, row * T + 8, true);
   }
 
+  drawPits(ground, gy, bottom) {
+    const g = this.add.graphics().setDepth(10.5);
+    for (let i = 0; i < ground.length - 1; i++) {
+      const x0 = ground[i][1] * T, x1 = ground[i + 1][0] * T;
+      if (x1 <= x0) continue;
+      const w = x1 - x0;
+      // dal blu notte al nero, a fasce come i 16 bit
+      const bands = [0x1a1030, 0x120a22, 0x0a0614, 0x050308, 0x000000];
+      bands.forEach((c, k) => { g.fillStyle(c, 1); g.fillRect(x0, gy + k * 4, w, bottom - gy - k * 4); });
+      // bordi: terra spezzata e ciuffi d'erba che pendono nel vuoto
+      g.fillStyle(0x3a2412, 1); g.fillRect(x0, gy, 2, bottom - gy); g.fillRect(x1 - 2, gy, 2, bottom - gy);
+      g.fillStyle(0x5a8a2a, 1);
+      for (const [ex, dir] of [[x0, 1], [x1, -1]]) {
+        g.fillRect(ex + (dir > 0 ? 0 : -3), gy, 3, 2);
+        g.fillRect(ex + (dir > 0 ? 1 : -2), gy + 2, 1, 3);
+      }
+      // un fiato di nebbia viola che sale dal vuoto: la buca si nota da lontano
+      const mist = this.add.graphics().setDepth(10.4);
+      for (let k = 0; k < 8; k++) { mist.fillStyle(0xc8a8ff, 0.06 + k * 0.05); mist.fillRect(x0 + 1, gy - 32 + k * 4, w - 2, 4); }
+      this.tweens.add({ targets: mist, alpha: 0.45, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      // due occhietti rossi in fondo alla buca, ogni tanto
+      const eyes = this.add.graphics().setDepth(10.6);
+      eyes.fillStyle(0xff3b3b, 1); eyes.fillRect(x0 + w / 2 - 4, gy + 11, 2, 1); eyes.fillRect(x0 + w / 2 + 2, gy + 11, 2, 1);
+      eyes.setAlpha(0);
+      this.tweens.add({ targets: eyes, alpha: 1, duration: 120, yoyo: true, hold: 900, repeat: -1, repeatDelay: Phaser.Math.Between(1800, 4200) });
+    }
+  }
+
   buildFx() {
     const conf = { speed: { min: 50, max: 150 }, angle: { min: 200, max: 340 }, gravityY: 420, lifespan: 700, scale: { start: 1, end: 0.4 }, emitting: false };
     this.fxWhite = this.add.particles(0, 0, 'px', conf).setDepth(60);
@@ -340,24 +373,27 @@ export class LevelScene extends Phaser.Scene {
     this.hudHi = txt(this, W / 2, 14, pad(Run.hiScore(this.registry.get('remoteTop') || 0)), { fixed: true, depth: D, ox: 0.5 });
     txt(this, W - 6, 4, t('time'), { color: C.red, fixed: true, depth: D, ox: 1 });
     this.hudTime = txt(this, W - 6, 14, '0:00', { fixed: true, depth: D, ox: 1 });
-    this.hudLifeIcon = this.add.image(10, H - 10, `portrait_${Run.character}`).setScale(0.18).setScrollFactor(0).setDepth(D);
-    this.hudLives = txt(this, 20, H - 14, `x${Run.lives}`, { fixed: true, depth: D });
-    this.hudShirt = this.add.image(50, H - 10, 'shirt').setScrollFactor(0).setDepth(D);
-    // il campionato, in basso a destra
-    txt(this, W - 6, H - 14, t(`lgTag${Math.min(3, Run.loop)}`), { color: league().color, fixed: true, depth: D, ox: 1 });
+    // vite e maglia in alto, sotto il punteggio: in basso c'è il terreno e si devono vedere le buche
+    const HY = 29;
+    this.hudLifeIcon = this.add.image(10, HY, `portrait_${Run.character}`).setScale(0.18).setScrollFactor(0).setDepth(D);
+    this.hudLives = txt(this, 20, HY - 4, `x${Run.lives}`, { fixed: true, depth: D });
+    this.hudShirt = this.add.image(50, HY, 'shirt').setScrollFactor(0).setDepth(D);
+    // dal secondo giro i punti valgono doppio o triplo: lo dice un "x2"/"x3" accanto a 1UP
+    if (league().pts > 1) txt(this, 34, 4, `x${league().pts}`, { color: league().color, fixed: true, depth: D });
     if (Run.cheat) {
-      const tag = txt(this, 62, H - 14, 'TEST', { color: C.red, fixed: true, depth: D });
+      const tag = txt(this, 62, HY - 4, 'TEST', { color: C.red, fixed: true, depth: D });
       this.tweens.add({ targets: tag, alpha: 0.3, yoyo: true, repeat: -1, duration: 500 });
     }
     this.hudCombo = txt(this, W / 2, 30, '', { color: C.gold, fixed: true, depth: D, ox: 0.5, stroke: '#000', strokeThickness: 2 });
     // barra del boost
-    this.hudBoostBg = this.add.rectangle(W / 2, H - 10, 82, 6, 0x000000).setStrokeStyle(1, 0xffd23f).setScrollFactor(0).setDepth(D).setVisible(false);
-    this.hudBoost = this.add.rectangle(W / 2 - 40, H - 10, 80, 4, 0xffd23f).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D).setVisible(false);
-    this.hudBoostIcon = this.add.image(W / 2 - 50, H - 10, 'seahorse').setScale(0.75).setScrollFactor(0).setDepth(D).setVisible(false);
+    // barra del boost: in alto a destra, sotto il tempo
+    this.hudBoostBg = this.add.rectangle(W - 6 - BOOST_W / 2 - 1, HY, BOOST_W + 2, 6, 0x000000).setStrokeStyle(1, 0xffd23f).setScrollFactor(0).setDepth(D).setVisible(false);
+    this.hudBoost = this.add.rectangle(W - 6 - BOOST_W, HY, BOOST_W, 4, 0xffd23f).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D).setVisible(false);
+    this.hudBoostIcon = this.add.image(W - 16 - BOOST_W, HY, 'seahorse').setScale(0.75).setScrollFactor(0).setDepth(D).setVisible(false);
     // barra del boss
-    this.bossBarBg = this.add.rectangle(W / 2, 32, 160, 7, 0x000000).setStrokeStyle(1, 0xf4f4f0).setScrollFactor(0).setDepth(D).setVisible(false);
-    this.bossBar = this.add.rectangle(W / 2 - 79, 32, 158, 5, 0xff3b3b).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D).setVisible(false);
-    this.bossName = txt(this, W / 2, 38, '', { color: C.white, fixed: true, depth: D, ox: 0.5 });
+    this.bossBarBg = this.add.rectangle(W / 2, 42, 160, 7, 0x000000).setStrokeStyle(1, 0xf4f4f0).setScrollFactor(0).setDepth(D).setVisible(false);
+    this.bossBar = this.add.rectangle(W / 2 - 79, 42, 158, 5, 0xff3b3b).setOrigin(0, 0.5).setScrollFactor(0).setDepth(D).setVisible(false);
+    this.bossName = txt(this, W / 2, 48, '', { color: C.white, fixed: true, depth: D, ox: 0.5 });
   }
 
   refreshHud() {
@@ -404,14 +440,14 @@ export class LevelScene extends Phaser.Scene {
         if (league().pitShirt && P.armored && !P.boosted && P.state !== 'dead') this.pitRescue(P);
         else P.die(this.L.pitCause || 'pit');
       }
-      if (P.body.blocked.down && P.y < this.groundY) this.safeX = P.x;
+      if (P.body.blocked.down && P.y < this.groundY) { this.safeX = P.x; this.safeY = P.y; }
       // checkpoint
       if (!this.reachedCheckpoint && P.x > this.L.checkpoint * T) this.reachCheckpoint();
       // fine del boost
       if (P.boostUntil && time > P.boostUntil) this.endBoost();
       else if (P.boostUntil) {
         const left = (P.boostUntil - time) / P.tune.boostTime;
-        this.hudBoost.width = 80 * Phaser.Math.Clamp(left, 0, 1);
+        this.hudBoost.width = BOOST_W * Phaser.Math.Clamp(left, 0, 1);
         setMusicTempo(P.boostUntil - time < 2000 ? 1.3 : 1.15);
         if ((time >> 5) % 3 === 0) this.boostAura(P);
         this.boostTrail(P, time);
@@ -532,13 +568,15 @@ export class LevelScene extends Phaser.Scene {
     ct.y += (this.camAnchorY - ct.y) * (grounded || free ? 0.25 : 0.5);
   }
 
-  // modalità prova: dalle buche si torna sull'ultimo punto sicuro, il tempo riparte
   // si torna sull'ultimo punto sicuro (dentro l'arena, se si è nel duello)
   backToSafe(P, invuln = 900) {
     let x = this.safeX ?? P.x - 48;
     const b = this.physics.world.bounds;
     x = Phaser.Math.Clamp(x, b.x + 16, b.right - 16);
-    P.setPosition(x, (this.deckY && this.bossActive ? this.deckY : this.groundY) - 60);
+    // dove si era appoggiati l'ultima volta (anche su un'asse o in cima alla scalinata)
+    const y = this.deckY && this.bossActive ? this.deckY - 60 : this.safeY != null && this.safeX != null ? this.safeY - 6 : this.groundY - 60;
+    P.setPosition(x, y);
+    this.camAnchorY = y;
     P.body.setVelocity(0, 0);
     P.invulnUntil = this.time.now + invuln;
   }
@@ -554,6 +592,7 @@ export class LevelScene extends Phaser.Scene {
     this.cameras.main.shake(120, 0.006);
   }
 
+  // modalità prova: dalle buche si torna sull'ultimo punto sicuro, il tempo riparte
   cheatRescue(cause) {
     const P = this.player;
     if (cause !== 'time') {
@@ -592,7 +631,7 @@ export class LevelScene extends Phaser.Scene {
     const zone = this.L.zombieZones.find((z) => ptile >= z.from && ptile <= z.to);
     if (!zone) return;
     const zombies = this.enemies.filter((e) => e instanceof Zombie).length;
-    if (time - this.lastZombie > zone.every && zombies < zone.max) {
+    if (time - this.lastZombie > zone.every * league().spawn && zombies < zone.max) {
       const x = this.findZombieSpot();
       if (x !== null) {
         this.lastZombie = time;
@@ -1195,12 +1234,40 @@ export class LevelScene extends Phaser.Scene {
     stopMusic();
     this.time.delayedCall(1800, () => {
       Run.lives--;
-      if (Run.lives > 0) {
+      if (Run.lives > 0 && league().revive && !this.ending) {
+        this.reviveHere();
+      } else if (Run.lives > 0) {
         this.scene.restart({ checkpoint: this.reachedCheckpoint });
       } else if (!Run.cheat) {
         this.continuePrompt();
       } else this.gameOver();
     });
+  }
+
+  // Serie BKT: persa una vita si riparte da dove si era, con la maglia e qualche secondo
+  // d'invulnerabilità. Il livello non ricomincia e il boss resta ferito.
+  reviveHere() {
+    const P = this.player;
+    if (P.boostUntil) this.endBoost();
+    // via i pericoli in volo e i nemici appiccicati al punto di ripartenza
+    this.hazards.forEach((hz) => { if (hz.active && !hz.friendly) hz.destroy(); });
+    this.hazards = this.hazards.filter((hz) => hz.active);
+    this.backToSafe(P, league().invuln);
+    for (const e of this.enemies) {
+      if (e === this.boss || e.isBoss || !e.alive) continue;
+      if (Math.abs(e.x - P.x) < 70 && Math.abs(e.y - P.y) < 70) { if (e.eyes) e.eyes.destroy(); e.alive = false; e.destroy(); }
+    }
+    P.state = 'play';
+    P.armored = true;
+    P.charging = false;
+    P.clearTint();
+    P.applyLook();
+    P.body.setVelocity(0, 0);
+    if (this.timeLeft < this.secs(60)) this.timeLeft = this.secs(60);
+    this.flyingShirt(P.x, P.y - 40);
+    Sfx.oneUp();
+    this.cameras.main.flash(180, 255, 255, 255);
+    playMusic(this.bossActive ? this.bossMusic() : this.musicKey);
   }
 
   gameOver() {

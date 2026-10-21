@@ -119,10 +119,12 @@ Il gioco si gioca tre volte di fila, come i "loop" dei coin-op: **stessi nemici,
 
 | Campionato | Punti | Nemici | Boss | Invulnerabilità | Tempo | Buche |
 |---|---|---|---|---|---|---|
-| **Serie BKT** | x1 | proiettili -22%, camminata -15% | +35% danno dei palloni | 3 s | +30% | costano la maglia, non la vita |
+| **Serie BKT** | x1 | proiettili -30%, camminata -20%, zombie che rinascono il 40% più piano | +50% danno dei palloni | 3 s | +30% | costano la maglia, non la vita |
 | **Serie A** | x2 | come la taratura originale | normale | 2,2 s | normale | vita |
 | **Champions League** | x3 | proiettili +18%, camminata +12%, +1 colpo per i nemici normali | -20% danno | 1,6 s | -15% | vita |
 
+- In Serie BKT persa una vita **si riparte da dove si è caduti**, con la maglia (il boss resta ferito); in Serie A e Champions si torna al checkpoint.
+- Sullo schermo il campionato si vede solo dal secondo giro: "x2"/"x3" accanto a 1UP e il nome all'inizio del livello.
 - Fine Serie BKT: Petrosino nella gabbia è un'illusione del Conte → PROMOSSI IN SERIE A.
 - Fine Serie A: il finale vero (Petrosino libero, Azdora, Marco il giardiniere, COMING SOON) → QUALIFICATI IN CHAMPIONS LEAGUE.
 - Fine Champions: Petrosino liberato di nuovo → CAMPIONI D'EUROPA → classifica.
