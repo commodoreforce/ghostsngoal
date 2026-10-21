@@ -1064,7 +1064,7 @@ export class LevelScene extends Phaser.Scene {
     this.tweens.add({ targets: veil, fillAlpha: 0.72, duration: 300 });
     const big = center(this, 56, 'DAIBURDEL!', { size: 24, color: C.white, fixed: true, depth: 120, stroke: '#ff7a1a', strokeThickness: 4 });
     big.setScale(0.2);
-    this.tweens.add({ targets: big, scale: 1, duration: 500, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: big, scale: 1, duration: 500, ease: 'Cubic.easeOut' });
     this.fxWhite.explode(30, P.x, P.y - 20); this.fxBlack.explode(30, P.x, P.y - 20);
 
     // conteggio dei bonus voce per voce
