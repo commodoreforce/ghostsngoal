@@ -837,7 +837,7 @@ export class LevelScene extends Phaser.Scene {
     if (this.boostTitle.width > 244) this.boostTitle.setScale(244 / this.boostTitle.width);
     this.boostSub = center(this, 82, t(`bSub_${id}`), { color: C.white, fixed: true, depth: 125, stroke: '#000', strokeThickness: 3, lineSpacing: 5 });
     const k = this.boostTitle.scaleX;
-    this.tweens.add({ targets: this.boostTitle, scale: { from: k * 2.2, to: k }, duration: 320, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: this.boostTitle, scale: { from: Math.min(k * 1.6, 244 / this.boostTitle.width), to: k }, duration: 320, ease: 'Back.easeOut' });
     this.tweens.add({ targets: [this.boostTitle, this.boostSub], alpha: 0, delay: 2200, duration: 400, onComplete: () => { if (this.boostTitle) { this.boostTitle.destroy(); this.boostSub.destroy(); this.boostTitle = null; } } });
     // cornice luminosa attorno allo schermo per tutta la durata del potere
     if (!this.boostFrame) this.boostFrame = this.add.graphics().setScrollFactor(0).setDepth(96);
