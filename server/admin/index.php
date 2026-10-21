@@ -72,6 +72,34 @@ if ($isPost) {
             meta_set('maint_on', !empty($_POST['maint_on']) ? '1' : '0');
             flash(!empty($_POST['maint_on']) ? 'Manutenzione ATTIVA: chi apre il sito vede il volantino MISSING. Tu, collegato all\'admin, vedi il gioco.' : 'Manutenzione spenta: il gioco è online per tutti.');
             break;
+        case 'reset':
+            // azzeramento della classifica (ed eventualmente delle statistiche) dopo il periodo di prova
+            if (trim(mb_strtoupper((string) ($_POST['confirm_word'] ?? ''), 'UTF-8')) !== 'RESET') {
+                flash('Niente è stato cancellato: per confermare devi scrivere RESET nella casella.', 'err');
+                $back = '?p=scores#reset';
+                break;
+            }
+            $nScores = (int) q('SELECT COUNT(*) FROM scores')->fetchColumn();
+            db()->beginTransaction();
+            try {
+                q('DELETE FROM scores');
+                // le partite già giocate non possono più entrare in classifica
+                q('UPDATE runs SET submitted = 1 WHERE submitted = 0');
+                $what = "Classifica azzerata: cancellati $nScores punteggi.";
+                if (!empty($_POST['with_stats'])) {
+                    q('DELETE FROM runs');
+                    q('DELETE FROM visits');
+                    q('DELETE FROM unlocks');
+                    q('DELETE FROM attempts');
+                    $what .= ' Azzerate anche le statistiche (partite, accessi, sblocchi).';
+                }
+                db()->commit();
+                flash($what . ' Parole magiche, filtro dei nomi, nomi bannati e impostazioni sono rimasti.');
+            } catch (Throwable $e) {
+                db()->rollBack();
+                flash('Errore durante l\'azzeramento: non è stato cancellato nulla.', 'err');
+            }
+            break;
         case 'logout':
             $_SESSION = []; session_destroy(); header('Location: ./'); exit;
         case 'hide':
@@ -560,6 +588,21 @@ $back = '?p=scores' . ($search !== '' ? '&q=' . urlencode($search) : '') . ($pag
   <?php if ($offset + $per < $total): ?><a class="btn" href="?p=scores&page=<?= $page + 1 ?><?= $search ? '&q=' . urlencode($search) : '' ?>">Successivi →</a><?php endif; ?>
   <span style="color:var(--muted);align-self:center"><?= $total ?> punteggi in tutto</span>
 </div>
+</div>
+
+<h2 id="reset" style="color:var(--red)">Azzera la classifica</h2>
+<div class="card" style="border-color:var(--red)">
+  <p style="margin-top:0">Per ripartire da zero dopo il periodo di prova: cancella <b>tutti</b> i punteggi della classifica (adesso sono <?= $total ?>). Non si può annullare.</p>
+  <p style="color:var(--muted);font-size:13px">Restano: parole magiche, filtro dei nomi, nomi bannati, cookie policy, manutenzione e il tuo accesso.</p>
+  <form method="post" onsubmit="return confirm('Sei proprio sicuro? Tutti i punteggi verranno cancellati per sempre e non si possono recuperare.') && (!this.with_stats.checked || confirm('Cancelli anche tutte le statistiche (partite, accessi, sblocchi)? Anche questo non si può annullare.'))">
+    <?= csrf_field() ?><input type="hidden" name="action" value="reset"><input type="hidden" name="back" value="?p=scores">
+    <p><label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" name="with_stats" value="1" style="width:20px;height:20px;margin-top:2px">
+      <span>Cancella anche le <b>statistiche</b> (partite giocate, accessi, sblocchi di Tatanka): utile se i numeri del periodo di prova falserebbero quelli veri.</span></label></p>
+    <div class="row">
+      <label>Per confermare scrivi <b>RESET</b>: <input type="text" name="confirm_word" autocomplete="off" style="width:120px"></label>
+      <button class="danger">Azzera la classifica</button>
+    </div>
+  </form>
 </div>
 <?php
 page_foot();
