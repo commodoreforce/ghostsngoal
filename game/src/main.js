@@ -2,6 +2,7 @@ import '@fontsource/press-start-2p/400.css';
 import './cabinet.css';
 import Phaser from 'phaser';
 import { Input } from './systems/input.js';
+import { initFullscreen, toggleFullscreen } from './systems/fullscreen.js';
 import { unlockAudio, isMuted, setMuted, resumePendingMusic, preloadMusicFiles } from './systems/sfx.js';
 import { getLang, setLang } from './i18n.js';
 import { Api } from './systems/api.js';
@@ -55,11 +56,8 @@ document.getElementById('tCrt').addEventListener('click', () => {
   if (window.__crt && window.__crt.ok) window.__crt.setEnabled(!crtOff);
   try { localStorage.setItem('gng_crt', crtOff ? 'off' : 'on'); } catch (e) { /* ignora */ }
 });
-document.getElementById('tFull').addEventListener('click', () => {
-  const el = document.documentElement;
-  if (document.fullscreenElement) document.exitFullscreen();
-  else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-});
+document.getElementById('tFull').addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
+initFullscreen();
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyM') { unlockAudio(); setMuted(!isMuted()); refreshMute(); }
   if (e.code === 'KeyF') document.getElementById('tFull').click();

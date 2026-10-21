@@ -85,7 +85,7 @@ def icons():
     base = Image.new('RGBA', (64, 64), (7, 5, 15, 255))
     c = crest.resize((44, 56), Image.Resampling.NEAREST)
     base.alpha_composite(c, (10, 4))
-    for size, name in ((192, 'icon-192.png'), (180, 'apple-touch-icon.png'), (32, 'favicon.png')):
+    for size, name in ((512, 'icon-512.png'), (192, 'icon-192.png'), (180, 'apple-touch-icon.png'), (32, 'favicon.png')):
         base.resize((size, size), Image.Resampling.NEAREST if size >= 64 else Image.Resampling.BOX).save(os.path.join(PUB, name), optimize=True)
     print('icone ok')
 

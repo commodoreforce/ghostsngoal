@@ -1,5 +1,6 @@
 # GHOSTS 'N GOALS — regole per Apache (Serverplan)
 Options -Indexes
+AddType application/manifest+json .webmanifest
 # la pagina d'ingresso decide tra gioco e volantino "MISSING" (manutenzione, dall'admin)
 DirectoryIndex index.php index.html
 

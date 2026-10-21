@@ -24,7 +24,40 @@ export function txt(scene, x, y, str, opts = {}) {
   if (opts.fixed) t.setScrollFactor(0);
   if (opts.depth !== undefined) t.setDepth(opts.depth);
   t.setResolution(1);
+  // le scritte sullo schermo (non quelle che galleggiano nel livello) non devono mai uscire dai bordi,
+  // in nessuna lingua: se una riga è troppo lunga il testo grande diventa piccolo e poi va a capo
+  const key = scene.scene && scene.scene.key;
+  if (opts.fixed || !/^Level/.test(key || '')) {
+    t.fitScreen = true;
+    const set = t.setText;
+    t.setText = function setTextFit(v) { set.call(this, v); fitToScreen(this); return this; };
+    fitToScreen(t);
+  }
   return t;
+}
+
+const MARGIN = 6;
+function roomFor(t) {
+  const x = t.x;
+  if (t.originX === 0.5) return 2 * Math.min(x, W - x) - MARGIN;
+  if (t.originX === 1) return x - MARGIN / 2;
+  return W - x - MARGIN / 2;
+}
+
+export function fitToScreen(t) {
+  if (!t.fitScreen || !t.text) return;
+  const room = roomFor(t);
+  if (room <= 16) return;
+  const unscaled = t.width;
+  if (unscaled <= room) return;
+  // primo tentativo: dal carattere grande al normale
+  if (parseInt(t.style.fontSize, 10) > 8) {
+    t.style.setFontSize('8px');
+    if (t.width <= room) return;
+  }
+  // poi a capo, alla larghezza disponibile (centrato se era centrato)
+  t.setWordWrapWidth(room, false);
+  if (t.originX === 0.5) t.setAlign('center');
 }
 
 export function center(scene, y, str, opts = {}) {

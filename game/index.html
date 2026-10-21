@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#050507" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ghosts 'N Goals" />
+  <link rel="manifest" href="./manifest.webmanifest" />
   <title>Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween</title>
   <meta name="description" content="Hanno rapito il Magazziniere Petrosino: salvalo con Shpendi, Ciofi, Klinsmann e il Mister Diamanti. Gioca gratis dal telefono, entra in classifica. #DAIBURDEL" />
   <link rel="canonical" href="https://ghostsngoals.com/" />
@@ -39,14 +43,16 @@
     #boot { container-type: inline-size; }
     .boot-title { white-space: nowrap; font-size: clamp(9px, 2.8vmin, 20px); font-size: 5.2cqw; letter-spacing: .04em; text-shadow: 3px 3px 0 #000, -2px 0 0 #ff7a1a, 2px 0 0 #ff7a1a; }
     .boot-title em { font-style: normal; color: #ff7a1a; }
-    .boot-ghost { width: 12%; aspect-ratio: 1; background: #e8e4fa; border-radius: 50% 50% 18% 18%; position: relative; animation: bootfloat 1.1s ease-in-out infinite;
-      box-shadow: 0 0 24px rgba(159, 232, 255, .35); }
-    .boot-ghost::before, .boot-ghost::after { content: ''; position: absolute; top: 34%; width: 16%; height: 22%; background: #07050f; border-radius: 40%; }
-    .boot-ghost::before { left: 26%; } .boot-ghost::after { right: 26%; }
+    .boot-pet { position: relative; width: 20%; animation: bootshake 1.6s steps(1) infinite; }
+    .boot-pet img { display: block; width: 100%; height: auto; image-rendering: pixelated; filter: drop-shadow(0 0 10px rgba(159, 232, 255, .35)); }
+    .boot-help { position: absolute; left: 80%; top: 6%; white-space: nowrap; font-size: 3.4cqw; color: #0a0a0c; background: #f4f4f0; padding: .7cqw 1.2cqw;
+      border: 2px solid #0a0a0c; box-shadow: 3px 3px 0 #ff3b3b; animation: boothelp .7s steps(1) infinite; }
+    .boot-help::after { content: ''; position: absolute; left: -8px; bottom: 2px; border: 5px solid transparent; border-right-color: #f4f4f0; }
+    @keyframes bootshake { 0%, 100% { transform: translate(0, 0); } 10% { transform: translate(-2%, 1%); } 12% { transform: translate(2%, -1%); } 14% { transform: translate(0, 0); } }
+    @keyframes boothelp { 50% { transform: scale(1.08); } }
     .boot-bar { width: 46%; height: clamp(6px, 1.8vmin, 12px); border: 2px solid #ff7a1a; padding: 2px; background: #000; }
     .boot-bar i { display: block; height: 100%; width: 4%; background: #ffd23f; transition: width .15s; }
     .boot-txt { font-size: clamp(7px, 2vmin, 12px); font-size: 3cqw; color: #9fe8ff; animation: bootblink .9s steps(1) infinite; }
-    @keyframes bootfloat { 0%, 100% { transform: translateY(-6%); } 50% { transform: translateY(6%); } }
     @keyframes bootblink { 50% { opacity: .25; } }
   </style>
   <script>
@@ -70,7 +76,10 @@
           <!-- schermata di caricamento: compare subito, prima ancora del gioco; la toglie BootScene -->
           <div id="boot" aria-live="polite">
             <div class="boot-title">GHOSTS <em>'N</em> GOALS</div>
-            <div class="boot-ghost" aria-hidden="true"></div>
+            <div class="boot-pet" aria-hidden="true">
+              <img src="data:image/png;base64,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" alt="" width="40" height="38">
+              <span class="boot-help">HELP ME!</span>
+            </div>
             <div class="boot-bar"><i id="bootFill"></i></div>
             <div class="boot-txt" id="bootTxt">CARICAMENTO...</div>
           </div>

@@ -319,3 +319,16 @@ body.sharing #screen { z-index: 10; }
 .gng-share-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .gng-share-btn { font: 10px 'Press Start 2P', monospace; padding: 10px 12px; color: #ffd23f; background: #0a0a0c; border: 2px solid #ff7a1a; text-decoration: none; cursor: pointer; }
 .gng-share-btn.x { color: #f4f4f0; border-color: #8a8a98; }
+
+/* guida al tutto schermo su iPhone (aggiungi alla schermata Home) */
+.gng-fs { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.82); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.gng-fs-in { width: min(420px, 100%); max-height: 100%; overflow: auto; background: #0e0e12; border: 3px solid #ff7a1a; padding: 16px 18px; color: #ecece6;
+  font: 14px/1.5 system-ui, -apple-system, sans-serif; text-align: center; }
+.gng-fs-in > b { display: block; font: 12px/1.4 'Press Start 2P', monospace; color: #ffd23f; margin-bottom: 10px; }
+.gng-fs-in p { margin: 0 0 8px; }
+.gng-fs-in ol { text-align: left; margin: 0 auto 12px; padding-left: 22px; max-width: 300px; }
+.gng-fs-in li { margin: 6px 0; }
+.gng-fs-in svg { vertical-align: -3px; color: #0a84ff; }
+.gng-fs-in button { font: 11px 'Press Start 2P', monospace; padding: 10px 16px; color: #0a0a0c; background: #ffd23f; border: 0; cursor: pointer; }
+/* aperto dalla schermata Home: niente barra del browser, rispettiamo la tacca */
+body.standalone #cabinet { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
