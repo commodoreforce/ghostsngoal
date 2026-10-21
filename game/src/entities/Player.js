@@ -100,6 +100,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
     const onGround = this.body.blocked.down || this.body.touching.down;
+    // Capitan Romagna: ogni atterraggio da un salto vero scuote il terreno e schiaccia chi è vicino
+    if (onGround && !this.wasGround && !this.pounding && this.boosted && this.char.id === 'klinsmann' && (this.fallSpeed || 0) > 220) {
+      this.scene.shockwave(this.x, this.body.bottom, 52);
+      this.scene.cameras.main.shake(120, 0.006);
+      Sfx.slam();
+    }
+    this.fallSpeed = onGround ? 0 : Math.max(this.fallSpeed || 0, this.body.velocity.y);
+    this.wasGround = onGround;
     if (onGround) this.lastGrounded = time;
     if (onGround && this.pounding) this.landPound();
 
@@ -114,6 +122,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (left) { target = -this.tune.runSpeed; this.facing = -1; }
       if (right) { target = this.tune.runSpeed; this.facing = 1; }
     }
+    if (this.boosted) target *= 1.2;           // con il potere si corre di più
     if (sliding) target = this.facing * 190;
     // terreno (la sabbia rallenta) e vento o risacca che spingono (accovacciati si resiste meglio)
     target *= this.terrainMul ?? 1;
@@ -182,6 +191,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
     // il tiro richiesto parte subito, o appena un pallone torna libero
     if (this.shotPendingUntil > time && !wrapped && this.shoot(up, down && !onGround, crouching, false)) this.shotPendingUntil = 0;
+    // Re Mida: tenendo premuto TIRO parte una raffica di palloni d'oro
+    if (this.boosted && this.char.id === 'shpendi') {
+      this.charging = false;
+      if (Input.down('b') && !wrapped && time - (this.lastAuto || 0) > 140 && time - this.chargeStart > 140) {
+        if (this.shoot(up, down && !onGround, crouching, false)) this.lastAuto = time;
+      }
+    }
     if (this.charging && Input.down('b') && time - this.chargeStart > CHARGE_MS) {
       if (!this.chargeSfx) { Sfx.charge(); this.chargeSfx = true; }
       if ((time >> 6) % 2) this.setTintFill(0xffd23f); else this.clearTint();
@@ -201,7 +217,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const time = sc.time.now;
     const boostKind = this.boosted ? this.char.id : null;
     const fire = boostKind === 'hubner';
-    if (!charged && !fire && sc.activeBalls(false) >= this.tune.maxBalls) return false;
+    const cap = boostKind === 'shpendi' ? 7 : this.tune.maxBalls;
+    if (!charged && !fire && sc.activeBalls(false) >= cap) return false;
     this.kickUntil = time + KICK_ANIM_MS;
     const dir = this.facing;
     let angle = 0; // gradi: 0 avanti, -45 su, 45 giù
@@ -216,7 +233,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     else if (boostKind === 'shpendi') sc.spawnBall({ ...base, kind: 'gold' });
     else if (boostKind === 'ciofi') {
       // tiro a ventaglio
-      [-18, 0, 18].forEach((da) => sc.spawnBall({ ...base, angle: angle + da, kind: 'normal', extra: da !== 0 }));
+      [-28, -14, 0, 14, 28].forEach((da) => sc.spawnBall({ ...base, angle: angle + da, kind: 'normal', extra: da !== 0 }));
     } else sc.spawnBall({ ...base, kind: charged ? 'charged' : 'normal' });
     Run.stats.shots++;
     if (fire) { Sfx.fireball(); sc.cameras.main.shake(160, 0.008); } else if (keeper) Sfx.throw(); else Sfx.kick();
@@ -227,12 +244,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.pounding = false;
     Sfx.slam();
     this.scene.cameras.main.shake(220, 0.012);
-    this.scene.shockwave(this.x, this.body.bottom, 64);
+    this.scene.shockwave(this.x, this.body.bottom, 110);
   }
 
   startBoost() {
     this.boostUntil = this.scene.time.now + this.tune.boostTime;
-    if (this.char.id === 'ciofi') this.shield = 1;
+    if (this.char.id === 'ciofi') this.shield = 2;
     Run.stats.boosts++;
     this.applyLook();
   }

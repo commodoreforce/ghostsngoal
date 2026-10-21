@@ -5,10 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#050507" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>GHOSTS 'N GOALS · Cesena FC</title>
-  <meta name="description" content="L'arcade di Halloween del Cesena FC. Salva il Magazziniere Petrosino, entra in classifica. DAIBURDEL!" />
-  <meta property="og:title" content="GHOSTS 'N GOALS · Cesena FC" />
-  <meta property="og:description" content="Hanno rapito il Magazziniere Petrosino. Tocca a te. L'arcade di Halloween del Cesena FC." />
+  <title>Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween</title>
+  <meta name="description" content="Hanno rapito il Magazziniere Petrosino: salvalo con Shpendi, Ciofi, Klinsmann e il Mister Diamanti. Gioca gratis dal telefono, entra in classifica. #DAIBURDEL" />
+  <link rel="canonical" href="https://ghostsngoals.com/" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <!-- anteprima dei link (WhatsApp, Facebook, Instagram, X, Telegram, LinkedIn): gli indirizzi devono
+       essere completi; sul server index.php li riscrive con il dominio da cui si apre il sito -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Ghosts 'N Goals · Cesena FC" />
+  <meta property="og:locale" content="it_IT" />
+  <meta property="og:locale:alternate" content="en_GB" />
+  <meta property="og:url" content="https://ghostsngoals.com/" />
+  <meta property="og:title" content="Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween" />
+  <meta property="og:description" content="Hanno rapito il Magazziniere Petrosino. Tocca a te: gioca gratis, sfida la classifica e condividi il tuo record. #DAIBURDEL" />
+  <meta property="og:image" content="https://ghostsngoals.com/og.png" />
+  <meta property="og:image:secure_url" content="https://ghostsngoals.com/og.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Ghosts 'N Goals: Shpendi, Ciofi, Klinsmann e il Mister Diamanti con lo scudetto del Cesena FC" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween" />
+  <meta name="twitter:description" content="Hanno rapito il Magazziniere Petrosino. Tocca a te. #DAIBURDEL" />
+  <meta name="twitter:image" content="https://ghostsngoals.com/og.png" />
   <style>
     /* stile della schermata di caricamento qui dentro: deve vedersi prima di ogni altro file */
     #boot { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4%;
@@ -16,7 +37,7 @@
       font-family: 'Press Start 2P', ui-monospace, Menlo, Consolas, monospace; font-weight: 700; transition: opacity .35s; }
     #boot.done { opacity: 0; pointer-events: none; }
     #boot { container-type: inline-size; }
-    .boot-title { white-space: nowrap; font-size: clamp(10px, 3.6vmin, 26px); font-size: 7.4cqw; letter-spacing: .04em; text-shadow: 3px 3px 0 #000, -2px 0 0 #ff7a1a, 2px 0 0 #ff7a1a; }
+    .boot-title { white-space: nowrap; font-size: clamp(9px, 2.8vmin, 20px); font-size: 5.2cqw; letter-spacing: .04em; text-shadow: 3px 3px 0 #000, -2px 0 0 #ff7a1a, 2px 0 0 #ff7a1a; }
     .boot-title em { font-style: normal; color: #ff7a1a; }
     .boot-ghost { width: 12%; aspect-ratio: 1; background: #e8e4fa; border-radius: 50% 50% 18% 18%; position: relative; animation: bootfloat 1.1s ease-in-out infinite;
       box-shadow: 0 0 24px rgba(159, 232, 255, .35); }
@@ -24,7 +45,7 @@
     .boot-ghost::before { left: 26%; } .boot-ghost::after { right: 26%; }
     .boot-bar { width: 46%; height: clamp(6px, 1.8vmin, 12px); border: 2px solid #ff7a1a; padding: 2px; background: #000; }
     .boot-bar i { display: block; height: 100%; width: 4%; background: #ffd23f; transition: width .15s; }
-    .boot-txt { font-size: clamp(8px, 2.2vmin, 14px); font-size: 3.4cqw; color: #9fe8ff; animation: bootblink .9s steps(1) infinite; }
+    .boot-txt { font-size: clamp(7px, 2vmin, 12px); font-size: 3cqw; color: #9fe8ff; animation: bootblink .9s steps(1) infinite; }
     @keyframes bootfloat { 0%, 100% { transform: translateY(-6%); } 50% { transform: translateY(6%); } }
     @keyframes bootblink { 50% { opacity: .25; } }
   </style>

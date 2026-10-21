@@ -23,7 +23,7 @@ header('Cache-Control: no-cache, no-store, must-revalidate');
 header('X-Content-Type-Options: nosniff');
 
 if ($maint) {
-    require __DIR__ . '/lib/share.php';
+    require_once __DIR__ . '/lib/share.php';
     http_response_code(503);            // per i motori di ricerca: torna presto, non è un errore
     header('Retry-After: 3600');
     $html = (string) file_get_contents(__DIR__ . '/lib/maintenance.html');
@@ -31,4 +31,9 @@ if ($maint) {
     exit;
 }
 
-readfile(__DIR__ . '/index.html');
+// gli indirizzi completi dell'anteprima dei link seguono il dominio da cui si apre il sito (es. lo staging)
+require_once __DIR__ . '/lib/share.php';
+$html = (string) file_get_contents(__DIR__ . '/index.html');
+$base = share_base_url();
+if ($base !== 'https://ghostsngoals.com/') $html = str_replace('https://ghostsngoals.com/', htmlspecialchars($base, ENT_QUOTES, 'UTF-8'), $html);
+echo $html;

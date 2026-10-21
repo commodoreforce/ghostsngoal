@@ -7,7 +7,7 @@ import { charById } from '../data/characters.js';
 import { t, getLang } from '../i18n.js';
 import { center, txt, pad, C, W, H } from '../systems/ui.js';
 import { surface } from '../systems/layout.js';
-import { shareRecord, cardBlob } from '../systems/shareCard.js';
+import { shareRecord, cardReady } from '../systems/shareCard.js';
 import { RunLog } from '../systems/runlog.js';
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-!'.split('');
@@ -125,14 +125,15 @@ export class NameEntryScene extends Phaser.Scene {
     this.children.removeAll(true);
     this.tweens.killAll();
     center(this, 10, t('hiscores'), { color: C.orange });
-    const r = offline ? { ok: false } : await Api.leaderboard(10);
+    const r = offline ? { ok: false } : await Api.leaderboard(9);
     if (!this.scene.isActive()) return;
     if (!r.ok) {
       center(this, 100, `${t('score')} ${pad(Run.score)}`, { color: C.white });
       center(this, 120, t('magicOffline'), { color: C.grey });
     } else {
       (r.scores || []).forEach((s, i) => {
-        const y = 30 + i * 17;
+        if (i >= 9) return;
+        const y = 28 + i * 16;
         const me = highlightId && s.id === highlightId;
         const col = me ? C.gold : i === 0 ? C.white : C.grey;
         txt(this, 10, y, `${String(i + 1).padStart(2, ' ')}.`, { color: col });
@@ -143,7 +144,7 @@ export class NameEntryScene extends Phaser.Scene {
       });
     }
     // punteggio da controllare a mano (i primi posti, se in admin è attivo): compare dopo l'approvazione
-    if (this.review) center(this, 190, getLang() === 'it' ? 'RECORD IN VERIFICA' : 'SCORE UNDER REVIEW', { color: C.gold });
+    if (this.review) center(this, 176, getLang() === 'it' ? 'RECORD IN VERIFICA' : 'SCORE UNDER REVIEW', { color: C.gold });
     this.backAt = this.time.now + (Run.cheat ? 9000 : 30000);
     this.time.delayedCall(800, () => { this.canLeave = true; });
     if (!Run.cheat && Run.score > 0) this.shareButtons(highlightId);
@@ -161,34 +162,33 @@ export class NameEntryScene extends Phaser.Scene {
       rank: scoreId ? this.rank : null, nickname: scoreId ? this.nick : null,
       host: /ghostsngoals/i.test(location.host) ? location.host.replace(/^www\./i, '').toUpperCase() : 'GHOSTSNGOALS.COM', url: scoreId ? `${base}share.php?id=${scoreId}${it ? '' : '&lang=en'}` : base,
     };
+    // la barra dei pulsanti sta sotto la classifica, su fondo scuro (non copre le scritte)
     const wrap = document.createElement('div');
-    Object.assign(wrap.style, { position: 'absolute', left: '0', right: '0', bottom: '3%', display: 'flex', justifyContent: 'center', gap: '3%', zIndex: 3 });
+    wrap.className = 'gng-sharebar';
     const ready = {};
-    ['story', 'post'].forEach((k) => cardBlob(this, k, data).then((b) => { ready[k] = b; }));
-    const mk = (label, kind) => {
+    // le cartoline si preparano subito: al tocco il menu di condivisione si apre all'istante
+    this.time.delayedCall(60, () => { ['story', 'post'].forEach((k) => { try { ready[k] = cardReady(this, k, data); } catch (e) { /* si rifà al tocco */ } }); });
+    const mk = (label, onTap, cls = '') => {
       const b = document.createElement('button');
+      b.type = 'button';
       b.textContent = label;
-      Object.assign(b.style, {
-        font: 'inherit', fontFamily: '"Press Start 2P", monospace', fontSize: 'clamp(8px, 2.6vw, 13px)', padding: '2.2% 3.5%',
-        color: '#ffd23f', background: '#0a0a0c', border: '2px solid #ff7a1a', borderRadius: '0', cursor: 'pointer',
-      });
-      b.addEventListener('pointerdown', (e) => e.stopPropagation());
-      b.addEventListener('click', async (e) => {
-        e.preventDefault(); e.stopPropagation();
-        this.backAt = this.time.now + 30000;
-        Sfx.select();
-        const res = await shareRecord(this, data, kind, ready[kind]);
-        if (res === 'downloaded' && this.scene.isActive()) {
-          const m = center(this, 212, it ? 'IMMAGINE SCARICATA · LINK COPIATO' : 'IMAGE SAVED · LINK COPIED', { color: C.green });
-          this.time.delayedCall(2500, () => m.destroy());
-        }
-      });
+      if (cls) b.className = cls;
+      ['pointerdown', 'touchstart'].forEach((ev) => b.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
+      b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onTap(); });
       wrap.appendChild(b);
     };
-    mk(it ? 'CONDIVIDI STORIA' : 'SHARE STORY', 'story');
-    mk(it ? 'POST' : 'POST', 'post');
+    const share = (kind) => {
+      this.backAt = this.time.now + 60000;
+      Sfx.select();
+      shareRecord(this, data, kind, ready[kind]);
+    };
+    mk(it ? 'CONDIVIDI STORIA' : 'SHARE STORY', () => share('story'));
+    mk('POST', () => share('post'));
+    mk(it ? 'CONTINUA ▶' : 'CONTINUE ▶', () => { if (this.scene.isActive()) this.scene.start('Title'); }, 'go');
     screen.appendChild(wrap);
+    document.body.classList.add('sharing');
     this.shareWrap = wrap;
+    this.events.once('shutdown', () => { document.body.classList.remove('sharing'); document.querySelectorAll('.gng-share').forEach((n) => n.remove()); });
     this.events.once('shutdown', () => { if (this.shareWrap) { this.shareWrap.remove(); this.shareWrap = null; } });
   }
 

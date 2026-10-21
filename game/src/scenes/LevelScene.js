@@ -18,6 +18,9 @@ const STADIUM_F = 0.35;   // velocità dello stadio
 const SIGN_X = 262;       // centro dell'insegna OROGEL STADIUM nel piano dell'ingresso
 const INSIDE_F = 0.295;   // velocità della tavola dell'interno dello stadio: all'arena del boss si vede la Curva Mare
 
+// colore di ogni potere: lampo, cornice dello schermo e scia del giocatore
+const BOOST_COLORS = { shpendi: 0xffd23f, ciofi: 0xffe066, klinsmann: 0x5aa0ff, diamanti: 0xc77dff, hubner: 0xff7a1a };
+
 export class LevelScene extends Phaser.Scene {
   constructor(key = 'Level') { super(key); }
 
@@ -374,6 +377,8 @@ export class LevelScene extends Phaser.Scene {
 
     const P = this.player;
     P.update(time, delta);
+    // la cornice del potere sparisce con il potere, anche nelle scene guidate dei finali
+    if (this.boostFrame && this.boostFrame.alpha > 0 && !P.boosted && !P.boostUntil) { this.tweens.killTweensOf(this.boostFrame); this.boostFrame.clear().setAlpha(0); }
 
     // look-ahead della telecamera nella direzione di corsa
     const cam = this.cameras.main;
@@ -395,8 +400,9 @@ export class LevelScene extends Phaser.Scene {
       else if (P.boostUntil) {
         const left = (P.boostUntil - time) / P.tune.boostTime;
         this.hudBoost.width = 80 * Phaser.Math.Clamp(left, 0, 1);
-        setMusicTempo(P.boostUntil - time < 2000 ? 1.25 : 1);
+        setMusicTempo(P.boostUntil - time < 2000 ? 1.3 : 1.15);
         if ((time >> 5) % 3 === 0) this.boostAura(P);
+        this.boostTrail(P, time);
       }
       // arena del boss
       if (!this.bossActive && P.x > this.arenaX + 24) this.enterArena();
@@ -615,8 +621,9 @@ export class LevelScene extends Phaser.Scene {
     this.lastKill = now;
     const mult = Math.min(this.combo, 4);
     const midas = this.player.boosted && this.player.char.id === 'shpendi';
-    const pts = e.points * mult * (midas ? 2 : 1);
+    const pts = e.points * mult * (midas ? 3 : 1);
     this.award(pts, e.x, e.y - 8, midas ? C.gold : C.white);
+    if (midas) this.goldStatue(e);
     if (mult > 1) {
       this.hudCombo.setText(`${t('combo')} x${mult}`);
       this.tweens.add({ targets: this.hudCombo, scale: { from: 1.6, to: 1 }, duration: 160 });
@@ -632,6 +639,24 @@ export class LevelScene extends Phaser.Scene {
     const r = Math.random();
     if (r < 0.03) this.addPickup('seahorse', e.x, e.y - 8);
     else if (r < 0.09) this.addPickup('pumpkinDrop', e.x, e.y - 8);
+  }
+
+  // Re Mida: il nemico diventa una statua d'oro che vibra e si sbriciola in monete
+  goldStatue(e) {
+    if (!e.texture || !e.frame) return;
+    const st = this.add.image(e.x, e.y, e.texture.key, e.frame.name).setOrigin(e.originX, e.originY).setFlipX(e.flipX)
+      .setDepth(31).setTintFill(0xffd23f);
+    const shine = this.add.image(e.x, e.y, e.texture.key, e.frame.name).setOrigin(e.originX, e.originY).setFlipX(e.flipX)
+      .setDepth(32).setTintFill(0xfff6c8).setAlpha(0);
+    this.tweens.add({ targets: shine, alpha: 0.9, yoyo: true, duration: 90, repeat: 1 });
+    this.tweens.add({ targets: [st, shine], x: e.x + 1, yoyo: true, repeat: 4, duration: 40 });
+    floatText(this, e.x, e.y - 18, t('gold'), C.gold);
+    this.time.delayedCall(380, () => {
+      this.fxGold.explode(20, st.x, st.y - 6);
+      this.coinBurst(st.x, st.y - 4);
+      Sfx.coin();
+      st.destroy(); shine.destroy();
+    });
   }
 
   // ------------------------------------------------------------------ palloni
@@ -654,6 +679,7 @@ export class LevelScene extends Phaser.Scene {
     b.body.setVelocity(Math.cos(rad) * speed * dir, Math.sin(rad) * speed);
     if (dir < 0) b.setFlipX(true);
     if (charged) { b.setScale(1.5); b.setTint(0xffb27a); }
+    if (kind === 'gold') b.setScale(1.6);
     b.homing = P.char.id === 'diamanti' && kind === 'normal';
     this.balls.push(b);
     return b;
@@ -665,7 +691,7 @@ export class LevelScene extends Phaser.Scene {
       if (!b.active) { this.balls.splice(i, 1); continue; }
       if (time - b.born > b.life) { this.killBall(b, true); this.balls.splice(i, 1); continue; }
       if (b.kind !== 'fire') b.angle += b.body.velocity.x > 0 ? 18 : -18;
-      if (b.kind === 'fire' && (time >> 5) % 2) this.fxGold.explode(1, b.x - Math.sign(b.body.velocity.x) * 6, b.y);
+      if ((b.kind === 'fire' || b.kind === 'gold') && (time >> 5) % 2) this.fxGold.explode(1, b.x - Math.sign(b.body.velocity.x) * 6, b.y);
       if (b.homing) {
         // abilità di Diamanti: il mancino curva verso il nemico più vicino
         let best = null; let bd = 90;
@@ -795,15 +821,48 @@ export class LevelScene extends Phaser.Scene {
   startBoost() {
     const P = this.player;
     P.startBoost();
+    const id = P.char.id;
+    const col = BOOST_COLORS[id] || 0xffd23f;
     Sfx.powerup();
-    this.cameras.main.flash(160, 255, 210, 63);
-    floatText(this, P.x, P.y - 24, t('boostGo'), C.gold, 8);
+    this.time.delayedCall(250, () => Sfx.cheat());
+    // un istante di fermo, lampo e scossa: deve sentirsi che è cambiato qualcosa
+    this.hitStopUntil = this.time.now + 320;
+    this.cameras.main.flash(260, (col >> 16) & 255, (col >> 8) & 255, col & 255);
+    this.cameras.main.shake(260, 0.012);
+    this.fxGold.explode(30, P.x, P.y - 10);
+    // il nome del potere, grande, al centro dello schermo
+    if (this.boostTitle) { this.boostTitle.destroy(); this.boostSub.destroy(); }
+    const hex = `#${col.toString(16).padStart(6, '0')}`;
+    this.boostTitle = center(this, 58, t(`bShout_${id}`), { size: 16, color: hex, fixed: true, depth: 125, stroke: '#000', strokeThickness: 4 });
+    if (this.boostTitle.width > 244) this.boostTitle.setScale(244 / this.boostTitle.width);
+    this.boostSub = center(this, 82, t(`bSub_${id}`), { color: C.white, fixed: true, depth: 125, stroke: '#000', strokeThickness: 3, lineSpacing: 5 });
+    const k = this.boostTitle.scaleX;
+    this.tweens.add({ targets: this.boostTitle, scale: { from: k * 2.2, to: k }, duration: 320, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: [this.boostTitle, this.boostSub], alpha: 0, delay: 2200, duration: 400, onComplete: () => { if (this.boostTitle) { this.boostTitle.destroy(); this.boostSub.destroy(); this.boostTitle = null; } } });
+    // cornice luminosa attorno allo schermo per tutta la durata del potere
+    if (!this.boostFrame) this.boostFrame = this.add.graphics().setScrollFactor(0).setDepth(96);
+    this.boostFrame.clear().setAlpha(1).lineStyle(4, col, 1).strokeRect(2, 2, W - 4, H - 4).lineStyle(2, 0xffffff, 0.6).strokeRect(5, 5, W - 10, H - 10).setAlpha(0.7);
+    this.tweens.killTweensOf(this.boostFrame);
+    this.tweens.add({ targets: this.boostFrame, alpha: 0.25, yoyo: true, repeat: -1, duration: 260 });
+    this.boostColor = col;
+    this.lastTrail = 0;
     [this.hudBoostBg, this.hudBoost, this.hudBoostIcon].forEach((o) => o.setVisible(true));
-    if (P.char.id === 'diamanti') playMusic('boost');
+    if (id === 'diamanti') playMusic('boost');
+    else setMusicTempo(1.15);
+  }
+
+  // scia di immagini del giocatore mentre ha il potere (come i "super" dei picchiaduro)
+  boostTrail(P, time) {
+    if (time - (this.lastTrail || 0) < 70 || !P.frame) return;
+    this.lastTrail = time;
+    const g = this.add.image(P.x, P.y, P.texture.key, P.frame.name).setOrigin(P.originX, P.originY).setFlipX(P.flipX)
+      .setDepth(P.depth - 1).setTintFill(this.boostColor || 0xffd23f).setAlpha(0.55);
+    this.tweens.add({ targets: g, alpha: 0, duration: 260, onComplete: () => g.destroy() });
   }
 
   endBoost() {
     const P = this.player;
+    if (this.boostFrame) { this.tweens.killTweensOf(this.boostFrame); this.boostFrame.clear(); }
     P.endBoost();
     [this.hudBoostBg, this.hudBoost, this.hudBoostIcon].forEach((o) => o.setVisible(false));
     setMusicTempo(1);
@@ -997,6 +1056,7 @@ export class LevelScene extends Phaser.Scene {
     const P = this.player;
     P.cheer();
     P.boostUntil = 0; P.clearTint(); P.applyLook();
+    if (this.boostFrame) { this.tweens.killTweensOf(this.boostFrame); this.boostFrame.clear(); }
     [this.hudBoostBg, this.hudBoost, this.hudBoostIcon].forEach((o) => o.setVisible(false));
     Sfx.daiburdel();
     // velo scuro dietro al conteggio: sopra la curva piena di gente le scritte devono leggersi

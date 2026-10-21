@@ -302,3 +302,20 @@ body.crt-gl .crt { display: none; }
 .legal-box a { color: #ffb070; } .legal-box code { color: #ffd23f; }
 .legal-box table { width: 100%; border-collapse: collapse; font-size: 13px; } .legal-box th, .legal-box td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #2a2a36; vertical-align: top; }
 .legal-x { position: sticky; top: 0; float: right; width: 36px; height: 36px; font-size: 16px; color: #fff; background: #1c1c24; border: 1px solid #3a3a46; border-radius: 6px; cursor: pointer; }
+
+/* condivisione del record: barra dei pulsanti sotto la classifica e finestra con l'immagine */
+body.sharing #screen { z-index: 10; }
+.gng-sharebar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; justify-content: center; gap: 2.5%;
+  padding: 1.6% 2% 2.2%; background: linear-gradient(180deg, rgba(5,3,8,0) 0, rgba(5,3,8,.92) 28%); }
+#screen { container-type: inline-size; }
+.gng-sharebar button { white-space: nowrap; font-family: 'Press Start 2P', monospace; font-size: clamp(7px, 2.3vw, 12px); font-size: 2.5cqw; padding: 1.5cqw 2cqw; color: #ffd23f; background: #0a0a0c;
+  border: 2px solid #ff7a1a; border-radius: 0; cursor: pointer; touch-action: manipulation; }
+.gng-sharebar button.go { color: #f4f4f0; border-color: #8a8a98; }
+.gng-sharebar button:active { transform: translateY(1px); background: #1a1220; }
+.gng-share { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.86); display: flex; align-items: center; justify-content: center; padding: 14px; }
+.gng-share-in { display: flex; flex-direction: column; align-items: center; gap: 12px; max-height: 100%; width: min(520px, 100%); }
+.gng-share img { display: block; max-width: 100%; max-height: 62dvh; image-rendering: pixelated; border: 3px solid #ff7a1a; -webkit-touch-callout: default; user-select: auto; }
+.gng-share-tip { margin: 0; color: #9fe8ff; text-align: center; font: 10px/1.6 'Press Start 2P', monospace; }
+.gng-share-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.gng-share-btn { font: 10px 'Press Start 2P', monospace; padding: 10px 12px; color: #ffd23f; background: #0a0a0c; border: 2px solid #ff7a1a; text-decoration: none; cursor: pointer; }
+.gng-share-btn.x { color: #f4f4f0; border-color: #8a8a98; }

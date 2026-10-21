@@ -178,28 +178,73 @@ export function cardBlob(scene, kind, data) {
   return new Promise((res) => cv.toBlob((b) => res(b), 'image/png'));
 }
 
-// condivide la storia (o il post): menu di sistema se c'è, altrimenti scarica l'immagine e copia il link
-// (l'immagine si prepara prima del tocco: il menu di condivisione va aperto subito, dentro il gesto)
-export async function shareRecord(scene, data, kind = 'story', ready = null) {
+// la cartolina pronta subito (senza attese): il menu di condivisione dei telefoni si apre solo se
+// la chiamata parte nello stesso istante del tocco, quindi l'immagine va preparata prima
+export function cardReady(scene, kind, data) {
+  const url = drawCard(scene, kind, data).toDataURL('image/png');
+  const bin = atob(url.split(',')[1]);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return { url, blob: new Blob([buf], { type: 'image/png' }) };
+}
+
+const isTouch = () => (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+
+// finestra con l'immagine: funziona ovunque, anche nei browser interni di Instagram, Facebook e WhatsApp
+// (dove la condivisione e lo scaricamento sono bloccati): basta tenere premuto sull'immagine
+function shareSheet(card, data, kind, text) {
+  const it = getLang() === 'it';
+  document.querySelectorAll('.gng-share').forEach((n) => n.remove());
+  const box = document.createElement('div');
+  box.className = 'gng-share';
+  box.innerHTML = `
+    <div class="gng-share-in">
+      <img alt="" class="${kind}">
+      <p class="gng-share-tip"></p>
+      <div class="gng-share-row">
+        <a class="gng-share-btn dl"></a>
+        <button class="gng-share-btn cp"></button>
+        <button class="gng-share-btn x"></button>
+      </div>
+    </div>`;
+  const img = box.querySelector('img');
+  img.src = card.url;
+  img.alt = it ? 'La tua cartolina del record' : 'Your high score card';
+  box.querySelector('.gng-share-tip').textContent = isTouch()
+    ? (it ? 'TIENI PREMUTO SULL\'IMMAGINE PER SALVARLA, POI PUBBLICALA NELLE STORIE O SU WHATSAPP' : 'PRESS AND HOLD THE IMAGE TO SAVE IT, THEN POST IT TO YOUR STORIES OR WHATSAPP')
+    : (it ? 'SCARICA L\'IMMAGINE E PUBBLICALA SUI TUOI SOCIAL' : 'DOWNLOAD THE IMAGE AND POST IT ON YOUR SOCIALS');
+  const dl = box.querySelector('.dl');
+  dl.textContent = it ? 'SCARICA' : 'DOWNLOAD';
+  dl.href = card.url;
+  dl.download = `ghostsngoals-${data.score}.png`;
+  const cp = box.querySelector('.cp');
+  cp.textContent = it ? 'COPIA IL LINK' : 'COPY LINK';
+  cp.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(`${text} ${data.url}`); cp.textContent = it ? 'LINK COPIATO!' : 'LINK COPIED!'; } catch (e) { cp.textContent = data.url; }
+  });
+  const x = box.querySelector('.x');
+  x.textContent = it ? 'CHIUDI' : 'CLOSE';
+  const close = () => box.remove();
+  x.addEventListener('click', close);
+  box.addEventListener('click', (e) => { if (e.target === box) close(); });
+  ['pointerdown', 'touchstart', 'keydown'].forEach((ev) => box.addEventListener(ev, (e) => e.stopPropagation()));
+  document.body.appendChild(box);
+  return 'sheet';
+}
+
+// condivide la storia (o il post): menu di sistema del telefono se c'è, altrimenti la finestra con l'immagine
+export function shareRecord(scene, data, kind = 'story', ready = null) {
   const L = T[getLang()] || T.it;
-  const blob = ready || await cardBlob(scene, kind, data);
-  const file = new File([blob], `ghostsngoals-${data.score}.png`, { type: 'image/png' });
+  const card = ready && ready.blob ? ready : cardReady(scene, kind, data);
+  const file = new File([card.blob], `ghostsngoals-${data.score}.png`, { type: 'image/png' });
   const text = `${L.best}: ${data.score} · ${L.dare} #DAIBURDEL`;
-  const url = data.url;
-  try {
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], text: `${text} ${url}` });
-      return 'shared';
-    }
-    if (navigator.share) { await navigator.share({ text, url }); return 'shared-link'; }
-  } catch (e) {
-    if (e && e.name === 'AbortError') return 'cancel';
+  let can = false;
+  try { can = !!(navigator.canShare && navigator.canShare({ files: [file] })); } catch (e) { can = false; }
+  if (can) {
+    // nessuna attesa prima di share(): il gesto del tocco resta valido
+    return navigator.share({ files: [file], text: `${text} ${data.url}` })
+      .then(() => 'shared')
+      .catch((e) => (e && e.name === 'AbortError' ? 'cancel' : shareSheet(card, data, kind, text)));
   }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = file.name;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  try { await navigator.clipboard.writeText(`${text} ${url}`); } catch (e) { /* niente appunti */ }
-  return 'downloaded';
+  return Promise.resolve(shareSheet(card, data, kind, text));
 }

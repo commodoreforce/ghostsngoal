@@ -11,13 +11,13 @@ try { $s = share_score($id); } catch (Throwable $e) { $s = null; }
 $base = share_base_url();
 $e = fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 if ($s) {
-    $title = $en ? "{$s['nickname']} SCORED {$s['score']} AT GHOSTS 'N GOALS" : "{$s['nickname']} HA FATTO {$s['score']} PUNTI A GHOSTS 'N GOALS";
-    $desc = ($en ? "#{$s['rank']} on the leaderboard. Beat me if you can! The Cesena FC Halloween arcade." : "#{$s['rank']} in classifica. Battimi se ci riesci! L'arcade di Halloween del Cesena FC.") . ' #DAIBURDEL';
+    $title = $en ? "Ghosts 'N Goals: the official Cesena FC Halloween video game" : "Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween";
+    $desc = ($en ? "{$s['nickname']} scored {$s['score']} points: #{$s['rank']} on the leaderboard. Beat me if you can!" : "{$s['nickname']} ha fatto {$s['score']} punti: #{$s['rank']} in classifica. Battimi se ci riesci!") . ' #DAIBURDEL';
     $img = $base . 'share_img.php?id=' . (int) $s['id'] . ($en ? '&lang=en' : '');
 } else {
-    $title = "GHOSTS 'N GOALS · Cesena FC";
+    $title = $en ? "Ghosts 'N Goals: the official Cesena FC Halloween video game" : "Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween";
     $desc = $en ? "Petrosino the kit man has been kidnapped. It's up to you. The Cesena FC Halloween arcade." : "Hanno rapito il Magazziniere Petrosino. Tocca a te. L'arcade di Halloween del Cesena FC.";
-    $img = $base . 'share_img.php' . ($en ? '?lang=en' : '');
+    $img = $base . 'og.png';
 }
 $game = $base . '?utm_source=share';
 header('Content-Type: text/html; charset=utf-8');
