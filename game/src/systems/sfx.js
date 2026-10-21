@@ -183,6 +183,20 @@ export const Sfx = {
   // l'alba: un accordo che si apre
   dawn: () => { [294, 370, 440, 587, 740, 880].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: 2.2 - i * 0.2, vol: 0.22, at: i * 0.18 })); tone({ type: 'sine', f0: 147, dur: 2.6, vol: 0.3 }); },
   soon: () => { [220, 262, 330, 311].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: 0.6, vol: 0.3, at: i * 0.35 })); tone({ type: 'sine', f0: 110, dur: 1.8, vol: 0.3 }); },
+  // ---- bonus dei rigori
+  // la curva che esplode: boato di rumore che sale e si apre, con il battimani
+  crowd: () => { noise({ dur: 1.8, vol: 0.55, f: 900, q: 0.35, sweep: 500 }); noise({ dur: 1.4, vol: 0.3, f: 2600, q: 0.5, at: 0.1 }); for (let i = 0; i < 8; i++) noise({ dur: 0.04, vol: 0.18, f: 3200, q: 2, at: 0.5 + i * 0.13 }); },
+  // la curva delusa: "ohhh" che scende
+  ooh: () => { noise({ dur: 1.0, vol: 0.4, f: 520, q: 1.2, sweep: -260 }); tone({ type: 'sawtooth', f0: 210, f1: 150, dur: 0.9, vol: 0.08 }); },
+  // palo: il ferro che vibra
+  post: () => { [1, 2.4, 3.9].forEach((k, i) => tone({ type: 'triangle', f0: 820 * k, f1: 800 * k, dur: 0.6 - i * 0.12, vol: [0.4, 0.2, 0.1][i], attack: 0.001 })); noise({ dur: 0.05, vol: 0.4, f: 3000 }); },
+  // la rete che si gonfia
+  net: () => { noise({ dur: 0.35, vol: 0.45, f: 1400, q: 0.5, sweep: -700 }); tone({ type: 'triangle', f0: 160, f1: 70, dur: 0.15, vol: 0.35 }); },
+  // parata: schiaffo dei guantoni
+  glove: () => { noise({ dur: 0.07, vol: 0.6, f: 1100, q: 0.8 }); tone({ type: 'triangle', f0: 240, f1: 110, dur: 0.1, vol: 0.45 }); },
+  // battito della tensione prima del tiro
+  beat: () => { tone({ type: 'sine', f0: 62, f1: 48, dur: 0.11, vol: 0.55 }); tone({ type: 'sine', f0: 58, f1: 44, dur: 0.1, vol: 0.4, at: 0.16 }); },
+  aimLock: () => { tone({ f0: 1200, dur: 0.04, vol: 0.25 }); tone({ f0: 1800, dur: 0.06, vol: 0.2, at: 0.04 }); },
   gameOver: () => [392, 370, 349, 330, 262].forEach((f, i) => tone({ type: 'triangle', f0: f, dur: i === 4 ? 0.8 : 0.22, vol: 0.45, at: i * 0.24 })),
 };
 

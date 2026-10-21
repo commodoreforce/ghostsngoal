@@ -330,5 +330,21 @@
   "l3_pier_water": {
     "width": 523,
     "height": 55
+  },
+  "pen_bg0": {
+    "width": 256,
+    "height": 224
+  },
+  "pen_bg1": {
+    "width": 256,
+    "height": 224
+  },
+  "pen_bg2": {
+    "width": 256,
+    "height": 224
+  },
+  "pen_bg3": {
+    "width": 256,
+    "height": 224
   }
 }

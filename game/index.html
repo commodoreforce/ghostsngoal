@@ -9,6 +9,29 @@
   <meta name="description" content="L'arcade di Halloween del Cesena FC. Salva il Magazziniere Petrosino, entra in classifica. DAIBURDEL!" />
   <meta property="og:title" content="GHOSTS 'N GOALS · Cesena FC" />
   <meta property="og:description" content="Hanno rapito il Magazziniere Petrosino. Tocca a te. L'arcade di Halloween del Cesena FC." />
+  <style>
+    /* stile della schermata di caricamento qui dentro: deve vedersi prima di ogni altro file */
+    #boot { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4%;
+      background: radial-gradient(ellipse at 50% 40%, #1d1744 0, #07050f 70%); color: #f4f4f0;
+      font-family: 'Press Start 2P', ui-monospace, Menlo, Consolas, monospace; font-weight: 700; transition: opacity .35s; }
+    #boot.done { opacity: 0; pointer-events: none; }
+    #boot { container-type: inline-size; }
+    .boot-title { white-space: nowrap; font-size: clamp(10px, 3.6vmin, 26px); font-size: 7.4cqw; letter-spacing: .04em; text-shadow: 3px 3px 0 #000, -2px 0 0 #ff7a1a, 2px 0 0 #ff7a1a; }
+    .boot-title em { font-style: normal; color: #ff7a1a; }
+    .boot-ghost { width: 12%; aspect-ratio: 1; background: #e8e4fa; border-radius: 50% 50% 18% 18%; position: relative; animation: bootfloat 1.1s ease-in-out infinite;
+      box-shadow: 0 0 24px rgba(159, 232, 255, .35); }
+    .boot-ghost::before, .boot-ghost::after { content: ''; position: absolute; top: 34%; width: 16%; height: 22%; background: #07050f; border-radius: 40%; }
+    .boot-ghost::before { left: 26%; } .boot-ghost::after { right: 26%; }
+    .boot-bar { width: 46%; height: clamp(6px, 1.8vmin, 12px); border: 2px solid #ff7a1a; padding: 2px; background: #000; }
+    .boot-bar i { display: block; height: 100%; width: 4%; background: #ffd23f; transition: width .15s; }
+    .boot-txt { font-size: clamp(8px, 2.2vmin, 14px); font-size: 3.4cqw; color: #9fe8ff; animation: bootblink .9s steps(1) infinite; }
+    @keyframes bootfloat { 0%, 100% { transform: translateY(-6%); } 50% { transform: translateY(6%); } }
+    @keyframes bootblink { 50% { opacity: .25; } }
+  </style>
+  <script>
+    // lingua della scritta di caricamento (il resto lo decide il gioco)
+    try { if (!/^it/i.test((navigator.languages && navigator.languages[0]) || navigator.language || 'it') && !(navigator.languages || []).slice(0, 2).some(function (l) { return /^it/i.test(l); })) document.addEventListener('DOMContentLoaded', function () { var t = document.getElementById('bootTxt'); if (t) t.textContent = 'LOADING...'; }); } catch (e) {}
+  </script>
 </head>
 <body>
   <div id="room">
@@ -23,6 +46,13 @@
       <div class="bezel">
         <div id="screen">
           <div id="game"></div>
+          <!-- schermata di caricamento: compare subito, prima ancora del gioco; la toglie BootScene -->
+          <div id="boot" aria-live="polite">
+            <div class="boot-title">GHOSTS <em>'N</em> GOALS</div>
+            <div class="boot-ghost" aria-hidden="true"></div>
+            <div class="boot-bar"><i id="bootFill"></i></div>
+            <div class="boot-txt" id="bootTxt">CARICAMENTO...</div>
+          </div>
           <div class="crt" aria-hidden="true"></div>
         </div>
       </div>

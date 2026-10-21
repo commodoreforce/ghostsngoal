@@ -607,5 +607,243 @@
     "frames": [
       "__solo"
     ]
+  },
+  "pk_shpendi": {
+    "sheet": "en_pk_shpendi",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_shpendi_away": {
+    "sheet": "en_pk_shpendi_away",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_shpendi_third": {
+    "sheet": "en_pk_shpendi_third",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_ciofi": {
+    "sheet": "en_pk_ciofi",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "run4",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_ciofi_away": {
+    "sheet": "en_pk_ciofi_away",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "run4",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_ciofi_third": {
+    "sheet": "en_pk_ciofi_third",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "run4",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_hubner": {
+    "sheet": "en_pk_hubner",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "run4",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_diamanti": {
+    "sheet": "en_pk_diamanti",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "run3",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_ghostkicker": {
+    "sheet": "en_pk_ghostkicker",
+    "frameWidth": 96,
+    "frameHeight": 108,
+    "frames": [
+      "idle0",
+      "idle1",
+      "run0",
+      "run1",
+      "run2",
+      "plant",
+      "strike",
+      "follow",
+      "cheer0",
+      "cheer1",
+      "sad"
+    ]
+  },
+  "pk_klinsmann": {
+    "sheet": "en_pk_klinsmann",
+    "frameWidth": 76,
+    "frameHeight": 60,
+    "frames": [
+      "ready0",
+      "ready1",
+      "diveLow",
+      "diveHigh",
+      "jump",
+      "block",
+      "catch",
+      "cheer",
+      "beaten"
+    ]
+  },
+  "pk_klinsmann_away": {
+    "sheet": "en_pk_klinsmann_away",
+    "frameWidth": 76,
+    "frameHeight": 60,
+    "frames": [
+      "ready0",
+      "ready1",
+      "diveLow",
+      "diveHigh",
+      "jump",
+      "block",
+      "catch",
+      "cheer",
+      "beaten"
+    ]
+  },
+  "pk_klinsmann_third": {
+    "sheet": "en_pk_klinsmann_third",
+    "frameWidth": 76,
+    "frameHeight": 60,
+    "frames": [
+      "ready0",
+      "ready1",
+      "diveLow",
+      "diveHigh",
+      "jump",
+      "block",
+      "catch",
+      "cheer",
+      "beaten"
+    ]
+  },
+  "pk_ghostkeeper": {
+    "sheet": "en_pk_ghostkeeper",
+    "frameWidth": 76,
+    "frameHeight": 60,
+    "frames": [
+      "ready0",
+      "ready1",
+      "diveLow",
+      "diveHigh",
+      "jump",
+      "block",
+      "catch",
+      "cheer",
+      "beaten"
+    ]
   }
 }

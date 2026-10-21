@@ -22,7 +22,7 @@ declare(strict_types=1);
 const AC_LEVEL_MIN_SEC = [1 => 35, 2 => 45, 3 => 50];
 // punti "a pacchetto" che si possono fare in un livello oltre alla media al secondo:
 // boss, bonus di fine livello (tempo, precisione, nessun colpo), zucche d'oro, casse
-const AC_LEVEL_BURST = [1 => 45000, 2 => 70000, 3 => 80000];
+const AC_LEVEL_BURST = [1 => 80000, 2 => 105000, 3 => 80000];   // 1 e 2 comprendono il bonus dei rigori
 const AC_RATE = 300;          // punti al secondo, di media, sopra i pacchetti
 const AC_KILL_RATE = 3;       // nemici sconfitti al secondo, di media
 const AC_SLACK = 2000;

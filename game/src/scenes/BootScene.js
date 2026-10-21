@@ -11,6 +11,9 @@ export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
 
   preload() {
+    // barra della schermata di caricamento (in HTML, visibile fin dal primo istante)
+    const fill = document.getElementById('bootFill');
+    this.load.on('progress', (v) => { if (fill) fill.style.width = `${Math.max(4, Math.round(v * 100))}%`; });
     // sprite veri (generati con tools/build_sprites.py); chi non li ha ancora usa quelli provvisori
     this.load.json('spriteManifest', './sprites/manifest.json');
     this.load.on('filecomplete-json-spriteManifest', (key, type, data) => {
@@ -25,7 +28,8 @@ export class BootScene extends Phaser.Scene {
       for (const en of Object.values(data || {})) this.load.image(`real_${en.sheet}`, `./sprites/${en.sheet}.png`);
     });
     // sfondi dipinti (tools/build_backgrounds.py): se mancano resta il parallasse provvisorio
-    for (const k of ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso', 'l1_inside0', 'l1_inside1', 'intro_room']) this.load.image(k, `./backgrounds/${k}.png`);
+    for (const k of ['l1_sky', 'l1_cesena', 'l1_stadio_retro', 'l1_stadio_ingresso', 'l1_inside0', 'l1_inside1', 'intro_room',
+      'pen_bg0', 'pen_bg1', 'pen_bg2', 'pen_bg3']) this.load.image(k, `./backgrounds/${k}.png`);
     // livello 2 (tools/build_l2_backgrounds.py): fondali, terreni, fontana, cartolina della Malatestiana
     this.load.json('bgManifest', './backgrounds/bg_manifest.json');
     for (const k of ['l2_ponte_sky', 'l2_ponte', 'l2_piazza_sky', 'l2_piazza', 'l2_library', 'l2_library_card', 'l2_scalette_sky', 'l2_scalette',
@@ -71,6 +75,8 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
+    const boot = document.getElementById('boot');
+    if (boot) { boot.classList.add('done'); setTimeout(() => boot.remove(), 400); }
     buildAll(this);
     this.useRealSprites();
     this.useRealEnemies();

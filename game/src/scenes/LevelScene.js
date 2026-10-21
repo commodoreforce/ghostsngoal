@@ -1048,8 +1048,8 @@ export class LevelScene extends Phaser.Scene {
     this.time.delayedCall(delay + 4600, () => {
       this.cameras.main.fadeOut(500, 0, 0, 0);
       this.time.delayedCall(520, () => {
-        Run.level = 2; Run.levelReached = Math.max(Run.levelReached, 2);
-        this.scene.start('Level2', { fromLevel1: true });
+        // prima del livello 2: il bonus dei rigori sotto la Curva Mare
+        this.scene.start('Penalty', { next: 'Level2', nextData: { fromLevel1: true } });
       });
     });
   }

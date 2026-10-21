@@ -842,8 +842,8 @@ export class Level2Scene extends LevelScene {
     this.time.delayedCall(delay + 4800, () => {
       this.cameras.main.fadeOut(500, 0, 0, 0);
       this.time.delayedCall(520, () => {
-        Run.level = 3; Run.levelReached = Math.max(Run.levelReached, 3);
-        this.scene.start('Level3', { fromLevel2: true });
+        // prima del livello 3: di nuovo i rigori (il Conte può aspettare)
+        this.scene.start('Penalty', { next: 'Level3', nextData: { fromLevel2: true } });
       });
     });
   }
