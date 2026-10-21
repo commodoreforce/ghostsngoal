@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Input } from '../systems/input.js';
 import { RunLog } from '../systems/runlog.js';
 import { Sfx, playMusic, stopMusic, setMusicTempo } from '../systems/sfx.js';
-import { Run } from '../systems/state.js';
+import { Run, league } from '../systems/state.js';
 import { LocalBest } from '../systems/api.js';
 import { Player } from '../entities/Player.js';
 import { Zombie, Bat, Pumpkin, Ghost } from '../entities/Enemies.js';
@@ -33,7 +33,8 @@ export class LevelScene extends Phaser.Scene {
 
   create() {
     this.L = this.levelData();
-    RunLog.level(Run.level);        // il server segna l'ora d'ingresso nel livello
+    if (this.scene.key === 'Level') Run.level = 1;
+    RunLog.level(Run.stage);        // il server segna l'ora d'ingresso nella tappa (campionato + livello)
     this.groundY = this.L.groundRow * T;   // 208 nel livello 1
     this.worldH = this.L.worldH || H;      // il livello 2 è più alto: si sale sul Monte
     this.musicKey = this.L.music || 'level1';
@@ -89,7 +90,7 @@ export class LevelScene extends Phaser.Scene {
     this.buildHud();
     this.buildDarkness();
 
-    this.timeLeft = this.fromCheckpoint ? this.L.timeB : this.L.timeA;
+    this.timeLeft = this.secs(this.fromCheckpoint ? this.L.timeB : this.L.timeA);
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickTimer() });
     this.lightTimer = 0;
 
@@ -102,9 +103,11 @@ export class LevelScene extends Phaser.Scene {
   startIntro() {
     this.player.state = 'intro';
     const [ta, tb] = this.introTexts();
+    // il campionato in cui si gioca, sopra il nome del livello
+    const lg = center(this, 74, t(`lg${Math.min(3, Run.loop)}`), { color: league().color, fixed: true, depth: 120, stroke: '#000', strokeThickness: 2 });
     const a = center(this, 92, ta, { color: C.orange, fixed: true, depth: 120 });
     const b = center(this, 108, tb, { color: C.white, fixed: true, depth: 120 });
-    this.time.delayedCall(1300, () => { a.setText(t('ready')); b.setText(''); });
+    this.time.delayedCall(1300, () => { a.setText(t('ready')); b.setText(''); lg.destroy(); });
     this.time.delayedCall(2100, () => {
       a.setText(t('go')); Sfx.whistle();
       this.player.state = 'play';
@@ -118,6 +121,9 @@ export class LevelScene extends Phaser.Scene {
   }
 
   introTexts() { return [t('level1'), t('level1Name')]; }
+
+  // secondi del cronometro secondo il campionato (in Serie BKT c'è più tempo)
+  secs(s) { return Math.round(s * league().timer); }
 
   buildWeather() {
     this.weather = new Weather(this, { groundY: this.groundY, isGround: (x) => this.L.ground.some(([a, b]) => x >= a * T && x < b * T) });
@@ -337,6 +343,8 @@ export class LevelScene extends Phaser.Scene {
     this.hudLifeIcon = this.add.image(10, H - 10, `portrait_${Run.character}`).setScale(0.18).setScrollFactor(0).setDepth(D);
     this.hudLives = txt(this, 20, H - 14, `x${Run.lives}`, { fixed: true, depth: D });
     this.hudShirt = this.add.image(50, H - 10, 'shirt').setScrollFactor(0).setDepth(D);
+    // il campionato, in basso a destra
+    txt(this, W - 6, H - 14, t(`lgTag${Math.min(3, Run.loop)}`), { color: league().color, fixed: true, depth: D, ox: 1 });
     if (Run.cheat) {
       const tag = txt(this, 62, H - 14, 'TEST', { color: C.red, fixed: true, depth: D });
       this.tweens.add({ targets: tag, alpha: 0.3, yoyo: true, repeat: -1, duration: 500 });
@@ -391,7 +399,11 @@ export class LevelScene extends Phaser.Scene {
 
     if (P.state === 'play' || P.state === 'hurt') {
       // buche
-      if (P.y > this.worldH + 38) P.die(this.L.pitCause || 'pit');
+      if (P.y > this.worldH + 38) {
+        // Serie BKT: la buca costa la maglia, non la vita (se la maglia c'è)
+        if (league().pitShirt && P.armored && !P.boosted && P.state !== 'dead') this.pitRescue(P);
+        else P.die(this.L.pitCause || 'pit');
+      }
       if (P.body.blocked.down && P.y < this.groundY) this.safeX = P.x;
       // checkpoint
       if (!this.reachedCheckpoint && P.x > this.L.checkpoint * T) this.reachCheckpoint();
@@ -413,6 +425,7 @@ export class LevelScene extends Phaser.Scene {
       const e = this.enemies[i];
       if (!e.active) { this.enemies.splice(i, 1); continue; }
       if (e.tick) e.tick(time, P);
+      if (e !== this.boss && !e.isBoss) this.leagueWalk(e);
       if (e !== this.boss && e.cull && e.cull(cam)) { this.enemies.splice(i, 1); continue; }
       if (e.syncEyes) e.syncEyes(this.darkness > 0.5);
     }
@@ -423,9 +436,10 @@ export class LevelScene extends Phaser.Scene {
       if (hz.kind === 'shoe') hz.angle += 24 * Math.sign(hz.body.velocity.x || 1);
       if (hz.step && !hz.friendly) hz.step(time, delta);
       if (!hz.active) { this.hazards.splice(i, 1); continue; }
+      if (!hz.friendly) this.leagueProjectile(hz);
       if (time > hz.dieAt || hz.x < cam.scrollX - 40 || hz.x > cam.scrollX + W + 40) { hz.destroy(); this.hazards.splice(i, 1); continue; }
       if (hz.friendly && this.boss && this.boss.alive && Phaser.Geom.Intersects.RectangleToRectangle(hz.getBounds(), this.boss.getBounds())) {
-        this.boss.damage(3, hz.x, hz.y); this.spark(hz.x, hz.y); hz.destroy(); this.hazards.splice(i, 1);
+        this.hitBoss(3, hz.x, hz.y); this.spark(hz.x, hz.y); hz.destroy(); this.hazards.splice(i, 1);
       }
     }
     for (let i = this.pickups.length - 1; i >= 0; i--) {
@@ -440,6 +454,37 @@ export class LevelScene extends Phaser.Scene {
     if (this.combo > 1 && time - this.lastKill > 1000) { this.combo = 0; this.hudCombo.setText(''); }
     this.refreshHud();
   }
+
+  // ------------------------------------------------------------------ campionato
+  // Stessi nemici in ogni campionato, cambia quanto corrono. La velocità che l'IA decide viene
+  // scalata una volta sola: se nel fotogramma dopo è ancora quella scalata, non si tocca.
+  leagueWalk(e) {
+    const k = league().walk;
+    if (k === 1 || !e.body || !e.body.velocity) return;
+    const v = e.body.velocity;
+    if (v.x !== 0 && v.x !== e._lvx) { v.x *= k; e._lvx = v.x; }
+  }
+
+  // proiettili e oggetti lanciati: più lenti in Serie BKT, più veloci in Champions.
+  // Quelli che cadono per gravità vengono scalati solo in orizzontale e una volta sola
+  // (la parabola resta la stessa, cambia la gittata); gli altri a ogni nuova velocità.
+  leagueProjectile(hz) {
+    const k = league().proj;
+    if (k === 1 || !hz.body || !hz.body.velocity) return;
+    const v = hz.body.velocity;
+    if (!hz._lg) {
+      hz._lg = true;
+      if (hz.dieAt && k < 1) hz.dieAt = this.time.now + (hz.dieAt - this.time.now) / k;   // più lento, vive di più
+      const g = hz.body.allowGravity ? this.physics.world.gravity.y + hz.body.gravity.y : 0;
+      hz._fall = Math.abs(g) > 1;
+      if (hz._fall) { v.x *= k; return; }
+    }
+    if (hz._fall) return;
+    if ((v.x !== 0 || v.y !== 0) && (v.x !== hz._lvx || v.y !== hz._lvy)) { v.x *= k; v.y *= k; hz._lvx = v.x; hz._lvy = v.y; }
+  }
+
+  // un pallone sul boss: in Serie BKT fa più male, in Champions meno
+  hitBoss(n, x, y) { this.boss.damage(n * league().bossDmg, x, y); }
 
   updateScenery(time, sx) {
     for (const l of this.parallax) l.tilePositionX = Math.round(sx * l.factor + (l.drift ? time * l.drift : 0));
@@ -488,16 +533,32 @@ export class LevelScene extends Phaser.Scene {
   }
 
   // modalità prova: dalle buche si torna sull'ultimo punto sicuro, il tempo riparte
+  // si torna sull'ultimo punto sicuro (dentro l'arena, se si è nel duello)
+  backToSafe(P, invuln = 900) {
+    let x = this.safeX ?? P.x - 48;
+    const b = this.physics.world.bounds;
+    x = Phaser.Math.Clamp(x, b.x + 16, b.right - 16);
+    P.setPosition(x, (this.deckY && this.bossActive ? this.deckY : this.groundY) - 60);
+    P.body.setVelocity(0, 0);
+    P.invulnUntil = this.time.now + invuln;
+  }
+
+  // Serie BKT: dalla buca si esce in mutande, ma vivi
+  pitRescue(P) {
+    P.armored = false;
+    P.applyLook();
+    P.state = 'play';
+    this.backToSafe(P, league().invuln);
+    Sfx.shirtLost();
+    this.flyingShirt(P.x, P.y);
+    this.cameras.main.shake(120, 0.006);
+  }
+
   cheatRescue(cause) {
     const P = this.player;
     if (cause !== 'time') {
-      // buche, fiume, mare: si torna sull'ultimo punto sicuro (dentro l'arena, se si è nel duello)
-      let x = this.safeX ?? P.x - 48;
-      const b = this.physics.world.bounds;
-      x = Phaser.Math.Clamp(x, b.x + 16, b.right - 16);
-      P.setPosition(x, (this.deckY && this.bossActive ? this.deckY : this.groundY) - 60);
-      P.body.setVelocity(0, 0);
-      P.invulnUntil = this.time.now + 900;
+      // buche, fiume, mare
+      this.backToSafe(P);
       Sfx.parry();
     } else if (cause === 'time') {
       this.timeLeft = 99;
@@ -724,7 +785,7 @@ export class LevelScene extends Phaser.Scene {
     if (!b.counted) { b.counted = true; Run.stats.hits++; }
     Sfx.hit();
     this.spark(b.x, b.y);
-    if (e === this.boss) e.damage(b.dmg, b.x, b.y);
+    if (e === this.boss) this.hitBoss(b.dmg, b.x, b.y);
     else e.damage(b.dmg, b.x);
     if (b.pierce > 0) b.pierce--; else this.killBall(b);
   }
@@ -888,7 +949,7 @@ export class LevelScene extends Phaser.Scene {
     for (const e of [...this.enemies]) {
       if (!e.alive) continue;
       if (Math.abs(e.x - x) < r && Math.abs(e.y - y) < 40) {
-        if (e === this.boss) e.damage(4, x, e.y); else e.kill(x);
+        if (e === this.boss) this.hitBoss(4, x, e.y); else e.kill(x);
       }
     }
   }
@@ -904,7 +965,7 @@ export class LevelScene extends Phaser.Scene {
     // pulizia dei nemici rimasti
     for (const e of [...this.enemies]) if (e.alive) e.kill(e.x, true);
     stopMusic();
-    this.timeLeft = Math.max(this.timeLeft, 90);
+    this.timeLeft = Math.max(this.timeLeft, this.secs(90));
     const title = center(this, 80, t('bossName'), { color: C.red, fixed: true, depth: 120, stroke: '#000', strokeThickness: 3 });
     this.time.delayedCall(700, () => {
       Sfx.thunder();
@@ -1117,7 +1178,7 @@ export class LevelScene extends Phaser.Scene {
   // ------------------------------------------------------------------ vita e morte
   reachCheckpoint() {
     this.reachedCheckpoint = true;
-    this.timeLeft = this.L.timeB;
+    this.timeLeft = this.secs(this.L.timeB);
     this.placeCheckpointFlag(false);
   }
 
@@ -1136,13 +1197,63 @@ export class LevelScene extends Phaser.Scene {
       Run.lives--;
       if (Run.lives > 0) {
         this.scene.restart({ checkpoint: this.reachedCheckpoint });
-      } else {
-        Sfx.gameOver();
-        center(this, 100, t('gameOver'), { size: 16, color: C.red, fixed: true, depth: 130, stroke: '#000', strokeThickness: 3 });
-        LocalBest.set(Run.score);
-        this.time.delayedCall(2600, () => this.scene.start('NameEntry', { cleared: false }));
-      }
+      } else if (!Run.cheat) {
+        this.continuePrompt();
+      } else this.gameOver();
     });
+  }
+
+  gameOver() {
+    Sfx.gameOver();
+    center(this, 100, t('gameOver'), { size: 16, color: C.red, fixed: true, depth: 130, stroke: '#000', strokeThickness: 3 });
+    LocalBest.set(Run.score);
+    this.time.delayedCall(2600, () => this.scene.start('NameEntry', { cleared: false }));
+  }
+
+  // CONTINUE, come in sala giochi: 10 secondi per rientrare dal checkpoint con 3 vite, ma il
+  // punteggio riparte da zero. È la scelta del giocatore: chi lascia scadere il conto manda in
+  // classifica i punti fatti; chi continua rinuncia a quei punti per vedere il resto del gioco.
+  // Il record di prima resta comunque salvato sul telefono. SALTO fa scendere il conto più in fretta.
+  continuePrompt() {
+    LocalBest.set(Run.score);
+    const D = 130;
+    const veil = this.add.rectangle(0, 0, W, H, 0x000000, 0.72).setOrigin(0).setScrollFactor(0).setDepth(D - 1);
+    const title = center(this, 62, t('contTitle'), { size: 16, color: C.gold, fixed: true, depth: D, stroke: '#000', strokeThickness: 3 });
+    const num = center(this, 96, '9', { size: 16, color: C.white, fixed: true, depth: D, stroke: '#000', strokeThickness: 3 });
+    const how = center(this, 128, t('contHow'), { color: C.orange, fixed: true, depth: D });
+    const note = center(this, 144, t('contNote'), { color: C.grey, fixed: true, depth: D, wrap: 230 });
+    const was = center(this, 164, `${t('score')} ${pad(Run.score)}`, { color: C.white, fixed: true, depth: D });
+    const parts = [veil, title, num, how, note, was];
+    this.tweens.add({ targets: how, alpha: 0.3, yoyo: true, repeat: -1, duration: 400 });
+    const seen = { a: Input.presses('a'), b: Input.presses('b'), start: Input.presses('start') };
+    let n = 9, nextTick = this.time.now + 1000, done = false;
+    Sfx.select();
+    const ev = this.time.addEvent({ delay: 30, loop: true, callback: () => {
+      if (done) return;
+      const pressedNew = (k) => { const c = Input.presses(k); const hit = c > seen[k]; seen[k] = c; return hit; };
+      if (pressedNew('b') || pressedNew('start')) {
+        done = true; ev.remove();
+        Sfx.oneUp();
+        RunLog.cont(Run.stage);            // il server sa che da qui il punteggio riparte da zero
+        Run.continueGame();
+        this.cameras.main.flash(200, 255, 210, 63);
+        this.time.delayedCall(260, () => this.scene.restart({ checkpoint: this.reachedCheckpoint }));
+        return;
+      }
+      if (pressedNew('a')) nextTick = 0;     // salto: il conto scende subito
+      if (this.time.now >= nextTick) {
+        n--;
+        nextTick = this.time.now + 1000;
+        if (n < 0) {
+          done = true; ev.remove();
+          parts.forEach((o) => o.destroy());
+          this.gameOver();
+          return;
+        }
+        num.setText(String(n));
+        Sfx.timeTick();
+      }
+    } });
   }
 
   // ------------------------------------------------------------------ luci
@@ -1194,7 +1305,7 @@ export class LevelScene extends Phaser.Scene {
   award(points, x, y, color = C.white) {
     const before = Run.lives;
     const gotLife = Run.add(points);
-    const shown = Math.round(points * (Run.loop > 1 ? 2 : 1));
+    const shown = Math.round(points * league().pts);
     floatText(this, x, y, String(shown), color);
     if (gotLife || Run.lives > before) { Sfx.oneUp(); floatText(this, this.player.x, this.player.y - 30, t('oneUp'), C.green); }
   }

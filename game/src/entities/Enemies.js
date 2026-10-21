@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { league } from '../systems/state.js';
 
 // Nemici del livello 1. Ognuno annuncia le proprie mosse (animazione, suono
 // o lampeggio) prima di diventare pericoloso: difficile, mai ingiusto.
@@ -9,7 +10,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.level = scene;
-    this.hp = opts.hp || 1;
+    // in Champions League i nemici normali reggono un colpo in più (i boss hanno la loro regola)
+    this.hp = (opts.hp || 1) + (opts.boss ? 0 : league().enemyHp);
     this.points = opts.points || 100;
     this.kind = opts.kind || 'enemy';
     this.harmful = true;

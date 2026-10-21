@@ -17,6 +17,14 @@
 // davvero, con tempi e punti credibili, e i primi posti li guarda comunque una persona.
 declare(strict_types=1);
 
+// Le tappe: il gioco si ripete in tre campionati (Serie BKT, Serie A, Champions), tre livelli
+// ciascuno. Tappa = (campionato - 1) * 3 + livello, da 1 a 9. Il campionato moltiplica i punti
+// (x1, x2, x3), quindi anche i limiti dei punti crescono con lui.
+const AC_STAGES = 9;
+function ac_lap_of(int $stage): int { return intdiv(max(1, $stage) - 1, 3) + 1; }
+function ac_lvl_of(int $stage): int { return (max(1, $stage) - 1) % 3 + 1; }
+function ac_stage(int $level, int $lap): int { return (max(1, min(3, $lap)) - 1) * 3 + max(1, min(3, $level)); }
+
 // tempo minimo (secondi, orologio del server) per finire ogni livello, intro compresa:
 // è la corsa più veloce possibile da un capo all'altro, più il boss, con un buon margine
 const AC_LEVEL_MIN_SEC = [1 => 35, 2 => 45, 3 => 50];
@@ -38,6 +46,9 @@ function ac_settings(): array {
 // difetti gravi: la partita è scartata. Gli altri mandano il punteggio in verifica.
 const AC_HARD = ['sig', 'rate', 'fast', 'skip', 'score_down', 'kills', 'kills_down', 'duration', 'quick', 'cleared', 'hits'];
 
+// solo informazioni per l'admin: non mandano il punteggio in verifica
+const AC_INFO = ['cont'];
+
 const AC_LABELS = [
     'sig' => 'firma sbagliata (dati manomessi)',
     'rate' => 'punti cresciuti troppo in fretta',
@@ -48,10 +59,11 @@ const AC_LABELS = [
     'kills_down' => 'uccisioni che scendono',
     'duration' => 'durata dichiarata più lunga di quella reale',
     'quick' => 'troppi punti nei primi secondi',
-    'cleared' => 'gioco finito senza arrivare al livello 3',
+    'cleared' => 'Petrosino salvato senza arrivare alla fine della Serie A',
     'hits' => 'più colpi a segno che tiri',
     'nosig' => 'partita senza firma (browser vecchio o dati non firmati)',
     'gap' => 'un passaggio di livello non è arrivato al server',
+    'cont' => 'ha usato il CONTINUE (punteggio ripartito da zero)',
     'missing' => 'mancano i passaggi di livello',
     'top' => 'tra i primi posti della classifica',
     'over' => 'sopra la soglia di punti impostata',
@@ -74,23 +86,25 @@ function ac_start_point(array $run): array {
     return ['l' => 1, 'sc' => 0, 'k' => 0, 't' => (int) $run['started_at']];
 }
 
-// controlla un tratto di partita, da un passaggio al successivo
-function ac_check_segment(array $a, array $b, int $lap, bool $final = false): array {
+// controlla un tratto di partita, da un passaggio al successivo.
+// 'l' è la tappa (1..9). Dopo un CONTINUE ('c') il punteggio riparte da zero.
+function ac_check_segment(array $a, array $b, int $lap = 1, bool $final = false): array {
     $f = [];
     $dt = max(1, $b['t'] - $a['t']);
-    $ds = $b['sc'] - $a['sc'];
+    $from = !empty($a['c']) ? 0 : $a['sc'];
+    $ds = $b['sc'] - $from;
     $dk = $b['k'] - $a['k'];
     if ($ds < 0) $f[] = 'score_down';
     if ($dk < 0) $f[] = 'kills_down';
     if ($b['l'] < $a['l']) $f[] = 'skip';
     $burst = 0;
-    for ($l = $a['l']; $l <= $b['l']; $l++) $burst += AC_LEVEL_BURST[$l] ?? 80000;
-    if ($ds > ($burst + AC_RATE * $dt + AC_SLACK) * max(1, $lap)) $f[] = 'rate';
+    for ($l = $a['l']; $l <= $b['l']; $l++) $burst += (AC_LEVEL_BURST[ac_lvl_of($l)] ?? 80000) * ac_lap_of($l);
+    if ($ds > $burst + (AC_RATE * $dt + AC_SLACK) * ac_lap_of($b['l'])) $f[] = 'rate';
     if ($dk > AC_KILL_RATE * $dt + 20) $f[] = 'kills';
     // si è passati a livelli successivi (o si è finito il gioco): serve almeno il tempo minimo di ognuno
     $last = ($final && !empty($b['cleared'])) ? $b['l'] : $b['l'] - 1;
     $min = 0;
-    for ($l = $a['l']; $l <= $last; $l++) $min += AC_LEVEL_MIN_SEC[$l] ?? 40;
+    for ($l = $a['l']; $l <= $last; $l++) $min += AC_LEVEL_MIN_SEC[ac_lvl_of($l)] ?? 40;
     if ($min > 0 && $dt < $min) $f[] = 'fast';
     return $f;
 }

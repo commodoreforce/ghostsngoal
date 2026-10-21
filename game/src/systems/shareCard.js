@@ -11,9 +11,11 @@ const SCALE = 4;
 export const CARD = { story: [270, 480], post: [270, 338] };
 
 const T = {
-  it: { pre: 'CESENA FC PRESENTA', best: 'IL MIO RECORD', rank: 'IN CLASSIFICA', lvl: 'LIVELLO', saved: 'HO SALVATO IL MAGAZZINIERE\nPETROSINO!',
+  it: { pre: 'CESENA FC PRESENTA', best: 'IL MIO RECORD', rank: 'IN CLASSIFICA', lvl: 'LIVELLO', saved: 'HO SALVATO IL MAGAZZINIERE\nPETROSINO!', champ: 'CAMPIONI D\'EUROPA!',
+    leagues: { 1: 'SERIE BKT', 2: 'SERIE A', 3: 'CHAMPIONS LEAGUE' },
     dare: 'BATTIMI SE CI RIESCI!', play: 'GIOCA ANCHE TU', places: { 1: 'NOTTE AL MANUZZI', 2: 'LA NEBBIA DEL SAVIO', 3: 'LA NAVE DEL CONTE' } },
-  en: { pre: 'CESENA FC PRESENTS', best: 'MY HIGH SCORE', rank: 'ON THE LEADERBOARD', lvl: 'STAGE', saved: 'I SAVED PETROSINO\nTHE KIT MAN!',
+  en: { pre: 'CESENA FC PRESENTS', best: 'MY HIGH SCORE', rank: 'ON THE LEADERBOARD', lvl: 'STAGE', saved: 'I SAVED PETROSINO\nTHE KIT MAN!', champ: 'CHAMPIONS OF EUROPE!',
+    leagues: { 1: 'SERIE BKT', 2: 'SERIE A', 3: 'CHAMPIONS LEAGUE' },
     dare: 'BEAT ME IF YOU CAN!', play: 'PLAY NOW', places: { 1: 'NIGHT AT THE MANUZZI', 2: 'THE SAVIO FOG', 3: "THE COUNT'S SHIP" } },
 };
 
@@ -145,7 +147,9 @@ export function drawCard(scene, kind, data) {
   pixText(ctx, String(Math.max(0, Math.floor(data.score))).padStart(7, '0'), w / 2, y, { size: 16, color: '#ffd23f', align: 'center', stroke: '#000' });
   y += story ? 22 : 21;
   if (data.rank) { pixText(ctx, `#${data.rank} ${L.rank}`, w / 2, y, { size: 8, color: '#f4f4f0', align: 'center', stroke: '#000' }); y += 13; }
-  const place = data.cleared ? L.saved : `${L.lvl} ${data.level} · ${L.places[data.level] || ''}`;
+  // il campionato (Serie BKT, Serie A, Champions) sopra il livello raggiunto
+  const lg = data.loop ? `${L.leagues[Math.min(3, data.loop)]}\n` : '';
+  const place = data.champion ? `${L.champ}\n${L.saved}` : data.cleared ? L.saved : `${lg}${L.lvl} ${data.level} · ${L.places[data.level] || ''}`;
   place.split('\n').forEach((ln, i) => pixText(ctx, ln, w / 2, y + i * 11, { size: 8, color: data.cleared ? '#7fd06a' : '#c8c4e8', align: 'center', stroke: '#000' }));
   y += (story ? 22 : 15) + (place.split('\n').length - 1) * 11;
 

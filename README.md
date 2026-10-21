@@ -113,6 +113,25 @@ I fogli finiscono in `game/public/sprites/` e il gioco li usa da soli al posto d
 
 La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` dentro `game/src/systems/sfx.js` (oggi: `intro.mp3` su titolo e selezione). I brani senza file usano ancora la musica sintetizzata.
 
+## Campionati e CONTINUE
+
+Il gioco si gioca tre volte di fila, come i "loop" dei coin-op: **stessi nemici, stesso numero**, cambia quanto picchiano.
+
+| Campionato | Punti | Nemici | Boss | Invulnerabilità | Tempo | Buche |
+|---|---|---|---|---|---|---|
+| **Serie BKT** | x1 | proiettili -22%, camminata -15% | +35% danno dei palloni | 3 s | +30% | costano la maglia, non la vita |
+| **Serie A** | x2 | come la taratura originale | normale | 2,2 s | normale | vita |
+| **Champions League** | x3 | proiettili +18%, camminata +12%, +1 colpo per i nemici normali | -20% danno | 1,6 s | -15% | vita |
+
+- Fine Serie BKT: Petrosino nella gabbia è un'illusione del Conte → PROMOSSI IN SERIE A.
+- Fine Serie A: il finale vero (Petrosino libero, Azdora, Marco il giardiniere, COMING SOON) → QUALIFICATI IN CHAMPIONS LEAGUE.
+- Fine Champions: Petrosino liberato di nuovo → CAMPIONI D'EUROPA → classifica.
+- Tutte le regole stanno in `LEAGUES` dentro `game/src/systems/state.js`.
+
+**CONTINUE**: a vite finite, 10 secondi per ripartire dal checkpoint con 3 vite; il punteggio torna a zero. Chi lascia scadere il conto manda in classifica i punti fatti. Il server sa dei continue (in admin si vedono nella cronologia della partita) e non manda in verifica una partita solo perché ha continuato.
+
+**Anti-furbi**: il server ragiona per *tappe* da 1 a 9 (campionato e livello); i limiti di punti crescono con il moltiplicatore del campionato. "Petrosino salvato" vale solo dalla fine della Serie A in poi.
+
 ## Nemici e boss
 
 `python3 tools/build_enemies.py` genera i fogli in `game/public/sprites/en_*.png` più `enemies.json`.

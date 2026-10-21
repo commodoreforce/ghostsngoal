@@ -2,14 +2,13 @@ import Phaser from 'phaser';
 import { Input } from '../systems/input.js';
 import { Sfx } from '../systems/sfx.js';
 import { charById, tuning, hasKits, texPrefix } from '../data/characters.js';
-import { Run } from '../systems/state.js';
+import { Run, league } from '../systems/state.js';
 
 const COYOTE_MS = 120;       // si può saltare poco dopo aver lasciato il bordo
 const BUFFER_MS = 110;       // il salto premuto poco prima di atterrare viene ricordato
 const KICK_ANIM_MS = 140;
 const SHOT_BUFFER_MS = 220;  // tiro premuto con già i palloni in campo: parte appena se ne libera uno
 const CHARGE_MS = 650;
-const INVULN_MS = 2200;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, charId, kit = 'home') {
@@ -283,7 +282,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.armored) {
       this.armored = false;
       this.applyLook();
-      this.invulnUntil = t + INVULN_MS;
+      this.invulnUntil = t + league().invuln;   // Serie BKT 3 s, Serie A 2,2 s, Champions 1,6 s
       Sfx.shirtLost();
       this.scene.flyingShirt(this.x, this.y);
       if (this.char.id !== 'hubner') {

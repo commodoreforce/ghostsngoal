@@ -15,6 +15,7 @@ import { Level2Scene } from './scenes/Level2Scene.js';
 import { PenaltyScene } from './scenes/PenaltyScene.js';
 import { Level3Scene } from './scenes/Level3Scene.js';
 import { NameEntryScene } from './scenes/NameEntryScene.js';
+import { LeagueScene } from './scenes/LeagueScene.js';
 import { W, H } from './systems/ui.js';
 import { CrtScreen } from './systems/crt.js';
 import { Run } from './systems/state.js';
@@ -104,7 +105,7 @@ async function start() {
     input: { keyboard: false, mouse: false, touch: false, gamepad: false },
     audio: { noAudio: true },
     banner: false,
-    scene: [BootScene, TitleScene, SelectScene, IntroScene, LevelScene, PenaltyScene, Level2Scene, Level3Scene, NameEntryScene],
+    scene: [BootScene, TitleScene, SelectScene, IntroScene, LevelScene, PenaltyScene, Level2Scene, Level3Scene, LeagueScene, NameEntryScene],
   });
   game.events.on('prestep', () => Input.update());
   // tubo catodico vero (shader WebGL); se non disponibile resta l'effetto leggero in CSS

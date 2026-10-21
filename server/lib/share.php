@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 function share_score(int $id): ?array {
     if ($id <= 0) return null;
-    $r = q('SELECT s.id, s.nickname, s.score, s.hero, s.level_reached, COALESCE(r.cleared, 0) AS cleared
+    $r = q('SELECT s.id, s.nickname, s.score, s.hero, s.level_reached, s.lap, COALESCE(r.cleared, 0) AS cleared
             FROM scores s LEFT JOIN runs r ON r.id = s.run_id WHERE s.id = ? AND s.hidden = 0', [$id])->fetch();
     if (!$r) return null;
     $r['rank'] = 1 + (int) q('SELECT COUNT(*) FROM scores WHERE hidden = 0 AND (score > ? OR (score = ? AND id < ?))', [(int) $r['score'], (int) $r['score'], (int) $r['id']])->fetchColumn();

@@ -742,7 +742,7 @@ export class Level2Scene extends LevelScene {
     cam.setBounds(this.arenaX, 0, W, H);
     for (const e of [...this.enemies]) if (e.alive) e.kill(e.x, true);
     stopMusic();
-    this.timeLeft = Math.max(this.timeLeft, 100);
+    this.timeLeft = Math.max(this.timeLeft, this.secs(100));
     this.enterSectionTitle('belvedere');
     const title = center(this, 80, t('boss2Name'), { color: C.red, fixed: true, depth: 120, stroke: '#000', strokeThickness: 3 });
     // un vortice di fumo nero: ne esce l'Azdora

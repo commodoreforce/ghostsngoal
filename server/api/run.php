@@ -33,19 +33,24 @@ if ($action === 'progress') {
     if (!$run || $run['ended_at'] !== null) json_out(['ok' => false, 'error' => 'token'], 409);
     $seq = (int) ($in['seq'] ?? 0);
     if ($seq <= (int) $run['seq'] || $seq > 40) json_out(['ok' => false, 'error' => 'seq'], 409);
-    $lvl = max(1, min(3, (int) ($in['level'] ?? 1)));
+    $lvl = max(1, min(AC_STAGES, (int) ($in['level'] ?? 1)));    // la tappa, 1..9
+    $cont = !empty($in['cont']);                                     // CONTINUE: da qui il punteggio riparte da zero
     $score = max(0, min(99999999, (int) ($in['score'] ?? 0)));
     $kills = max(0, min(100000, (int) ($in['kills'] ?? 0)));
     $flags = [];
-    $sig = ac_sig_ok($run, "$token|$seq|$lvl|$score|$kills", (string) ($in['sig'] ?? ''));
+    $sig = ac_sig_ok($run, $cont ? "$token|$seq|cont|$lvl|$score|$kills" : "$token|$seq|$lvl|$score|$kills", (string) ($in['sig'] ?? ''));
     if ($sig === false) $flags[] = 'sig';
     if ($sig === null) $flags[] = 'nosig';
     if ($seq > (int) $run['seq'] + 1) $flags[] = 'gap';
     $events = ac_events($run);
     $prev = $events ? end($events) : ac_start_point($run);
     $point = ['s' => $seq, 'l' => $lvl, 'sc' => $score, 'k' => $kills, 't' => time()];
-    if ($lvl > $prev['l'] + 1) $flags[] = 'skip';
-    $flags = array_merge($flags, ac_check_segment($prev, $point, (int) ($run['lap'] ?? 1) ?: 1));
+    if ($cont) {
+        $point['c'] = 1;
+        $flags[] = 'cont';
+        if ($lvl !== $prev['l']) $flags[] = 'skip';      // si continua dalla tappa in cui si è perso
+    } elseif ($lvl > $prev['l'] + 1) $flags[] = 'skip';
+    $flags = array_merge($flags, ac_check_segment($prev, $point));
     $events[] = $point;
     q('UPDATE runs SET seq = ?, events = ?, flags = ? WHERE id = ?', [$seq, json_encode($events), ac_add_flags((string) $run['flags'], $flags), $run['id']]);
     json_out(['ok' => true]);
@@ -58,8 +63,10 @@ if ($action === 'end') {
     if (!$run || $run['ended_at'] !== null) json_out(['ok' => false, 'error' => 'token'], 409);
 
     $score = max(0, min(99999999, (int) ($in['score'] ?? 0)));
-    $level = max(1, min(3, (int) ($in['level'] ?? 1)));
-    $lap = max(1, min(2, (int) ($in['loop'] ?? 1)));
+    $level = max(1, min(3, (int) ($in['level'] ?? 1)));       // livello dentro il campionato
+    $lap = max(1, min(3, (int) ($in['loop'] ?? 1)));          // campionato: 1 Serie BKT, 2 Serie A, 3 Champions
+    $stage = ac_stage($level, $lap);
+    $continues = max(0, min(99, (int) ($in['continues'] ?? 0)));
     $cleared = !empty($in['cleared']) ? 1 : 0;
     $durMs = max(0, (int) ($in['durationMs'] ?? 0));
     $cause = substr(preg_replace('/[^a-z_]/', '', strtolower((string) ($in['cause'] ?? ''))) ?? '', 0, 24);
@@ -81,19 +88,25 @@ if ($action === 'end') {
     $flags = [];
     if ($clientSec > $serverSec + 15) $flags[] = 'duration';
     if ($serverSec < 20 && $score > 5000) $flags[] = 'quick';
-    if ($cleared && $level < 3) $flags[] = 'cleared';
+    // "salvato": il Magazziniere Petrosino si libera davvero solo alla fine della Serie A
+    // (i giocatori con la versione di prima in cache, senza campionati, lo liberavano al livello 3)
+    $legacy = !array_key_exists('continues', $in);
+    if ($cleared && $stage < ($legacy ? 3 : 6)) $flags[] = 'cleared';
     if ($st['hits'] > $st['shots'] * 3 + 10) $flags[] = 'hits';
     $seq = (int) ($in['seq'] ?? 0);
-    $sig = ac_sig_ok($run, "$token|$seq|end|$score|$level|$cleared|{$st['kills']}", (string) ($in['sig'] ?? ''));
+    $sig = ac_sig_ok($run, "$token|$seq|end|$score|$stage|$cleared|{$st['kills']}", (string) ($in['sig'] ?? ''));
     if ($sig === false) $flags[] = 'sig';
     if ($sig === null) $flags[] = 'nosig';
     if ($run['rkey'] !== '' && $seq !== (int) $run['seq'] + 1) $flags[] = 'gap';
     $events = ac_events($run);
     $prev = $events ? end($events) : ac_start_point($run);
-    $point = ['s' => $seq, 'l' => $level, 'sc' => $score, 'k' => $st['kills'], 't' => $now, 'cleared' => $cleared, 'end' => 1];
-    if ($level > $prev['l'] + 1) $flags[] = $events ? 'skip' : 'missing';
+    // il gioco finito (Champions vinta) chiude la tappa 9: per i controlli conta come "superata"
+    $point = ['s' => $seq, 'l' => $stage, 'sc' => $score, 'k' => $st['kills'], 't' => $now, 'cleared' => ($stage === AC_STAGES && $cleared) ? 1 : 0, 'end' => 1];
+    if ($stage > $prev['l'] + 1) $flags[] = $events ? 'skip' : 'missing';
+    if ($continues > 0 && !in_array('cont', array_filter(explode(',', (string) $run['flags'])), true)) $flags[] = 'gap';
     $flags = array_merge($flags, ac_check_segment($prev, $point, $lap, true));
-    // controllo complessivo, per sicurezza anche sulle partite senza passaggi
+    // controllo complessivo (anche per le partite senza passaggi): con un CONTINUE il punteggio
+    // finale è solo una parte di quello fatto, quindi resta comunque sotto il limite
     $flags = array_merge($flags, ac_check_segment(ac_start_point($run), $point, $lap, true));
     $events[] = $point;
     $allFlags = ac_add_flags((string) $run['flags'], $flags);
@@ -112,7 +125,7 @@ if ($action === 'end') {
         if ($acs['review_over'] > 0 && $score >= $acs['review_over']) $flagList[] = 'over';
         $allFlags = ac_add_flags($allFlags, $flagList);
     }
-    $review = ($plausible && array_diff($flagList, AC_HARD)) ? 1 : 0;
+    $review = ($plausible && array_diff($flagList, AC_HARD, AC_INFO)) ? 1 : 0;
 
     $set = 'ended_at = ?, score = ?, level_reached = ?, lap = ?, cleared = ?, duration_ms = ?, cause = ?, stats = ?, plausible = ?, cheat = ?, seq = ?, events = ?, flags = ?, review = ?';
     $args = [$now, $score, $level, $lap, $cleared, $durMs, $cause, $stats, $plausible, $cheat, max($seq, (int) $run['seq']), json_encode($events), $allFlags, $review];

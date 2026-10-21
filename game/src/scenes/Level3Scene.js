@@ -1065,7 +1065,7 @@ export class Level3Scene extends LevelScene {
     cam.setBounds(ax, 0, W, this.worldH);
     for (const e of [...this.enemies]) if (e.alive && !(e instanceof Crab)) e.kill(e.x, true);
     stopMusic();
-    this.timeLeft = Math.max(this.timeLeft, 120);
+    this.timeLeft = Math.max(this.timeLeft, this.secs(120));
     const title = center(this, 80, t('octoName'), { color: C.red, fixed: true, depth: 120, stroke: '#000', strokeThickness: 3 });
     // bolle nel canale, poi esce
     const gx = (176 + 182) / 2 * T;
@@ -1167,7 +1167,7 @@ export class Level3Scene extends LevelScene {
     cam.setBounds(this.arenaX, 0, W, this.worldH);
     for (const e of [...this.enemies]) if (e.alive) e.kill(e.x, true);
     stopMusic();
-    this.timeLeft = Math.max(this.timeLeft, 150);
+    this.timeLeft = Math.max(this.timeLeft, this.secs(150));
     const title = center(this, 80, t('boss3Name'), { color: C.red, fixed: true, depth: 120, stroke: '#000', strokeThickness: 3 });
     // i pipistrelli scendono dal cielo e si riuniscono: è lui
     const x = this.arenaX + W - 70;
@@ -1283,7 +1283,64 @@ export class Level3Scene extends LevelScene {
       this.tweens.add({ targets: ui, alpha: 0, duration: 500, onComplete: () => ui.forEach((o) => o.destroy()) });
       LocalBest.set(Run.score);
     });
-    this.time.delayedCall(delay + 3500, () => this.freePetrosino(P));
+    // Serie BKT: il Petrosino nella gabbia è un'illusione del Conte, si sale in Serie A.
+    // Serie A: il finale vero. Champions: lo si libera di nuovo e si vince la coppa.
+    this.time.delayedCall(delay + 3500, () => (Run.loop <= 1 ? this.illusion(P) : this.freePetrosino(P)));
+  }
+
+  // il giocatore va accanto alla gabbia e la gabbia scende sul ponte
+  async cageDown(P) {
+    const dY = this.deckY;
+    P.state = 'scripted';
+    P.anims.stop();
+    P.facing = 1; P.setFlipX(false);
+    P.body.setVelocity(0, 0);
+    const stand = this.arenaX + 92;
+    P.play(`${P.currentTex}_run`, true);
+    P.setFlipX(P.x > stand);
+    await new Promise((r) => this.tweens.add({ targets: P, x: stand, duration: Math.min(1400, Math.abs(P.x - stand) * 8 + 100), onComplete: r }));
+    P.anims.stop(); P.setFlipX(false); P.setFrame('idle0');
+    this.tweens.killTweensOf(this.cage);
+    this.cage.setAngle(0);
+    Sfx.creak();
+    await new Promise((r) => this.tweens.add({ targets: this.cage, y: dY - 70, duration: 1600, ease: 'Quad.easeIn', onComplete: r }));
+    Sfx.slam(); this.cameras.main.shake(160, 0.006); this.dust(this.cageX - 20, dY); this.dust(this.cageX + 20, dY);
+    await this.wait(400);
+    Sfx.cage();
+    this.cage.setFrame('cageOpen');
+  }
+
+  // Serie BKT: Petrosino esce, ringrazia... e si dissolve. Era un'illusione del Conte.
+  async illusion(P) {
+    const dY = this.deckY;
+    await this.cageDown(P);
+    const pet = this.add.sprite(this.cageX - 4, dY - 25, 'pet3', 'petArms').setDepth(39);
+    await this.walkTo(pet, P.x + 34, 900, ['petArms', 'petArms1']);
+    pet.setFrame('petArms');
+    this.bubble(t('pet0'), C.gold);
+    Sfx.oneUp();
+    await this.wait(1500);
+    this.bubble(t('illusion0'), C.white);
+    // la figura sfarfalla, diventa azzurra fantasma e sale in fumo
+    const flick = this.time.addEvent({ delay: 70, loop: true, callback: () => { pet.setVisible(!pet.visible); pet.setTint(pet.visible ? 0x9fe8ff : 0xffffff); } });
+    Sfx.countLaugh();
+    await this.wait(1100);
+    flick.remove();
+    pet.setVisible(true).setTint(0x9fe8ff);
+    this.fxWhite.explode(24, pet.x, pet.y);
+    this.tweens.add({ targets: pet, y: pet.y - 30, alpha: 0, scaleX: 0.3, duration: 700, ease: 'Quad.easeIn', onComplete: () => pet.destroy() });
+    Sfx.laugh();
+    this.cameras.main.flash(160, 159, 232, 255);
+    await this.wait(500);
+    P.setFrame('hurt');
+    this.bubble(t('illusion1'), C.red);
+    await this.wait(2400);
+    P.setFrame('idle0');
+    this.bubble(t('illusion2'), C.white, 46);
+    await this.wait(4200);
+    this.cameras.main.fadeOut(800, 0, 0, 0);
+    await this.wait(850);
+    this.scene.start('League', { kind: 'up2' });
   }
 
   bubble(text, color = C.white, y = 52) {
@@ -1304,25 +1361,8 @@ export class Level3Scene extends LevelScene {
 
   async freePetrosino(P) {
     const dY = this.deckY;
-    // il giocatore si mette a sinistra della gabbia
-    P.state = 'scripted';
-    P.anims.stop();
-    P.facing = 1; P.setFlipX(false);
-    P.body.setVelocity(0, 0);
-    const stand = this.arenaX + 92;
-    P.play(`${P.currentTex}_run`, true);
-    P.setFlipX(P.x > stand);
-    await new Promise((r) => this.tweens.add({ targets: P, x: stand, duration: Math.min(1400, Math.abs(P.x - stand) * 8 + 100), onComplete: r }));
-    P.anims.stop(); P.setFlipX(false); P.setFrame('idle0');
-    // la gabbia scende sul ponte
-    this.tweens.killTweensOf(this.cage);
-    this.cage.setAngle(0);
-    Sfx.creak();
-    await new Promise((r) => this.tweens.add({ targets: this.cage, y: dY - 70, duration: 1600, ease: 'Quad.easeIn', onComplete: r }));
-    Sfx.slam(); this.cameras.main.shake(160, 0.006); this.dust(this.cageX - 20, dY); this.dust(this.cageX + 20, dY);
-    await this.wait(400);
-    Sfx.cage();
-    this.cage.setFrame('cageOpen');
+    Run.saved = true;                 // il Magazziniere Petrosino è libero davvero
+    await this.cageDown(P);
     const pet = this.add.sprite(this.cageX - 4, dY - 25, 'pet3', 'petArms').setDepth(39);
     await this.walkTo(pet, P.x + 34, 900, ['petArms', 'petArms1']);
     pet.setFrame('petArms');
@@ -1343,6 +1383,16 @@ export class Level3Scene extends LevelScene {
     await this.wait(2200);
     hearts.stop();
     pet.setFrame('petArms');
+    // Champions: niente Azdora, si va dritti alla coppa
+    if (Run.loop >= 3) {
+      P.play(`${P.currentTex}_cheer`, true);
+      Sfx.daiburdel();
+      await this.wait(1200);
+      this.cameras.main.fadeOut(800, 0, 0, 0);
+      await this.wait(850);
+      this.scene.start('League', { kind: 'win' });
+      return;
+    }
     // arriva l'Azdora di corsa
     const az = this.add.sprite(this.arenaX - 40, dY - 42, 'azdora', 'azCured').setDepth(38).setFlipX(true);
     this.tweens.add({ targets: az, y: az.y - 3, yoyo: true, repeat: 8, duration: 110 });
@@ -1423,7 +1473,8 @@ export class Level3Scene extends LevelScene {
     this.time.delayedCall(1700, () => sub.setAlpha(1));
     this.time.delayedCall(7500, () => {
       this.cameras.main.fadeOut(600, 0, 0, 0);
-      this.time.delayedCall(650, () => { ev.remove(); this.scene.start('NameEntry', { cleared: true }); });
+      // dopo la Serie A si va in Champions League
+      this.time.delayedCall(650, () => { ev.remove(); this.scene.start('League', { kind: 'up3' }); });
     });
   }
 

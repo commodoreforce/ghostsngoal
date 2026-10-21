@@ -31,7 +31,7 @@ export const RunLog = {
     }).catch(() => {});
   },
 
-  // si entra in un livello nuovo (le ripartenze dal checkpoint non contano)
+  // si entra in una tappa nuova, 1..9 = (campionato-1)*3 + livello (le ripartenze dal checkpoint non contano)
   level(n) {
     if (n <= lastLevel) return;
     lastLevel = n;
@@ -44,6 +44,17 @@ export const RunLog = {
     }).catch(() => {});
   },
 
+  // CONTINUE: si manda il punteggio di prima dell'azzeramento; da qui il server riparte da zero
+  cont(stage) {
+    const score = Run.score, kills = Run.stats.kills;
+    chain = chain.then(async () => {
+      if (!token) return;
+      seq++;
+      const sig = await sign(`${token}|${seq}|cont|${stage}|${score}|${kills}`);
+      await Api.progress({ token, seq, level: stage, score, kills, sig, cont: 1 });
+    }).catch(() => {});
+  },
+
   // fine partita: aspetta che i passaggi precedenti siano arrivati, poi chiude
   end(payload) {
     const p = { ...payload };
@@ -51,7 +62,8 @@ export const RunLog = {
     return chain.then(async () => {
       if (!token) return { ok: false, offline: true };
       seq++;
-      const sig = await sign(`${token}|${seq}|end|${p.score}|${p.level}|${p.cleared ? 1 : 0}|${kills}`);
+      const stage = (Math.min(3, p.loop || 1) - 1) * 3 + p.level;
+      const sig = await sign(`${token}|${seq}|end|${p.score}|${stage}|${p.cleared ? 1 : 0}|${kills}`);
       return Api.endRun(token, { ...p, seq, sig });
     });
   },

@@ -246,9 +246,11 @@ if ($p === 'review') {
         $prevT = (int) $r['started_at']; $prevS = 0; $out = [];
         foreach ($ev as $e) {
             $dt = (int) $e['t'] - $prevT; $ds = (int) $e['sc'] - $prevS;
-            $label = !empty($e['end']) ? (!empty($e['cleared']) ? 'fino al finale' : 'fino al game over') : 'fino al livello ' . (int) $e['l'];
+            $l = (int) $e['l'];
+            $tappa = ['Serie BKT', 'Serie A', 'Champions'][min(2, intdiv(max(1, $l) - 1, 3))] . ' liv. ' . ((max(1, $l) - 1) % 3 + 1);
+            $label = !empty($e['end']) ? (!empty($e['cleared']) ? 'fino al finale' : 'fino al game over') : (!empty($e['c']) ? 'CONTINUE in ' . $tappa : 'fino a ' . $tappa);
             $out[] = $label . ': ' . $mmss($dt) . ' · ' . number_format($ds, 0, ',', '.') . ' punti' . ($dt > 0 ? ' (' . round($ds / $dt) . '/s)' : '');
-            $prevT = (int) $e['t']; $prevS = (int) $e['sc'];
+            $prevT = (int) $e['t']; $prevS = !empty($e['c']) ? 0 : (int) $e['sc'];
         }
         return implode('<br>', array_map('h', $out));
     };

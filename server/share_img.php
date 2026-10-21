@@ -73,7 +73,12 @@ if ($s) {
     px_text($im, $font, $en ? 'MY HIGH SCORE' : 'IL MIO RECORD', $x, 46, 8, $rgb('#ff3b3b'), 'left', $black);
     px_text($im, $font, str_pad((string) (int) $s['score'], 7, '0', STR_PAD_LEFT), $x, 58, 16, $rgb('#ffd23f'), 'left', $black);
     px_text($im, $font, '#' . $s['rank'] . ($en ? ' ON THE BOARD' : ' IN CLASSIFICA'), $x, 80, 8, $rgb('#f4f4f0'), 'left', $black);
-    $lvl = $gold ? ($en ? ['KIT MAN PETROSINO', 'SAVED!'] : ['IL MAGAZZINIERE', 'PETROSINO SALVATO!']) : [($en ? 'STAGE ' : 'LIVELLO ') . (int) $s['level_reached']];
+    // il campionato in cui si è arrivati: Serie BKT, Serie A, Champions
+    $lap = max(1, min(3, (int) ($s['lap'] ?? 1)));
+    $league = ['SERIE BKT', 'SERIE A', 'CHAMPIONS'][$lap - 1];
+    if ($gold && $lap === 3) $lvl = $en ? ['CHAMPIONS', 'OF EUROPE!'] : ["CAMPIONI", "D'EUROPA!"];
+    elseif ($gold) $lvl = $en ? ['KIT MAN PETROSINO', 'SAVED!'] : ['IL MAGAZZINIERE', 'PETROSINO SALVATO!'];
+    else $lvl = [$league . ($en ? ' · STAGE ' : ' · LIV. ') . (int) $s['level_reached']];
     foreach ($lvl as $i => $ln) px_text($im, $font, $ln, $x, 92 + $i * 10, 8, $rgb($gold ? '#7fd06a' : '#c8c4e8'), 'left', $black);
     imagefilledrectangle($im, $x - 4, 114, SW - 6, 140, $black);
     imagefilledrectangle($im, $x - 4, 114, SW - 6, 114, $rgb('#ff7a1a'));

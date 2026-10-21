@@ -11,7 +11,7 @@ import { Sfx } from '../systems/sfx.js';
 
 class SwarmBat extends Enemy {
   constructor(scene, boss, x, y, king) {
-    super(scene, x, y, 'bat', 'bat0', { kind: king ? 'countbat' : 'bat', hp: king ? 999 : 1, points: king ? 0 : 50 });
+    super(scene, x, y, 'bat', 'bat0', { kind: king ? 'countbat' : 'bat', hp: king ? 999 : 1, points: king ? 0 : 50, boss: true });
     this.body.setAllowGravity(false);
     this.body.setSize(14, 10).setOffset(Math.round(this.frame.width / 2 - 7), Math.round(this.frame.height / 2 - 5));
     this.noClip = true;

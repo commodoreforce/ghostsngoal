@@ -33,8 +33,8 @@ export class NameEntryScene extends Phaser.Scene {
 
     const durationMs = Date.now() - Run.startedAt;
     const payload = {
-      score: Run.score, character: Run.character, level: Run.levelReached, loop: Run.loop,
-      cleared: this.cleared, durationMs, stats: Run.stats, cause: Run.deathCause,
+      score: Run.score, character: Run.character, level: Run.level, loop: Run.loop, continues: Run.continues,
+      cleared: Run.saved || this.cleared, durationMs,   // "salvato": Petrosino liberato alla fine della Serie A stats: Run.stats, cause: Run.deathCause,
       kit: Run.kit, cheat: Run.cheat,
     };
     const finish = (r) => {
@@ -158,7 +158,7 @@ export class NameEntryScene extends Phaser.Scene {
     const dir = location.pathname.replace(/[^/]*$/, '');
     const base = `${location.origin}${dir}`;
     const data = {
-      character: Run.character, score: Run.score, level: Run.levelReached, cleared: this.cleared,
+      character: Run.character, score: Run.score, level: Run.level, loop: Run.loop, cleared: Run.saved || this.cleared, champion: this.cleared,
       rank: scoreId ? this.rank : null, nickname: scoreId ? this.nick : null,
       host: /ghostsngoals/i.test(location.host) ? location.host.replace(/^www\./i, '').toUpperCase() : 'GHOSTSNGOALS.COM', url: scoreId ? `${base}share.php?id=${scoreId}${it ? '' : '&lang=en'}` : base,
     };
