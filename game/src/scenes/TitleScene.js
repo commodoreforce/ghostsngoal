@@ -123,7 +123,7 @@ export class TitleScene extends Phaser.Scene {
     // durante la combinazione segreta B e A non fanno partire la partita
     const comboEnd = !Cheat.on && Cheat.combo >= 8 && time - Cheat.comboAt < 1000;
     if (Input.pressed('up') || Input.pressed('down')) {
-      setLang(getLang() === 'it' ? 'en' : 'it');
+      setLang(getLang() === 'it' ? 'en' : 'it', true);
       Sfx.blip();
       this.buildTitle();
       this.buildBoard();

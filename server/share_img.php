@@ -72,9 +72,9 @@ if ($s) {
     px_text($im, $font, (string) $s['nickname'], $x, 30, 8, $rgb('#9fe8ff'), 'left', $black);
     px_text($im, $font, $en ? 'MY HIGH SCORE' : 'IL MIO RECORD', $x, 46, 8, $rgb('#ff3b3b'), 'left', $black);
     px_text($im, $font, str_pad((string) (int) $s['score'], 7, '0', STR_PAD_LEFT), $x, 58, 16, $rgb('#ffd23f'), 'left', $black);
-    px_text($im, $font, '#' . $s['rank'] . ($en ? ' ON THE BOARD' : ' IN CLASSIFICA'), $x, 82, 8, $rgb('#f4f4f0'), 'left', $black);
-    $lvl = $gold ? ($en ? 'PETROSINO SAVED!' : 'PETROSINO SALVATO!') : (($en ? 'STAGE ' : 'LIVELLO ') . (int) $s['level_reached']);
-    px_text($im, $font, $lvl, $x, 96, 8, $rgb($gold ? '#7fd06a' : '#c8c4e8'), 'left', $black);
+    px_text($im, $font, '#' . $s['rank'] . ($en ? ' ON THE BOARD' : ' IN CLASSIFICA'), $x, 80, 8, $rgb('#f4f4f0'), 'left', $black);
+    $lvl = $gold ? ($en ? ['KIT MAN PETROSINO', 'SAVED!'] : ['IL MAGAZZINIERE', 'PETROSINO SALVATO!']) : [($en ? 'STAGE ' : 'LIVELLO ') . (int) $s['level_reached']];
+    foreach ($lvl as $i => $ln) px_text($im, $font, $ln, $x, 92 + $i * 10, 8, $rgb($gold ? '#7fd06a' : '#c8c4e8'), 'left', $black);
     imagefilledrectangle($im, $x - 4, 114, SW - 6, 140, $black);
     imagefilledrectangle($im, $x - 4, 114, SW - 6, 114, $rgb('#ff7a1a'));
     imagefilledrectangle($im, $x - 4, 140, SW - 6, 140, $rgb('#ff7a1a'));
@@ -86,9 +86,9 @@ if ($s) {
         imagecopyresized($im, $c, 24, 30, 0, 0, imagesx($c) * 3 / 2, imagesy($c) * 3 / 2, imagesx($c), imagesy($c));
         imagedestroy($c);
     }
-    px_text($im, $font, $en ? 'PETROSINO HAS' : 'HANNO RAPITO', 140, 44, 8, $rgb('#ff3b3b'), 'left', $black);
-    px_text($im, $font, $en ? 'BEEN KIDNAPPED!' : 'PETROSINO!', 140, 56, 8, $rgb('#ff3b3b'), 'left', $black);
-    px_text($im, $font, $en ? "IT'S UP TO YOU." : 'TOCCA A TE.', 140, 80, 8, $rgb('#f4f4f0'), 'left', $black);
+    $lines = $en ? ['PETROSINO THE', 'KIT MAN HAS BEEN', 'KIDNAPPED!'] : ['HANNO RAPITO IL', 'MAGAZZINIERE', 'PETROSINO!'];
+    foreach ($lines as $i => $ln) px_text($im, $font, $ln, 140, 40 + $i * 12, 8, $rgb('#ff3b3b'), 'left', $black);
+    px_text($im, $font, $en ? "IT'S UP TO YOU." : 'TOCCA A TE.', 140, 84, 8, $rgb('#f4f4f0'), 'left', $black);
     px_text($im, $font, '#DAIBURDEL', 140, 104, 8, $rgb('#ff7a1a'), 'left', $black);
 }
 

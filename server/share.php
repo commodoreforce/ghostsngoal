@@ -16,7 +16,7 @@ if ($s) {
     $img = $base . 'share_img.php?id=' . (int) $s['id'] . ($en ? '&lang=en' : '');
 } else {
     $title = "GHOSTS 'N GOALS · Cesena FC";
-    $desc = $en ? "Petrosino has been kidnapped. It's up to you. The Cesena FC Halloween arcade." : "Hanno rapito Petrosino. Tocca a te. L'arcade di Halloween del Cesena FC.";
+    $desc = $en ? "Petrosino the kit man has been kidnapped. It's up to you. The Cesena FC Halloween arcade." : "Hanno rapito il Magazziniere Petrosino. Tocca a te. L'arcade di Halloween del Cesena FC.";
     $img = $base . 'share_img.php' . ($en ? '?lang=en' : '');
 }
 $game = $base . '?utm_source=share';

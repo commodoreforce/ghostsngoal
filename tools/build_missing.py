@@ -103,16 +103,19 @@ def main():
         img[ty:ty + 6, tx:tx + 14] = (214, 210, 186)
         img[ty, tx:tx + 14] = (190, 184, 158)
 
-    # PETROSINO
-    y = py + bh + 12
+    # IL MAGAZZINIERE / PETROSINO
+    y = py + bh + 9
+    m = text_mask('IL MAGAZZINIERE', 8)
+    paste_mask(img, m, (W - m.shape[1]) // 2, y, RED_D)
+    y += 11
     m = text_mask('PETROSINO', 16)
     x = (W - m.shape[1]) // 2
     paste_mask(img, m, x, y, INK)
-    y += 24
+    y += 22
     for line in ("VISTO L'ULTIMA", 'VOLTA NELLO', 'SPOGLIATOIO'):
         m = text_mask(line, 8)
         paste_mask(img, m, (W - m.shape[1]) // 2, y, INK)
-        y += 11
+        y += 10
 
     # le linguette da strappare in fondo, con la puntina rossa in alto
     ty0 = H - 18

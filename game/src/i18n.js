@@ -15,36 +15,36 @@ const STRINGS = {
     magicTooMany: 'TROPPI TENTATIVI. RIPROVA PIÙ TARDI',
     magicOffline: 'SERVER NON RAGGIUNGIBILE',
     unlocked: 'SBLOCCATO!',
-    kidnapped: 'HANNO RAPITO PETROSINO!',
+    kidnapped: 'HANNO RAPITO IL MAGAZZINIERE PETROSINO!',
     intro1: 'NOTTE DI HALLOWEEN.',
     intro2: 'LO SPOGLIATOIO DEL MANUZZI.',
-    intro3: 'SENZA PETROSINO, DOMENICA SI GIOCA SENZA MAGLIE.',
+    intro3: 'SENZA IL MAGAZZINIERE PETROSINO, DOMENICA SI GIOCA SENZA MAGLIE.',
     level1: 'LIVELLO 1', level1Name: 'NOTTE AL MANUZZI',
     level2: 'LIVELLO 2', level2Name: 'LA NEBBIA DEL SAVIO',
-    nextStage: 'MA PETROSINO NON È QUI... SI VA AL LIVELLO 2!',
+    nextStage: 'MA IL MAGAZZINIERE PETROSINO NON È QUI... SI VA AL LIVELLO 2!',
     boss2Name: "L'AZDORA INDEMONIATA",
     secPonte: 'PONTE VECCHIO', secPiazza: 'PIAZZA DEL POPOLO', secLibrary: 'BIBLIOTECA MALATESTIANA',
     secScalette: 'VIA DELLE SCALETTE', secMonte: 'IL BELVEDERE DEL MONTE',
     librarySub: 'NON SVEGLIATE I LIBRI...',
     midnight: 'MEZZANOTTE!', midnightSub: 'PUNTI DOPPI',
     wrapped: 'AVVOLTO! SALTA PER LIBERARTI',
-    l2a: 'SENZA CAPPELLO\nNON HO PIÙ POTERI...', l2b: 'VA BENE, PARLO!', l2c: 'IL CONTE HA PORTATO PETROSINO\nOLTRE IL SAVIO, SU AL MONTE!',
+    l2a: 'SENZA CAPPELLO\nNON HO PIÙ POTERI...', l2b: 'VA BENE, PARLO!', l2c: 'IL CONTE HA PORTATO\nIL MAGAZZINIERE PETROSINO\nOLTRE IL SAVIO, SU AL MONTE!',
     azFree: "L'AZDORA È LIBERA!", az1: 'GRAZIE, BURDEL!\nERO STREGATA DAL CONTE...', az2: 'TIENI, UNA PIADINA BUONA.\nIL CONTE VOLA VERSO IL MARE!',
     demoEnd2: 'FINE DEL LIVELLO 2 · IL LIVELLO 3 È IN ARRIVO',
     nextStage2: 'IL CONTE È VOLATO VERSO IL MARE... SI VA A CESENATICO!',
     level3: 'LIVELLO 3', level3Name: 'LA NAVE DEL CONTE',
-    l3a: 'CESENATICO. LA STESSA NOTTE.', l3b: 'AL LARGO ASPETTA LA NAVE DEL CONTE...', l3c: 'PETROSINO È A BORDO!',
+    l3a: 'CESENATICO. LA STESSA NOTTE.', l3b: 'AL LARGO ASPETTA LA NAVE DEL CONTE...', l3c: 'IL MAGAZZINIERE PETROSINO\nÈ A BORDO!',
     secBeach: 'LA SPIAGGIA DI CESENATICO', secPort: 'IL PORTO CANALE', secPier: 'IL MOLO E IL FARO', secShip: 'LA NAVE DEL CONTE',
     octoName: 'LA PIOVRA DEL PORTO CANALE', octoFree: 'IL PORTO È LIBERO!', boatUp: 'LA BARCA TORNA A GALLA!',
     tide: 'LA MAREA!', stolen: 'PALLONE RUBATO!', ink: 'INCHIOSTRO!', wind: 'VENTO!', swarm: 'LO SCIAME!',
     boarding: "ALL'ARREMBAGGIO!",
     boss3Name: 'IL CONTE VAMPIRO', boss3Name2: 'IL DEMONE DELLA NOTTE',
-    count1: 'BENVENUTO A BORDO, BURDEL...', count2: 'PETROSINO RESTA CON ME!', count3: 'ORA VEDRAI LA MIA VERA FORMA!',
+    count1: 'BENVENUTO A BORDO, BURDEL...', count2: 'IL MAGAZZINIERE PETROSINO\nRESTA CON ME!', count3: 'ORA VEDRAI LA MIA VERA FORMA!',
     dawn: "L'ALBA!", countGone: 'IL CONTE È SCONFITTO!',
     pet0: 'GRAZIE, BURDEL!', pet1: 'ORA POSSO SISTEMARE LE MAGLIE\nE POSSIAMO GIOCARE LA PARTITA!',
-    az3: 'NON TROVIAMO IL GIAGUARO,\nIL GIARDINIERE! C\'È L\'ERBA ALTA\nNEL PRATO DELLO STADIO E NON\nSAPPIAMO DOVE SIA FINITO!',
-    hero3: 'È ORA DI SALVARE\nIL GIARDINIERE!',
-    comingSoon: 'COMING SOON...', soonSub: 'DOV\'È FINITO IL GIAGUARO?',
+    az3: 'NON TROVIAMO MARCO,\nIL GIARDINIERE SOPRANNOMINATO\n"IL GIAGUARO"! C\'È L\'ERBA ALTA\nNEL PRATO DELLO STADIO E NON\nSAPPIAMO DOVE SIA FINITO!',
+    hero3: 'È ORA DI SALVARE\nMARCO, IL GIARDINIERE!',
+    comingSoon: 'COMING SOON...', soonSub: 'DOV\'È FINITO MARCO,\nIL GIARDINIERE SOPRANNOMINATO\n"IL GIAGUARO"?',
     bossName: 'IL MAZAPEGÙL', nightmare: 'INCUBO!', capStolen: 'CAPPELLO RUBATO!', parry: 'PARATA!',
     ready: 'PRONTI?', go: 'VIA!',
     time: 'TEMPO', score: 'PUNTI', hi: 'RECORD',
@@ -87,36 +87,36 @@ const STRINGS = {
     magicTooMany: 'TOO MANY TRIES. TRY LATER',
     magicOffline: 'SERVER UNREACHABLE',
     unlocked: 'UNLOCKED!',
-    kidnapped: 'PETROSINO HAS BEEN KIDNAPPED!',
+    kidnapped: 'PETROSINO THE KIT MAN HAS BEEN KIDNAPPED!',
     intro1: 'HALLOWEEN NIGHT.',
     intro2: 'THE MANUZZI DRESSING ROOM.',
-    intro3: 'WITHOUT PETROSINO, SUNDAY\'S MATCH HAS NO KITS.',
+    intro3: 'WITHOUT PETROSINO THE KIT MAN, SUNDAY\'S MATCH HAS NO KITS.',
     level1: 'STAGE 1', level1Name: 'NIGHT AT THE MANUZZI',
     level2: 'STAGE 2', level2Name: 'THE SAVIO FOG',
-    nextStage: "PETROSINO'S NOT HERE... ON TO STAGE 2!",
+    nextStage: "PETROSINO THE KIT MAN ISN'T HERE... ON TO STAGE 2!",
     boss2Name: 'THE POSSESSED AZDORA',
     secPonte: 'THE OLD BRIDGE', secPiazza: 'PIAZZA DEL POPOLO', secLibrary: 'MALATESTA LIBRARY',
     secScalette: 'THE OLD STEPS', secMonte: 'THE MONTE LOOKOUT',
     librarySub: "DON'T WAKE THE BOOKS...",
     midnight: 'MIDNIGHT!', midnightSub: 'DOUBLE POINTS',
     wrapped: 'WRAPPED! JUMP TO BREAK FREE',
-    l2a: 'WITHOUT MY HAT\nI HAVE NO POWERS...', l2b: "ALL RIGHT, I'LL TALK!", l2c: 'THE COUNT TOOK PETROSINO\nOVER THE SAVIO, UP THE MONTE!',
+    l2a: 'WITHOUT MY HAT\nI HAVE NO POWERS...', l2b: "ALL RIGHT, I'LL TALK!", l2c: 'THE COUNT TOOK\nPETROSINO THE KIT MAN\nOVER THE SAVIO, UP THE MONTE!',
     azFree: 'THE AZDORA IS FREE!', az1: 'THANK YOU, BURDEL!\nTHE COUNT HAD BEWITCHED ME...', az2: 'HAVE A GOOD PIADINA.\nTHE COUNT FLED TO THE SEA!',
     demoEnd2: 'END OF STAGE 2 · STAGE 3 COMING SOON',
     nextStage2: 'THE COUNT FLEW TO THE SEA... ON TO CESENATICO!',
     level3: 'STAGE 3', level3Name: "THE COUNT'S SHIP",
-    l3a: 'CESENATICO. THE SAME NIGHT.', l3b: "THE COUNT'S SHIP WAITS OFFSHORE...", l3c: 'PETROSINO IS ON BOARD!',
+    l3a: 'CESENATICO. THE SAME NIGHT.', l3b: "THE COUNT'S SHIP WAITS OFFSHORE...", l3c: 'PETROSINO THE KIT MAN\nIS ON BOARD!',
     secBeach: 'CESENATICO BEACH', secPort: 'THE CANAL PORT', secPier: 'THE PIER AND THE LIGHTHOUSE', secShip: "THE COUNT'S SHIP",
     octoName: 'THE CANAL OCTOPUS', octoFree: 'THE PORT IS FREE!', boatUp: 'THE BOAT IS BACK AFLOAT!',
     tide: 'HIGH TIDE!', stolen: 'BALL STOLEN!', ink: 'INK!', wind: 'WIND!', swarm: 'THE SWARM!',
     boarding: 'ALL ABOARD!',
     boss3Name: 'THE VAMPIRE COUNT', boss3Name2: 'THE NIGHT DEMON',
-    count1: 'WELCOME ABOARD, BURDEL...', count2: 'PETROSINO STAYS WITH ME!', count3: 'NOW SEE MY TRUE FORM!',
+    count1: 'WELCOME ABOARD, BURDEL...', count2: 'PETROSINO THE KIT MAN\nSTAYS WITH ME!', count3: 'NOW SEE MY TRUE FORM!',
     dawn: 'DAWN!', countGone: 'THE COUNT IS DEFEATED!',
     pet0: 'THANK YOU, BURDEL!', pet1: 'NOW I CAN SORT OUT THE SHIRTS\nAND WE CAN PLAY THE MATCH!',
-    az3: "WE CAN'T FIND THE JAGUAR,\nOUR GARDENER! THE GRASS IS TALL\nON THE STADIUM PITCH AND\nNOBODY KNOWS WHERE HE WENT!",
-    hero3: "IT'S TIME TO SAVE\nTHE GARDENER!",
-    comingSoon: 'COMING SOON...', soonSub: 'WHERE IS THE JAGUAR?',
+    az3: "WE CAN'T FIND MARCO,\nTHE GARDENER THEY CALL\n\"THE JAGUAR\"! THE PITCH GRASS\nIS GROWING TALL AND NOBODY\nKNOWS WHERE HE WENT!",
+    hero3: "IT'S TIME TO SAVE\nMARCO THE GARDENER!",
+    comingSoon: 'COMING SOON...', soonSub: 'WHERE IS MARCO,\nTHE GARDENER THEY CALL\n"THE JAGUAR"?',
     bossName: 'THE MAZAPEGÙL', nightmare: 'NIGHTMARE!', capStolen: 'HAT STOLEN!', parry: 'SAVED!',
     ready: 'READY?', go: 'GO!',
     time: 'TIME', score: 'SCORE', hi: 'HI',
@@ -146,17 +146,29 @@ const STRINGS = {
   },
 };
 
-let lang = 'it';
+// lingua di partenza: quella scelta a mano (se c'è), altrimenti quella del browser.
+// Italiano se il browser è in italiano (o lo mette tra le lingue preferite), inglese per tutti gli altri.
+function browserLang() {
+  try {
+    const list = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''])
+      .map((l) => String(l).toLowerCase());
+    if (!list[0]) return 'it';
+    // la prima lingua decide; l'italiano vince anche se è la seconda scelta (es. inglese + italiano)
+    return list.slice(0, 2).some((l) => l.startsWith('it')) ? 'it' : 'en';
+  } catch (e) { return 'it'; }
+}
+
+let lang = browserLang();
 try {
-  const saved = localStorage.getItem('gng_lang');
-  if (saved) lang = saved;
-  else if (!(navigator.language || 'it').toLowerCase().startsWith('it')) lang = 'en';
+  const saved = localStorage.getItem('gng_lang');   // solo se l'ha cambiata il giocatore
+  if (saved === 'it' || saved === 'en') lang = saved;
 } catch (e) { /* ignora */ }
 
 export const getLang = () => lang;
-export function setLang(l) {
+// remember = true solo quando è il giocatore a cambiarla: così la scelta automatica resta automatica
+export function setLang(l, remember = false) {
   lang = l;
-  try { localStorage.setItem('gng_lang', l); } catch (e) { /* ignora */ }
+  if (remember) { try { localStorage.setItem('gng_lang', l); } catch (e) { /* ignora */ } }
   document.documentElement.lang = l;
 }
 export const t = (k) => (STRINGS[lang] && STRINGS[lang][k]) || STRINGS.it[k] || k;
