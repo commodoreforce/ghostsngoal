@@ -14,6 +14,13 @@ export class BootScene extends Phaser.Scene {
     // barra della schermata di caricamento (in HTML, visibile fin dal primo istante)
     const fill = document.getElementById('bootFill');
     this.load.on('progress', (v) => { if (fill) fill.style.width = `${Math.max(4, Math.round(v * 100))}%`; });
+    // ogni file porta la versione della build: le immagini restano in cache a lungo,
+    // ma una nuova pubblicazione le fa riscaricare (vedi .htaccess e vite.config.js)
+    this.load.on('addfile', (key, type, loader, file) => {
+      if (file && typeof file.url === 'string' && !/^(data|blob):/.test(file.url) && !/[?&]v=/.test(file.url)) {
+        file.url += (file.url.includes('?') ? '&' : '?') + 'v=' + __BUILD__;
+      }
+    });
     // sprite veri (generati con tools/build_sprites.py); chi non li ha ancora usa quelli provvisori
     this.load.json('spriteManifest', './sprites/manifest.json');
     this.load.on('filecomplete-json-spriteManifest', (key, type, data) => {

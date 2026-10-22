@@ -113,6 +113,13 @@ I fogli finiscono in `game/public/sprites/` e il gioco li usa da soli al posto d
 
 La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` dentro `game/src/systems/sfx.js` (oggi: `intro.mp3` su titolo e selezione). I brani senza file usano ancora la musica sintetizzata.
 
+## Prestazioni e lancio
+
+- Prima visita: ~2,7 MB (codice compresso, immagini PNG ottimizzate senza perdita con `tools/optimize_png.py`: rilanciarlo dopo aver rigenerato sprite o sfondi). Le visite successive scaricano quasi niente (cache lunga).
+- Sprite, sfondi e musica si caricano con `?v=<build>`: ogni pubblicazione fa riscaricare le immagini nuove.
+- Una partita fa 12-15 richieste PHP in circa 8 minuti, ognuna da pochi millisecondi.
+- Consigliato per il lancio: Cloudflare (piano gratuito) davanti al sito. Il server riconosce l'indirizzo vero dei giocatori (`CF-Connecting-IP`, solo se la richiesta arriva davvero da Cloudflare).
+
 ## Motori di ricerca (SEO)
 
 - `index.html`: titolo, descrizione, canonical, hreflang (it / `?lang=en` / x-default), Open Graph, Twitter, dati strutturati `VideoGame` (JSON-LD), testo nascosto per motori e lettori di schermo.

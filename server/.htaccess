@@ -16,17 +16,26 @@ DirectoryIndex index.php index.html
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
-  # i file del gioco hanno un nome che cambia a ogni versione: si possono tenere a lungo in cache
+  # i file del gioco cambiano nome (assets/) o portano la versione nell'indirizzo (?v=, sprite,
+  # sfondi e musica): si possono tenere in cache a lungo, ogni pubblicazione li fa riscaricare
   <FilesMatch "\.(js|css|woff2?|png|ogg|mp3|m4a|webp)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  # icone, anteprima dei link e manifest hanno sempre lo stesso indirizzo: un giorno al massimo
+  <FilesMatch "^(favicon\.(png|ico)|icon-\d+\.png|apple-touch-icon\.png|og\.png|poster\.png|manifest\.webmanifest|robots\.txt|sitemap\.xml)$">
+    Header set Cache-Control "public, max-age=86400"
   </FilesMatch>
   <FilesMatch "^index\.html$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
 </IfModule>
 
+# compressione: il codice del gioco (1,5 MB) viaggia compresso a circa un quarto
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/javascript application/javascript application/json application/manifest+json image/svg+xml text/plain application/xml text/xml
+</IfModule>
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json application/manifest+json image/svg+xml text/plain application/xml text/xml
 </IfModule>
 
 # forza HTTPS

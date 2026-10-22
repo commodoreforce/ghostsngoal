@@ -11,8 +11,9 @@ $action = $in['action'] ?? '';
 
 if ($action === 'start') {
     $hero = in_array($in['character'] ?? '', GNG_HEROES, true) ? $in['character'] : 'shpendi';
-    // freno contro chi apre migliaia di partite finte
-    if (too_many('run', 120, 3600)) json_out(['ok' => false, 'error' => 'rate'], 429);
+    // freno contro chi apre migliaia di partite finte. Largo: sui telefoni molte persone escono su
+    // internet con lo stesso indirizzo (rete mobile, wifi dello stadio o della scuola)
+    if (too_many('run', 600, 3600)) json_out(['ok' => false, 'error' => 'rate'], 429);
     log_attempt('run');
     $token = bin2hex(random_bytes(24));
     $rkey = bin2hex(random_bytes(32));       // chiave segreta di questa partita: firma i passaggi

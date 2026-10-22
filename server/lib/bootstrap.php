@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 const GNG_HEROES = ['shpendi', 'ciofi', 'klinsmann', 'diamanti', 'hubner'];
 const GNG_NAME_MAX = 10;
-const GNG_SCHEMA = 4;   // si alza quando cambia la struttura del database
+const GNG_SCHEMA = 5;   // si alza quando cambia la struttura del database
 const GNG_KITS = ['home', 'away', 'third'];
 const GNG_KILL_KINDS = ['zombie', 'bat', 'pumpkin', 'ghost', 'boss', 'fisher', 'owl', 'eel', 'washer', 'wolf', 'book', 'azdora',
     'crab', 'gull', 'jelly', 'sailor', 'rat', 'octopus', 'count'];
@@ -67,9 +67,36 @@ function require_post(): void {
 }
 
 // impronta anonima del dispositivo: l'IP non viene mai salvato in chiaro
+// Indirizzo del visitatore. Se il sito passa da Cloudflare (consigliato per il lancio), l'indirizzo
+// vero arriva nell'intestazione CF-Connecting-IP: ci si fida solo se la richiesta viene davvero
+// da un server Cloudflare, altrimenti chiunque potrebbe scriverla per aggirare i limiti.
+const GNG_CF_RANGES = ['173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22', '141.101.64.0/18',
+    '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15',
+    '104.16.0.0/13', '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22', '2400:cb00::/32', '2606:4700::/32',
+    '2803:f800::/32', '2405:b500::/32', '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32'];
+
+function ip_in_range(string $ip, string $cidr): bool {
+    [$net, $bits] = explode('/', $cidr);
+    $a = @inet_pton($ip); $b = @inet_pton($net);
+    if ($a === false || $b === false || strlen($a) !== strlen($b)) return false;
+    $bits = (int) $bits; $bytes = intdiv($bits, 8); $rest = $bits % 8;
+    if (strncmp($a, $b, $bytes) !== 0) return false;
+    if ($rest === 0) return true;
+    $mask = chr((0xff << (8 - $rest)) & 0xff);
+    return (($a[$bytes] & $mask) === ($b[$bytes] & $mask));
+}
+
+function client_ip(): string {
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    $cf = (string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? '');
+    if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP)) {
+        foreach (GNG_CF_RANGES as $r) if (ip_in_range($ip, $r)) return $cf;
+    }
+    return $ip;
+}
+
 function client_hash(): string {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-    return hash('sha256', gng_config()['salt'] . '|' . $ip);
+    return hash('sha256', gng_config()['salt'] . '|' . client_ip());
 }
 
 function too_many(string $kind, int $max, int $windowSec): bool {
@@ -216,6 +243,7 @@ function schema_statements(string $driver): array {
         "CREATE INDEX idx_visits_time ON visits (created_at)",
         "CREATE INDEX idx_visits_ip ON visits (ip_hash, created_at)",
         "CREATE INDEX idx_runs_time ON runs (started_at)",
+        "CREATE INDEX idx_runs_ip ON runs (ip_hash)",
         "CREATE TABLE IF NOT EXISTS meta (
             k VARCHAR(32) NOT NULL PRIMARY KEY,
             v VARCHAR(255) NOT NULL

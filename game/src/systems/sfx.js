@@ -365,7 +365,7 @@ let fileName = null;
 export function preloadMusicFiles() {
   for (const [name, url] of Object.entries(FILE_TRACKS)) {
     if (fileRaw[name]) continue;
-    fileRaw[name] = fetch(url).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null);
+    fileRaw[name] = fetch(url + (url.includes('?') ? '&' : '?') + 'v=' + __BUILD__).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null);
   }
 }
 
