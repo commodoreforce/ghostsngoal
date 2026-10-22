@@ -200,6 +200,9 @@ let lang = browserLang();
 try {
   const saved = localStorage.getItem('gng_lang');   // solo se l'ha cambiata il giocatore
   if (saved === 'it' || saved === 'en') lang = saved;
+  // ?lang=en / ?lang=it nell'indirizzo (link condivisi, pagina inglese per i motori di ricerca)
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q === 'it' || q === 'en') lang = q;
 } catch (e) { /* ignora */ }
 
 export const getLang = () => lang;

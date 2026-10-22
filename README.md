@@ -113,6 +113,14 @@ I fogli finiscono in `game/public/sprites/` e il gioco li usa da soli al posto d
 
 La musica registrata va in `game/public/audio/` ed è elencata in `FILE_TRACKS` dentro `game/src/systems/sfx.js` (oggi: `intro.mp3` su titolo e selezione). I brani senza file usano ancora la musica sintetizzata.
 
+## Motori di ricerca (SEO)
+
+- `index.html`: titolo, descrizione, canonical, hreflang (it / `?lang=en` / x-default), Open Graph, Twitter, dati strutturati `VideoGame` (JSON-LD), testo nascosto per motori e lettori di schermo.
+- `?lang=en`: `index.php` serve la stessa pagina con titolo e descrizioni in inglese e `lang="en"`; il gioco parte in inglese.
+- `robots.txt` e `sitemap.xml` nella cartella principale; admin e API escluse.
+- Staging (o qualsiasi indirizzo diverso da `ghostsngoals.com/`): `noindex` automatico. `www.` e `ghostngoals.com` reindirizzano a `ghostsngoals.com`.
+- Le pagine dei record condivisi (`share.php`) sono `noindex, follow`.
+
 ## Campionati e CONTINUE
 
 Il gioco si gioca tre volte di fila, come i "loop" dei coin-op: **stessi nemici, stesso numero**, cambia quanto picchiano.

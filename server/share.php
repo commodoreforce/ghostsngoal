@@ -26,6 +26,7 @@ header('Cache-Control: public, max-age=300');
 <html lang="<?= $en ? 'en' : 'it' ?>"><head><meta charset="utf-8">
 <title><?= $e($title) ?></title>
 <meta name="description" content="<?= $e($desc) ?>">
+<meta name="robots" content="noindex, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="<?= $e($title) ?>">
 <meta property="og:description" content="<?= $e($desc) ?>">

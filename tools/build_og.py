@@ -10,6 +10,7 @@ Escono in game/public/:
 Tutto in pixel art: disegnato a 300x158 e ingrandito 4 volte senza sfumature.
 """
 import os
+import re
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -79,17 +80,53 @@ def og():
     print('og.png', out.size, os.path.getsize(os.path.join(PUB, 'og.png')) // 1024, 'KB')
 
 
+def petrosino_face():
+    """Il primo piano del Magazziniere Petrosino (lo stesso della schermata di caricamento)."""
+    import base64, io
+    html = open(os.path.join(ROOT, 'game', 'index.html'), encoding='utf-8').read()
+    m = re.search(r'<div class="boot-pet"[^>]*>\s*<img[^>]*src="data:image/png;base64,([^"]+)"', html)
+    return Image.open(io.BytesIO(base64.b64decode(m.group(1)))).convert('RGBA')
+
+
 def icons():
-    # icona: il fantasmino del gioco sullo scudetto bianconero stilizzato
-    crest = Image.open(os.path.join(SP, 'en_crest.png')).convert('RGBA')
-    base = Image.new('RGBA', (64, 64), (7, 5, 15, 255))
-    c = crest.resize((44, 56), Image.Resampling.NEAREST)
-    base.alpha_composite(c, (10, 4))
-    for size, name in ((512, 'icon-512.png'), (192, 'icon-192.png'), (180, 'apple-touch-icon.png'), (32, 'favicon.png')):
-        base.resize((size, size), Image.Resampling.NEAREST if size >= 64 else Image.Resampling.BOX).save(os.path.join(PUB, name), optimize=True)
+    # icona della schermata Home: la faccia del Magazziniere Petrosino su arancio Halloween.
+    # Disegnata su 56x56 pixel e ingrandita a multipli interi (pixel tutti uguali); il bordo
+    # di colore pieno aggiunto alla fine non si nota. La faccia sta nel cerchio centrale (80%)
+    # che Android lascia sempre visibile quando ritaglia le icone.
+    face = petrosino_face()
+    B = 56
+    ORANGE = (255, 122, 26, 255)
+    base = Image.new('RGBA', (B, B), ORANGE)
+    d = ImageDraw.Draw(base)
+    # alone chiaro dietro la testa, come una luna piena: stacca il nero della maglia dal fondo
+    d.ellipse((7, 6, B - 8, B - 7), fill=(255, 168, 82, 255))
+    d.ellipse((10, 9, B - 11, B - 10), fill=(255, 196, 120, 255))
+    fx, fy = (B - face.width) // 2, B - face.height   # il busto arriva al bordo, come un ritratto
+    # ombra nera di un pixel tutto intorno alla sagoma, come gli sprite del gioco
+    a = np.pad(np.asarray(face)[:, :, 3] > 100, 1)
+    m = np.zeros_like(a)
+    m[1:, :] |= a[:-1, :]; m[:-1, :] |= a[1:, :]; m[:, 1:] |= a[:, :-1]; m[:, :-1] |= a[:, 1:]
+    sa = np.zeros(a.shape + (4,), np.uint8)
+    sa[m] = (20, 10, 4, 255)
+    base.alpha_composite(Image.fromarray(sa), (fx - 1, fy - 1))
+    base.alpha_composite(face, (fx, fy))
+
+    def out(size, name):
+        k = size // B
+        img = base.resize((B * k, B * k), Image.Resampling.NEAREST)
+        canvas = Image.new('RGBA', (size, size), ORANGE)
+        canvas.alpha_composite(img, ((size - img.width) // 2, (size - img.height) // 2))
+        canvas.convert('RGB').save(os.path.join(PUB, name), optimize=True)
+    out(512, 'icon-512.png'); out(192, 'icon-192.png'); out(180, 'apple-touch-icon.png')
+    # favicon: solo la faccia, ritagliata stretta e rimpicciolita
+    fav = Image.new('RGBA', (48, 48), ORANGE)
+    fav.alpha_composite(face, ((48 - face.width) // 2, 48 - face.height - 2))
+    fav.resize((32, 32), Image.Resampling.BOX).convert('RGB').save(os.path.join(PUB, 'favicon.png'), optimize=True)
+    fav.convert('RGB').resize((32, 32), Image.Resampling.BOX).save(os.path.join(PUB, 'favicon.ico'), sizes=[(32, 32), (16, 16)])
     print('icone ok')
 
 
 if __name__ == '__main__':
-    og()
+    import sys
+    if 'icons' not in sys.argv: og()
     icons()

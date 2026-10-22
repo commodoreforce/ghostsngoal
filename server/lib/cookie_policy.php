@@ -46,7 +46,6 @@ function cp_html(array $s, string $lang = 'it'): string {
     $rows = [
         ['gng_lang', ['lingua scelta (italiano o inglese)', 'chosen language (Italian or English)']],
         ['gng_mute', ['audio attivo o disattivato', 'sound on or off']],
-        ['gng_crt', ['effetto "vecchio televisore" acceso o spento', '"old TV" screen effect on or off']],
         ['gng_best', ['il tuo record personale', 'your personal best score']],
         ['gng_name', ['l\'ultimo nome inserito in classifica, per non riscriverlo', 'the last name you entered in the leaderboard, so you don\'t retype it']],
         ['gng_tatanka', ['lo sblocco del personaggio segreto', 'the secret character unlock']],

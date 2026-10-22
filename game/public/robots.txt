@@ -1,0 +1,8 @@
+# Ghosts 'N Goals · Cesena FC
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /install.php
+
+Sitemap: https://ghostsngoals.com/sitemap.xml

@@ -14,6 +14,8 @@
 }
 
 * { box-sizing: border-box; }
+/* testo solo per motori di ricerca e lettori di schermo */
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
 body {
   font-family: 'Press Start 2P', monospace;

@@ -32,6 +32,10 @@ DirectoryIndex index.php index.html
 # forza HTTPS
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  # un solo indirizzo per i motori di ricerca: www e il dominio senza "s" portano a ghostsngoals.com
+  RewriteCond %{HTTP_HOST} ^(www\.)?ghostngoals\.com$ [NC,OR]
+  RewriteCond %{HTTP_HOST} ^www\.ghostsngoals\.com$ [NC]
+  RewriteRule ^ https://ghostsngoals.com%{REQUEST_URI} [L,R=301]
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !=https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

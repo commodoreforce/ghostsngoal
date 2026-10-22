@@ -41,7 +41,7 @@ export const CHARACTERS = [
     id: 'hubner', name: 'DARIO HUBNER', short: 'HUBNER', number: '',
     nick: { it: 'TATANKA', en: 'TATANKA' },
     stats: { speed: 2, jump: 2, shot: 6, boost: 3 },
-    passive: { it: 'TESTA DURA: NESSUN RINCULO', en: 'HARD HEAD: NO KNOCKBACK' },
+    passive: { it: 'IL BISONTE: NON ARRETRA MAI', en: 'THE BISON: NEVER STEPS BACK' },
     boost: { it: 'TATANKA: DIVENTA BISONTE', en: 'TATANKA: BISON FORM' },
     look: { skin: '#e0a47e', hair: '#5a4a3a', hairStyle: 'bald', beard: false, moustache: true, retro: true },
     // le tre maglie storiche di Tatanka

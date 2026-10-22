@@ -46,19 +46,12 @@ const refreshMute = () => { muteBtn.textContent = isMuted() ? '🔇' : '🔊'; }
 muteBtn.addEventListener('click', () => { unlockAudio(); setMuted(!isMuted()); refreshMute(); });
 refreshMute();
 
-let crtOff = false;
-let crtPref = null;
-try { crtPref = localStorage.getItem('gng_crt'); } catch (e) { /* ignora */ }
-crtOff = crtPref === 'off';
-// sui telefoni lenti l'effetto parte spento (si può sempre riaccendere)
-if (crtPref === null && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) crtOff = true;
+// Il tubo catodico è sempre acceso: fa parte del gioco. Si spegne da solo solo sui telefoni
+// lentissimi (2 processori o meno), dove rallenterebbe tutto. ?crt=off serve solo ai test in locale.
+const isLocal = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+let crtOff = !!(navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2);
+try { if (isLocal && localStorage.getItem('gng_crt') === 'off') crtOff = true; } catch (e) { /* ignora */ }
 document.body.classList.toggle('crt-off', crtOff);
-document.getElementById('tCrt').addEventListener('click', () => {
-  crtOff = !crtOff;
-  document.body.classList.toggle('crt-off', crtOff);
-  if (window.__crt && window.__crt.ok) window.__crt.setEnabled(!crtOff);
-  try { localStorage.setItem('gng_crt', crtOff ? 'off' : 'on'); } catch (e) { /* ignora */ }
-});
 document.getElementById('tFull').addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
 initFullscreen();
 window.addEventListener('keydown', (e) => {

@@ -12,6 +12,13 @@
   <title>Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween</title>
   <meta name="description" content="Hanno rapito il Magazziniere Petrosino: salvalo con Shpendi, Ciofi, Klinsmann e il Mister Diamanti. Gioca gratis dal telefono, entra in classifica. #DAIBURDEL" />
   <link rel="canonical" href="https://ghostsngoals.com/" />
+  <link rel="alternate" hreflang="it" href="https://ghostsngoals.com/" />
+  <link rel="alternate" hreflang="en" href="https://ghostsngoals.com/?lang=en" />
+  <link rel="alternate" hreflang="x-default" href="https://ghostsngoals.com/" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="author" content="Cesena FC" />
+  <meta name="application-name" content="Ghosts 'N Goals" />
+  <link rel="icon" href="./favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
@@ -34,6 +41,30 @@
   <meta name="twitter:title" content="Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween" />
   <meta name="twitter:description" content="Hanno rapito il Magazziniere Petrosino. Tocca a te. #DAIBURDEL" />
   <meta name="twitter:image" content="https://ghostsngoals.com/og.png" />
+  <meta name="twitter:image:alt" content="Ghosts 'N Goals: Shpendi, Ciofi, Klinsmann e il Mister Diamanti con lo scudetto del Cesena FC" />
+  <!-- dati strutturati: Google capisce che è un videogioco gratuito del Cesena FC -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Ghosts 'N Goals",
+    "alternateName": "Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween",
+    "url": "https://ghostsngoals.com/",
+    "image": "https://ghostsngoals.com/og.png",
+    "description": "Hanno rapito il Magazziniere Petrosino: salvalo con Shpendi, Ciofi, Klinsmann e il Mister Diamanti. Arcade a piattaforme in stile anni '80, gratis dal telefono, con classifica online.",
+    "genre": ["Platform", "Arcade"],
+    "gamePlatform": ["Web browser", "Android", "iOS"],
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any",
+    "inLanguage": ["it", "en"],
+    "playMode": "SinglePlayer",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "publisher": { "@type": "SportsOrganization", "name": "Cesena FC", "sport": "Football" },
+    "author": { "@type": "SportsOrganization", "name": "Cesena FC" },
+    "keywords": "Cesena FC, Halloween, videogioco, arcade, Ghosts 'N Goals, DAIBURDEL, Manuzzi"
+  }
+  </script>
   <style>
     /* stile della schermata di caricamento qui dentro: deve vedersi prima di ogni altro file */
     #boot { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4%;
@@ -61,6 +92,10 @@
   </script>
 </head>
 <body>
+  <!-- per motori di ricerca e lettori di schermo (il gioco è disegnato in un canvas, senza testo) -->
+  <h1 class="sr">Ghosts 'N Goals: il videogioco ufficiale del Cesena FC per Halloween</h1>
+  <p class="sr">Hanno rapito il Magazziniere Petrosino nella notte di Halloween. Salvalo con Shpendi, Ciofi, Klinsmann e il Mister Diamanti: tre livelli tra lo stadio Manuzzi, la nebbia del Savio e la nave del Conte a Cesenatico, il bonus dei rigori sotto la Curva Mare e una classifica online. Gratis, dal telefono o dal computer. #DAIBURDEL</p>
+  <noscript><p style="color:#fff;font:16px sans-serif;padding:24px;text-align:center">Per giocare a Ghosts 'N Goals, il videogioco ufficiale del Cesena FC per Halloween, attiva JavaScript nel browser.</p></noscript>
   <div id="room">
     <div id="cabinet" aria-label="Cabinato arcade">
       <header class="marquee">
@@ -114,7 +149,6 @@
 
     <nav class="cab-tools">
       <button id="tMute" aria-label="Audio">🔊</button>
-      <button id="tCrt" aria-label="Effetto CRT">CRT</button>
       <button id="tFull" aria-label="Schermo intero">⛶</button>
       <button id="tCookie" aria-label="Cookie policy" title="Cookie policy" hidden>🍪</button>
     </nav>

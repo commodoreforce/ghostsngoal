@@ -788,7 +788,58 @@ export class LevelScene extends Phaser.Scene {
     return b;
   }
 
+  // Dove un nemico "si vede": il rettangolo dei pixel pieni del fotogramma che sta mostrando.
+  // I corpi fisici dei nemici sono più piccoli del disegno (così toccarli è meno punitivo per chi
+  // gioca), ma un pallone che passa sulla testa di uno zombie lo deve colpire: per i palloni
+  // conta il disegno. Si calcola una volta per fotogramma di animazione e si ricorda.
+  shotBox(e) {
+    const f = e.frame;
+    if (!f || !f.source || !f.source.image) return null;
+    const key = `${e.texture.key}|${f.name}`;
+    const cache = (this.sys.game.__shotBoxes ||= new Map());
+    let o = cache.get(key);
+    if (o === undefined) {
+      o = null;
+      try {
+        const c = document.createElement('canvas'); c.width = f.cutWidth; c.height = f.cutHeight;
+        const g = c.getContext('2d', { willReadFrequently: true });
+        g.drawImage(f.source.image, f.cutX, f.cutY, f.cutWidth, f.cutHeight, 0, 0, f.cutWidth, f.cutHeight);
+        const d = g.getImageData(0, 0, c.width, c.height).data;
+        let t = 1e9, bt = -1, l = 1e9, r = -1;
+        for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+          if (d[(y * c.width + x) * 4 + 3] > 100) { if (y < t) t = y; if (y > bt) bt = y; if (x < l) l = x; if (x > r) r = x; }
+        }
+        if (r >= 0) o = { t, b: bt, l, r, w: f.cutWidth };
+      } catch (err) { o = null; }
+      cache.set(key, o);
+    }
+    if (!o) return null;
+    const sx = Math.abs(e.scaleX), sy = Math.abs(e.scaleY);
+    const x0 = e.x - e.displayOriginX * sx, y0 = e.y - e.displayOriginY * sy;
+    const l = e.flipX ? o.w - 1 - o.r : o.l, r = e.flipX ? o.w - 1 - o.l : o.r;
+    // un pixel di margine ai lati: le punte (ali, mani) non devono "rubare" colpi troppo larghi
+    return new Phaser.Geom.Rectangle(x0 + (l + 1) * sx, y0 + o.t * sy, Math.max(2, (r - l - 1) * sx), (o.b - o.t + 1) * sy);
+  }
+
+  // palloni contro il disegno dei nemici (oltre al contatto fisico tra i corpi)
+  ballsVsSprites() {
+    const balls = this.balls.filter((b) => b.active);
+    if (!balls.length) return;
+    const foes = this.enemies.filter((e) => e.alive && e.vulnerable && e.active && e !== this.boss && !e.isBoss);
+    if (!foes.length) return;
+    const boxes = foes.map((e) => [e, this.shotBox(e)]);
+    for (const b of balls) {
+      if (!b.active || !b.body) continue;
+      const br = new Phaser.Geom.Rectangle(b.body.x, b.body.y, b.body.width, b.body.height);
+      for (const [e, box] of boxes) {
+        if (!b.active) break;
+        if (box && !b.hit.has(e) && e.alive && Phaser.Geom.Intersects.RectangleToRectangle(br, box)) this.ballHitsEnemy(b, e);
+      }
+    }
+  }
+
   updateBalls(time, delta) {
+    this.ballsVsSprites();
     for (let i = this.balls.length - 1; i >= 0; i--) {
       const b = this.balls[i];
       if (!b.active) { this.balls.splice(i, 1); continue; }
