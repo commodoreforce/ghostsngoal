@@ -36,6 +36,7 @@ export const Run = {
   loop: 1,
   saved: false,
   continues: 0,
+  best: 0,
   token: null,
   startedAt: 0,
   nextLife: EXTRA_LIFE_AT[0],
@@ -51,6 +52,7 @@ export const Run = {
     this.score = 0; this.lives = 3; this.level = 1; this.loop = 1;
     this.saved = false;      // il Magazziniere Petrosino è stato salvato davvero (finale della Serie A)
     this.continues = 0;
+    this.best = 0;           // il punteggio più alto della partita, anche se poi si è usato il CONTINUE
     this.token = null; this.startedAt = Date.now();
     this.nextLife = EXTRA_LIFE_AT[0]; this.lifeIdx = 0; this.levelReached = 1;
     this.deathCause = null;
@@ -70,12 +72,16 @@ export const Run = {
     return false;
   },
 
+  // il punteggio che conta per la classifica: il più alto della partita (prima o dopo un CONTINUE)
+  get record() { return Math.max(this.best || 0, this.score); },
+
   // tappa assoluta 1..9: (campionato-1)*3 + livello (serve al controllo anti-furbi)
   get stage() { return (Math.min(3, this.loop) - 1) * 3 + this.level; },
 
   // CONTINUE: come in sala giochi, si riparte dal checkpoint con 3 vite ma il punteggio torna a zero
   continueGame() {
     this.continues++;
+    this.best = Math.max(this.best, this.score);
     this.score = 0; this.lives = 3;
     this.nextLife = EXTRA_LIFE_AT[0]; this.lifeIdx = 0;
   },

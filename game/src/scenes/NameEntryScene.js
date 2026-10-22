@@ -24,17 +24,19 @@ export class NameEntryScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#07050f');
     surface();
     playMusic('title');
-    LocalBest.set(Run.score);
+    LocalBest.set(Run.record);
     this.phase = 'loading';
     this.add.image(W / 2, 46, `portrait_${Run.character}`).setScale(0.75);
     center(this, 8, this.cleared ? 'DAIBURDEL!' : t('gameOver'), { color: this.cleared ? C.gold : C.red });
-    center(this, 76, `${t('score')} ${pad(Run.score)}`, { color: C.white });
+    center(this, 76, `${t('score')} ${pad(Run.record)}`, { color: C.white });
     this.status = center(this, 100, t('sending'), { color: C.grey });
 
     const durationMs = Date.now() - Run.startedAt;
     const payload = {
       score: Run.score, character: Run.character, level: Run.level, loop: Run.loop, continues: Run.continues,
-      cleared: Run.saved || this.cleared, champion: this.cleared, durationMs,   // "salvato": Petrosino liberato alla fine della Serie A stats: Run.stats, cause: Run.deathCause,
+      // "cleared" = il Magazziniere Petrosino liberato alla fine della Serie A; "champion" = Champions vinta
+      cleared: Run.saved || this.cleared, champion: this.cleared, durationMs, stats: Run.stats, cause: Run.deathCause,
+      best: Run.record,
       kit: Run.kit, cheat: Run.cheat,
     };
     const finish = (r) => {
@@ -128,7 +130,7 @@ export class NameEntryScene extends Phaser.Scene {
     const r = offline ? { ok: false } : await Api.leaderboard(9);
     if (!this.scene.isActive()) return;
     if (!r.ok) {
-      center(this, 100, `${t('score')} ${pad(Run.score)}`, { color: C.white });
+      center(this, 100, `${t('score')} ${pad(Run.record)}`, { color: C.white });
       center(this, 120, t('magicOffline'), { color: C.grey });
     } else {
       (r.scores || []).forEach((s, i) => {
@@ -147,7 +149,7 @@ export class NameEntryScene extends Phaser.Scene {
     if (this.review) center(this, 176, getLang() === 'it' ? 'RECORD IN VERIFICA' : 'SCORE UNDER REVIEW', { color: C.gold });
     this.backAt = this.time.now + (Run.cheat ? 9000 : 30000);
     this.time.delayedCall(800, () => { this.canLeave = true; });
-    if (!Run.cheat && Run.score > 0) this.shareButtons(highlightId);
+    if (!Run.cheat && Run.record > 0) this.shareButtons(highlightId);
   }
 
   // condividi il record: storia (Instagram, WhatsApp...) o post; da computer si scarica l'immagine
@@ -158,7 +160,7 @@ export class NameEntryScene extends Phaser.Scene {
     const dir = location.pathname.replace(/[^/]*$/, '');
     const base = `${location.origin}${dir}`;
     const data = {
-      character: Run.character, score: Run.score, level: Run.level, loop: Run.loop, cleared: Run.saved || this.cleared, champion: this.cleared,
+      character: Run.character, score: Run.record, level: Run.level, loop: Run.loop, cleared: Run.saved || this.cleared, champion: this.cleared,
       rank: scoreId ? this.rank : null, nickname: scoreId ? this.nick : null,
       host: /ghostsngoals/i.test(location.host) ? location.host.replace(/^www\./i, '').toUpperCase() : 'GHOSTSNGOALS.COM', url: scoreId ? `${base}share.php?id=${scoreId}${it ? '' : '&lang=en'}` : base,
     };

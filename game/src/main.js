@@ -19,6 +19,7 @@ import { LeagueScene } from './scenes/LeagueScene.js';
 import { W, H } from './systems/ui.js';
 import { CrtScreen } from './systems/crt.js';
 import { Frame } from './systems/frame.js';
+import { RunLog } from './systems/runlog.js';
 import { Run } from './systems/state.js';
 import * as ShareCard from './systems/shareCard.js';
 
@@ -140,6 +141,7 @@ async function start() {
     window.__run = Run;
     window.__share = ShareCard;
     window.__gngInput = Input;
+    window.__runlog = RunLog;
   }
 }
 start();

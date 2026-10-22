@@ -1198,7 +1198,7 @@ export class LevelScene extends Phaser.Scene {
     this.time.delayedCall(delay + 300, () => {
       txt(this, 22, y + 6, t('total'), { fixed: true, depth: 120, color: C.gold });
       txt(this, W - 22, y + 6, pad(Run.score), { fixed: true, depth: 120, ox: 1, color: C.gold });
-      LocalBest.set(Run.score);
+      LocalBest.set(Run.record);
     });
     this.afterClear(delay);
   }
@@ -1276,7 +1276,7 @@ export class LevelScene extends Phaser.Scene {
   gameOver() {
     Sfx.gameOver();
     center(this, 100, t('gameOver'), { size: 16, color: C.red, fixed: true, depth: 130, stroke: '#000', strokeThickness: 3 });
-    LocalBest.set(Run.score);
+    LocalBest.set(Run.record);
     this.time.delayedCall(2600, () => this.scene.start('NameEntry', { cleared: false }));
   }
 
@@ -1285,14 +1285,14 @@ export class LevelScene extends Phaser.Scene {
   // classifica i punti fatti; chi continua rinuncia a quei punti per vedere il resto del gioco.
   // Il record di prima resta comunque salvato sul telefono. SALTO fa scendere il conto più in fretta.
   continuePrompt() {
-    LocalBest.set(Run.score);
+    LocalBest.set(Run.record);
     const D = 130;
     const veil = this.add.rectangle(0, 0, W, H, 0x000000, 0.72).setOrigin(0).setScrollFactor(0).setDepth(D - 1);
     const title = center(this, 62, t('contTitle'), { size: 16, color: C.gold, fixed: true, depth: D, stroke: '#000', strokeThickness: 3 });
     const num = center(this, 96, '9', { size: 16, color: C.white, fixed: true, depth: D, stroke: '#000', strokeThickness: 3 });
     const how = center(this, 128, t('contHow'), { color: C.orange, fixed: true, depth: D });
     const note = center(this, 144, t('contNote'), { color: C.grey, fixed: true, depth: D, wrap: 230 });
-    const was = center(this, 164, `${t('score')} ${pad(Run.score)}`, { color: C.white, fixed: true, depth: D });
+    const was = center(this, 178, `${t('score')} ${pad(Run.score)}`, { color: C.white, fixed: true, depth: D });
     const parts = [veil, title, num, how, note, was];
     this.tweens.add({ targets: how, alpha: 0.3, yoyo: true, repeat: -1, duration: 400 });
     const seen = { a: Input.presses('a'), b: Input.presses('b'), start: Input.presses('start') };

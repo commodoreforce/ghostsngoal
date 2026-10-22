@@ -1282,7 +1282,7 @@ export class Level3Scene extends LevelScene {
       // via il conteggio
       const ui = this.children.list.filter((o) => o.scrollFactorX === 0 && o.depth >= 119 && o.depth <= 120.5);
       this.tweens.add({ targets: ui, alpha: 0, duration: 500, onComplete: () => ui.forEach((o) => o.destroy()) });
-      LocalBest.set(Run.score);
+      LocalBest.set(Run.record);
     });
     // Serie BKT: il Petrosino nella gabbia è un'illusione del Conte, si sale in Serie A.
     // Serie A: il finale vero. Champions: lo si libera di nuovo e si vince la coppa.

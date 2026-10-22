@@ -107,6 +107,11 @@ if ($action === 'end') {
     if ($stage > $prev['l'] + 1) $flags[] = $events ? 'skip' : 'missing';
     if ($continues > 0 && !in_array('cont', array_filter(explode(',', (string) $run['flags'])), true)) $flags[] = 'gap';
     $flags = array_merge($flags, ac_check_segment($prev, $point, $lap, true));
+    // con il CONTINUE il punteggio riparte da zero: in classifica va il più alto della partita,
+    // cioè il maggiore tra quello finale e quelli raggiunti prima di ogni CONTINUE (già controllati
+    // tratto per tratto quando sono arrivati)
+    $best = $score;
+    foreach ($events as $e) if (!empty($e['c'])) $best = max($best, (int) $e['sc']);
     // controllo complessivo (anche per le partite senza passaggi): con un CONTINUE il punteggio
     // finale è solo una parte di quello fatto, quindi resta comunque sotto il limite
     $flags = array_merge($flags, ac_check_segment(ac_start_point($run), $point, $lap, true));
@@ -119,23 +124,23 @@ if ($action === 'end') {
     $durMs = min($durMs, ($serverSec + 5) * 1000);
     // da verificare a mano: difetti lievi, oppure primi posti / soglia di punti impostati in admin
     $size = (int) (gng_config()['leaderboard_size'] ?? 100);
-    $better = (int) q('SELECT COUNT(*) FROM scores WHERE hidden = 0 AND score >= ?', [$score])->fetchColumn();
+    $better = (int) q('SELECT COUNT(*) FROM scores WHERE hidden = 0 AND score >= ?', [$best])->fetchColumn();
     $rank = $better + 1;
     $acs = ac_settings();
     if ($plausible) {
         if ($acs['review_top'] > 0 && $rank <= $acs['review_top']) $flagList[] = 'top';
-        if ($acs['review_over'] > 0 && $score >= $acs['review_over']) $flagList[] = 'over';
+        if ($acs['review_over'] > 0 && $best >= $acs['review_over']) $flagList[] = 'over';
         $allFlags = ac_add_flags($allFlags, $flagList);
     }
     $review = ($plausible && array_diff($flagList, AC_HARD, AC_INFO)) ? 1 : 0;
 
     $set = 'ended_at = ?, score = ?, level_reached = ?, lap = ?, cleared = ?, duration_ms = ?, cause = ?, stats = ?, plausible = ?, cheat = ?, seq = ?, events = ?, flags = ?, review = ?, champion = ?';
-    $args = [$now, $score, $level, $lap, $cleared, $durMs, $cause, $stats, $plausible, $cheat, max($seq, (int) $run['seq']), json_encode($events), $allFlags, $review, $champion];
+    $args = [$now, $best, $level, $lap, $cleared, $durMs, $cause, $stats, $plausible, $cheat, max($seq, (int) $run['seq']), json_encode($events), $allFlags, $review, $champion];
     foreach ($st as $k => $v) { $set .= ", $k = ?"; $args[] = $v; }
     $args[] = $run['id'];
     q("UPDATE runs SET $set WHERE id = ?", $args);
 
-    $qualifies = $plausible && !$cheat && $score > 0 && $rank <= $size;
+    $qualifies = $plausible && !$cheat && $best > 0 && $rank <= $size;
     json_out(['ok' => true, 'qualifies' => (bool) $qualifies, 'rank' => $rank]);
 }
 

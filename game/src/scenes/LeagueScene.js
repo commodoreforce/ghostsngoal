@@ -23,7 +23,7 @@ export class LeagueScene extends Phaser.Scene {
     this.cameras.main.fadeIn(500, 0, 0, 0);
     stopMusic();
     playMusic('finale');
-    LocalBest.set(Run.score);
+    LocalBest.set(Run.record);
 
     // fasci di luce da stadio che si incrociano
     const beams = this.add.graphics().setDepth(1);
