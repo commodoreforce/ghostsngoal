@@ -109,10 +109,27 @@ async function start() {
     scene: [BootScene, TitleScene, SelectScene, IntroScene, LevelScene, PenaltyScene, Level2Scene, Level3Scene, LeagueScene, NameEntryScene],
   });
   game.events.on('prestep', () => { Frame.set(game.loop.delta); Input.update(); });
+  // Prova di "sapore": i comandi e la fisica girano sempre a 60 al secondo, ma lo schermo si
+  // può ridisegnare meno spesso (?fps=30 o ?fps=20 nell'indirizzo, ?fps=60 per tornare normale;
+  // la scelta resta ricordata sul telefono). Meno fotogrammi = più "a scatti", un filo meno reattivo.
+  let drawEvery = 1;
+  try {
+    const q = new URLSearchParams(location.search).get('fps');
+    if (q) localStorage.setItem('gng_fps', q);
+    const v = Number(q || localStorage.getItem('gng_fps') || 60);
+    drawEvery = v <= 20 ? 3 : v <= 30 ? 2 : 1;
+  } catch (e) { /* niente */ }
+  if (drawEvery > 1) {
+    game.events.once('poststep', () => {
+      const draw = game.loop.callback;
+      let n = 0;
+      game.loop.callback = (time, delta) => ((n++ % drawEvery) === 0 ? draw(time, delta) : game.headlessStep(time, delta));
+    });
+  }
   // tubo catodico vero (shader WebGL); se non disponibile resta l'effetto leggero in CSS
   const crt = new CrtScreen(document.getElementById('game'), game.canvas);
   if (crt.ok) {
-    game.events.on('postrender', () => crt.draw());
+    game.events.on('postrender', (renderer) => { if (renderer) crt.draw(); });   // solo sui fotogrammi disegnati
     crt.setEnabled(!crtOff);
   }
   window.__crt = crt;   // serve al pulsante CRT

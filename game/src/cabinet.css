@@ -212,7 +212,7 @@ body.crt-off #game canvas { filter: none; }
   .buttons { gap: calc(var(--u) * 9); }
   .btn-b { margin-top: calc(var(--u) * 9); }
   .btn small { font-size: calc(var(--u) * 2.4); }
-  .btn-start { font-size: calc(var(--u) * 3); padding: calc(var(--u) * 2.2) calc(var(--u) * 7); margin-top: calc(var(--u) * 3); }
+  .btn-start { font-size: calc(var(--u) * 3); padding: calc(var(--u) * 2.2) calc(var(--u) * 7); margin-top: calc(var(--u) * 8); }
   .cab-foot { flex: 1 1 auto; align-items: stretch; padding-bottom: max(calc(var(--u) * 3), env(safe-area-inset-bottom)); }
   .instr-card { display: none; }
   .speaker { display: block; }
@@ -295,6 +295,8 @@ body.magic .btn-zone, body.magic .stick-zone { pointer-events: none !important; 
   body.playing #cabinet { justify-content: flex-start; background: linear-gradient(180deg, #000 0, #000 40%, #0f0f13 100%); }
   body.playing .bezel { width: 100vw; padding-top: env(safe-area-inset-top, 0px); }
   body.playing .panel { display: grid; flex: 1 1 auto; margin-top: 0; width: 100%; padding-top: calc(var(--u) * 12); }
+  /* il joystick in partita sta in alto a sinistra, lontano dai pulsanti (la zona del pollice resta tutta la metà sinistra) */
+  body.playing .stick { align-self: start; margin-top: calc(var(--u) * -6); }
   body.playing .cab-tools { top: calc(75vw + env(safe-area-inset-top, 0px) + 10px); bottom: auto; }
 }
 @media (prefers-reduced-motion: reduce) {

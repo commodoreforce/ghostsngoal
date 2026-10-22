@@ -14,5 +14,4 @@ $scores = array_map(fn ($r) => [
     'level' => (int) $r['level_reached'],
     'loop' => (int) $r['lap'],
 ], $rows);
-$plays = (int) q('SELECT COUNT(*) FROM runs')->fetchColumn();
-json_out(['ok' => true, 'scores' => $scores, 'plays' => $plays], 200, 15);
+json_out(['ok' => true, 'scores' => $scores], 200, 15);

@@ -65,9 +65,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   updatePlays() {
-    if (this.playsText && this.plays != null) {
-      this.playsText.setText(`${t('plays')}: ${this.plays.toLocaleString(getLang() === 'it' ? 'it-IT' : 'en-GB')}`);
-    }
+    // il numero di partite giocate non si mostra più ai giocatori (resta nelle statistiche dell'admin)
   }
 
   async fetchBoard() {
