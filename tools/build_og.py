@@ -126,7 +126,64 @@ def icons():
     print('icone ok')
 
 
+def github_card():
+    """Anteprima del repository su GitHub (Settings > Social preview): 1280x640.
+    Disegnata a 320x160 e ingrandita 4 volte; tutto l'importante sta dentro il margine
+    di sicurezza di 40 px (10 px qui) consigliato da GitHub."""
+    W, H = 320, 160
+    bg = Image.open(os.path.join(PUB, 'backgrounds', 'l1_inside0.png')).convert('RGB')
+    img = bg.crop((520, 40, 520 + W, 40 + H))
+    a = np.asarray(img).astype(np.float32)
+    ys = np.linspace(0, 1, H)[:, None, None]
+    shade = 0.30 + 0.36 * np.exp(-((ys - 0.55) / 0.30) ** 2)
+    a = a * shade + np.array([10, 6, 30]) * (1 - shade) * 0.6
+    img = Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert('RGBA')
+    d = ImageDraw.Draw(img)
+    # scudetto in alto a sinistra, titolo e sottotitolo accanto
+    crest = Image.open(os.path.join(SP, 'en_crest.png')).convert('RGBA').resize((30, 38), Image.Resampling.NEAREST)
+    img.alpha_composite(crest, (12, 10))
+    cx = 176
+    img = text(img, "GHOSTS 'N GOALS", cx, 10, 16, (244, 244, 240), stroke=(255, 122, 26), shadow=(0, 0, 0), align='center')
+    img = text(img, 'IL VIDEOGIOCO UFFICIALE', cx, 30, 8, (255, 210, 63), stroke=(0, 0, 0), align='center')
+    img = text(img, 'DEL CESENA FC PER HALLOWEEN', cx, 40, 8, (255, 210, 63), stroke=(0, 0, 0), align='center')
+    d = ImageDraw.Draw(img)
+
+    def frame(x, y, w, h, col):
+        d.rectangle((x - 3, y - 3, x + w + 2, y + h + 2), fill=(0, 0, 0, 255))
+        d.rectangle((x - 2, y - 2, x + w + 1, y + h + 1), fill=col)
+        d.rectangle((x, y, x + w - 1, y + h - 1), fill=(18, 12, 34, 255))
+
+    # i quattro campioni e il Magazziniere Petrosino da salvare
+    x, y = 17, 66
+    for who in ['shpendi', 'ciofi', 'klinsmann', 'diamanti']:
+        p = Image.open(os.path.join(SP, f'portrait_{who}.png')).convert('RGBA').resize((48, 48), Image.Resampling.NEAREST)
+        frame(x, y, 48, 48, (255, 122, 26, 255))
+        img.alpha_composite(p, (x, y))
+        x += 57
+    face = petrosino_face()
+    frame(x, y, 48, 48, (255, 59, 59, 255))
+    img.alpha_composite(face, (x + (48 - face.width) // 2, y + 48 - face.height))
+    # fumetto "HELP ME!" sopra il riquadro del Magazziniere
+    d = ImageDraw.Draw(img)
+    tw = 8 * 8 + 4
+    d.rectangle((x + 24 - tw // 2 - 1, y - 15, x + 24 + tw // 2, y - 3), fill=(244, 244, 240, 255), outline=(255, 59, 59, 255))
+    img = text(img, 'HELP ME!', x + 24, y - 12, 8, (10, 10, 12), align='center')
+    d = ImageDraw.Draw(img)
+    # fascia in basso
+    d.rectangle((0, 121, W, 151), fill=(0, 0, 0, 210))
+    img = text(img, 'SALVA IL MAGAZZINIERE PETROSINO!', W // 2, 125, 8, (255, 59, 59), align='center')
+    img = text(img, 'PHASER 3 · PHP · MYSQL · #DAIBURDEL', W // 2, 138, 8, (200, 196, 232), align='center')
+    out = img.convert('RGB').resize((1280, 640), Image.Resampling.NEAREST)
+    os.makedirs(os.path.join(ROOT, 'docs'), exist_ok=True)
+    dest = os.path.join(ROOT, 'docs', 'github-social-preview.png')
+    out.save(dest, optimize=True)
+    print('github-social-preview.png', out.size, os.path.getsize(dest) // 1024, 'KB')
+
+
 if __name__ == '__main__':
     import sys
+    if 'github' in sys.argv:
+        github_card()
+        sys.exit()
     if 'icons' not in sys.argv: og()
     icons()
