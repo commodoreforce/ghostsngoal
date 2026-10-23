@@ -1,6 +1,7 @@
 # GHOSTS 'N GOALS — regole per Apache (Serverplan)
 Options -Indexes
 AddType application/manifest+json .webmanifest
+AddType application/octet-stream .bin
 # la pagina d'ingresso decide tra gioco e volantino "MISSING" (manutenzione, dall'admin)
 DirectoryIndex index.php index.html
 
@@ -18,7 +19,7 @@ DirectoryIndex index.php index.html
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
   # i file del gioco cambiano nome (assets/) o portano la versione nell'indirizzo (?v=, sprite,
   # sfondi e musica): si possono tenere in cache a lungo, ogni pubblicazione li fa riscaricare
-  <FilesMatch "\.(js|css|woff2?|png|ogg|mp3|m4a|webp)$">
+  <FilesMatch "\.(js|css|woff2?|png|ogg|mp3|m4a|webp|bin)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
   # icone, anteprima dei link e manifest hanno sempre lo stesso indirizzo: un giorno al massimo

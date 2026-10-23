@@ -19,6 +19,7 @@ import { LeagueScene } from './scenes/LeagueScene.js';
 import { W, H } from './systems/ui.js';
 import { CrtScreen } from './systems/crt.js';
 import { Frame } from './systems/frame.js';
+import { Pack } from './systems/pack.js';
 import { RunLog } from './systems/runlog.js';
 import { Run } from './systems/state.js';
 import * as ShareCard from './systems/shareCard.js';
@@ -85,6 +86,9 @@ document.addEventListener('dblclick', (e) => e.preventDefault());
 
 async function start() {
   try { await document.fonts.load('8px "Press Start 2P"'); } catch (e) { /* si va avanti col font di riserva */ }
+  // tutte le immagini in un solo file: la barra di caricamento ne mostra l'arrivo (fino al 70%)
+  const fill = document.getElementById('bootFill');
+  if (await Pack.load((v) => { if (fill) fill.style.width = `${Math.max(4, Math.round(v * 70))}%`; })) window.__packed = true;
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game',

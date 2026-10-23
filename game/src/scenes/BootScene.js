@@ -5,6 +5,7 @@ import { Input } from '../systems/input.js';
 import { Sfx } from '../systems/sfx.js';
 import { t, getLang } from '../i18n.js';
 import { center, C, W, H, makeLightTexture } from '../systems/ui.js';
+import { Pack, packKey } from '../systems/pack.js';
 
 // Accensione del cabinato: avviso fotosensibilità, "tonfo" del tubo, logo del club.
 export class BootScene extends Phaser.Scene {
@@ -13,13 +14,16 @@ export class BootScene extends Phaser.Scene {
   preload() {
     // barra della schermata di caricamento (in HTML, visibile fin dal primo istante)
     const fill = document.getElementById('bootFill');
-    this.load.on('progress', (v) => { if (fill) fill.style.width = `${Math.max(4, Math.round(v * 100))}%`; });
-    // ogni file porta la versione della build: le immagini restano in cache a lungo,
-    // ma una nuova pubblicazione le fa riscaricare (vedi .htaccess e vite.config.js)
+    const from = window.__packed ? 70 : 0;   // il pacchetto delle immagini ha già riempito la barra fino al 70%
+    this.load.on('progress', (v) => { if (fill) fill.style.width = `${Math.max(4, Math.round(from + v * (100 - from)))}%`; });
+    // ogni file arriva dal pacchetto unico, se c'è (nessuna richiesta al server); altrimenti porta
+    // la versione della build: le immagini restano in cache a lungo, ma una nuova pubblicazione
+    // le fa riscaricare (vedi .htaccess e vite.config.js)
     this.load.on('addfile', (key, type, loader, file) => {
-      if (file && typeof file.url === 'string' && !/^(data|blob):/.test(file.url) && !/[?&]v=/.test(file.url)) {
-        file.url += (file.url.includes('?') ? '&' : '?') + 'v=' + __BUILD__;
-      }
+      if (!file || typeof file.url !== 'string' || /^(data|blob):/.test(file.url)) return;
+      const k = packKey(file.url);
+      if (Pack.has(k)) { file.url = Pack.url(k); return; }
+      if (!/[?&]v=/.test(file.url)) file.url += (file.url.includes('?') ? '&' : '?') + 'v=' + __BUILD__;
     });
     // sprite veri (generati con tools/build_sprites.py); chi non li ha ancora usa quelli provvisori
     this.load.json('spriteManifest', './sprites/manifest.json');
